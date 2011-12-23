@@ -3,7 +3,7 @@
 
 (function(window, jsziptools){
 
-var BlobBuilder = window.MozBlobBuilder || window.WebKitBlobBuilder || window.BlobBuilder;
+var BlobBuilder = window.MozBlobBuilder || window.WebKitBlobBuilder || window.MSBlobBuilder || window.BlobBuilder;
 
 function readInt(view, offset){
 	return view[offset] | view[offset + 1] << 8 | view[offset + 2] << 16 | view[offset + 3] << 24;
@@ -69,16 +69,16 @@ function getEndCentDirHeader(buffer, offset){
 	
 }
 
-function LazyLoader(buffer, files, localFileHeaders, centralDirHeaders){
+jsziptools.LazyLoader = function(buffer, files, localFileHeaders, centralDirHeaders){
 	this.buffer = buffer;
 	this.files = files;
 	this.localFileHeaders = localFileHeaders;
 	this.centralDirHeaders = centralDirHeaders;
-}
+};
 
-LazyLoader.prototype = {
+jsziptools.LazyLoader.prototype = {
 	getFileNames: function(){
-		var ret = [], i, n, offset, len;
+		var ret = [], i, n;
 		for(i = 0, n = this.files.length; i < n; ++i){
 			ret.push(this.localFileHeaders[this.files[i]].filename);
 		}
@@ -137,6 +137,7 @@ jsziptools.unzip = function(data){
 		localFileHeaders = [],
 		centralDirHeaders = [],
 		files = [],
+		folders = [],
 		offset = 0;
 	
 	if(data.constructor === ArrayBuffer) {
@@ -170,12 +171,14 @@ jsziptools.unzip = function(data){
 			throw 'invalid zip file,';
 		}
 		
-		if(centralDirHeaders[i].outattr !== 0x10) {
+		if(centralDirHeaders[i].outattr & 0x10) {
 			files.push(i);
+		} else {
+			folders.push(i);
 		}
 	}
 	
-	return new LazyLoader(buffer, files, localFileHeaders, centralDirHeaders);
+	return new jsziptools.LazyLoader(buffer, files, localFileHeaders, centralDirHeaders);
 };
 
 })(this, jsziptools);

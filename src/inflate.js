@@ -733,7 +733,7 @@ function zip_inflate(uint8array) {
     buff = new Uint8Array(1024);
     out = [];
     while((i = zip_inflate_internal(buff, 0, buff.length)) > 0) {
-	for(j = 0; j < i; j++)
+	for(j = 0; j < i; ++j)
 	    out[out.length] = buff[j];
     }
     zip_inflate_data = null; // G.C.
