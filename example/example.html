@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+	<title>example</title>
+	<script type="text/javascript" src="../src/jsziptools.min.js"></script>
+	<script>
+	window.onload = function(){
+		var b, fr = new FileReader(), $ = function(a){return document.getElementById(a)};
+		$("start").addEventListener("click", function(){
+			b = jsziptools.zip([{name:"foo.txt", str:$("zip").value}], 6);
+			fr.onload = function(){
+				jsziptools.unzip(this.result).getFileAsText("foo.txt", function(result){
+					$("unzip").value = result;
+				});
+			};
+			fr.readAsArrayBuffer(b);
+		});
+  };
+  </script>
+</head>
+
+<body>
+zip<br/>
+<textarea id="zip"></textarea><br/>
+<button id="start">start</button><br/>
+unzip<br/>
+<textarea id="unzip"></textarea>
+
+</body>
+</html>
