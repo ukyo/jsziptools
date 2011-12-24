@@ -69,9 +69,10 @@ function getEndCentDirHeader(buffer, offset){
 	
 }
 
-jsziptools.LazyLoader = function(buffer, files, localFileHeaders, centralDirHeaders){
+jsziptools.LazyLoader = function(buffer, files, folders, localFileHeaders, centralDirHeaders){
 	this.buffer = buffer;
 	this.files = files;
+	this.folders = folders;
 	this.localFileHeaders = localFileHeaders;
 	this.centralDirHeaders = centralDirHeaders;
 };
@@ -131,6 +132,24 @@ jsziptools.LazyLoader.prototype = {
 	}
 };
 
+//for worker
+if(window.FileReaderSync){
+	(function(){
+		return {
+			getFileAsTextSync: function(filename, encoding){
+				encoding = encodign || 'UTF-8';
+				return new FileReaderSync().readAsText(this.getFileAsBlob(filename), encoidng);
+			},
+			getFileAsBinaryStringSync: function(filename){
+				return new FileReaderSync().readAsBinarySting(this.getFileAsBlob(filename));
+			},
+			getFileAsDataURLSync: function(filename){
+				return new FileReaderSync().readAsDataURL(this.getFileAsBlob(filename));
+			}
+		}
+	}).call(jsziptools.LazyLoader.prototype);
+}
+
 
 jsziptools.unzip = function(data){
 	var buffer, view, signature, header, i, n,
@@ -171,14 +190,14 @@ jsziptools.unzip = function(data){
 			throw 'invalid zip file,';
 		}
 		
-		if(centralDirHeaders[i].outattr & 0x10) {
+		if(localFileHeaders[i].filename.split('/').pop()) {
 			files.push(i);
 		} else {
 			folders.push(i);
 		}
 	}
 	
-	return new jsziptools.LazyLoader(buffer, files, localFileHeaders, centralDirHeaders);
+	return new jsziptools.LazyLoader(buffer, files, folders, localFileHeaders, centralDirHeaders);
 };
 
 })(this, jsziptools);
