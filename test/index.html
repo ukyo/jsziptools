@@ -1,8 +1,9 @@
 <!DOCTYPE html>
-
 <html>
 <head>
-	<title>example</title>
+	<meta charset="UTF-8" />
+	<title>QUnit Test Suite</title>
+	<link rel="stylesheet" href="../qunit/qunit.css" type="text/css" media="screen">
 	<script type="text/javascript" src="../qunit/qunit.js"></script>
 	<script type="text/javascript" src="../src/jsziptools.js"></script>
 	<script type="text/javascript" src="../src/utils.js"></script>
@@ -14,28 +15,14 @@
 	<script type="text/javascript" src="../src/gz.js"></script>
 	<script type="text/javascript" src="../src/zip.js"></script>
 	<script type="text/javascript" src="../src/unzip.js"></script>
-	<script>
-	window.onload = function(){
-		var b, fr = new FileReader(), $ = function(a){return document.getElementById(a)};
-		$("start").addEventListener("click", function(){
-			b = jz.zip.compress([{name:"foo.txt", str:$("zip").value}], 6);
-			fr.onload = function(){
-				jz.zip.decompress(this.result).getFileAsText("foo.txt", function(result){
-					$("unzip").value = result;
-				});
-			};
-			fr.readAsArrayBuffer(b);
-		});
-  };
-  </script>
+	<script type="text/javascript" src="test.js"></script>
 </head>
-
 <body>
-zip<br/>
-<textarea id="zip"></textarea><br/>
-<button id="start">start</button><br/>
-unzip<br/>
-<textarea id="unzip"></textarea>
-
+	<h1 id="qunit-header">QUnit Test Suite</h1>
+	<h2 id="qunit-banner"></h2>
+	<div id="qunit-testrunner-toolbar"></div>
+	<h2 id="qunit-userAgent"></h2>
+	<ol id="qunit-tests"></ol>
+	<div id="qunit-fixture">test markup</div>
 </body>
 </html>

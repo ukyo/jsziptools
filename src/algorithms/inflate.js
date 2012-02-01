@@ -1,6 +1,8 @@
 // refer: http://www.onicos.com/staff/iz/amuse/javascript/expert/inflate.txt
 
-(function(jsziptools){
+jz.algorithms = jz.algorithms || {};
+
+(function(jz){
 
 /* Copyright (C) 1999 Masanao Izumo <iz@onicos.co.jp>
  * Version: 1.0.0.1
@@ -722,12 +724,12 @@ function zip_inflate_internal(buff, off, size) {
     return n;
 }
 
-function zip_inflate(uint8array) {
+function zip_inflate(bytes) {
     var out, buff;
     var i, j;
 
     zip_inflate_start();
-    zip_inflate_data = uint8array;
+    zip_inflate_data = jz.utils.arrayBufferToBytes(bytes);
     zip_inflate_pos = 0;
 
     buff = new Uint8Array(1024);
@@ -740,6 +742,6 @@ function zip_inflate(uint8array) {
     return new Uint8Array(out).buffer;
 }
 
-jsziptools._inflate = zip_inflate;
+jz.algorithms.inflate = zip_inflate;
 
-})(jsziptools);
+})(jz);

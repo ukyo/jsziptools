@@ -1,6 +1,8 @@
 // refer: http://www.onicos.com/staff/iz/amuse/javascript/expert/deflate.txt
 
-(function(jsziptools){
+jz.algorithms = jz.algorithms || {};
+
+(function(jz){
 
 /* Copyright (C) 1999 Masanao Izumo <iz@onicos.co.jp>
  * Version: 1.0.1
@@ -1637,10 +1639,10 @@ var zip_qoutbuf = function() {
     }
 }
 
-var zip_deflate = function(arraybuffer, level) {
+var zip_deflate = function(bytes, level) {
     var i, j;
 
-    zip_deflate_data = new Uint8Array(arraybuffer);
+    zip_deflate_data = jz.utils.arrayBufferToBytes(bytes);
     zip_deflate_pos = 0;
     if(typeof level == "undefined")
 	level = zip_DEFAULT_LEVEL;
@@ -1661,6 +1663,6 @@ var zip_deflate = function(arraybuffer, level) {
 // end of the script of Masanao Izumo.
 //
 
-jsziptools._deflate = zip_deflate;
+jz.algorithms.deflate = zip_deflate;
 
-})(jsziptools);
+})(jz);

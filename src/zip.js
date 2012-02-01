@@ -1,52 +1,41 @@
 //author: @ukyo
 //license: GPLv3
 
-(function(window, jsziptools){
+jz.zip = jz.zip || {};
+
+(function(window, jz){
 
 var BlobBuilder = window.MozBlobBuilder || window.WebKitBlobBuilder || window.MSBlobBuilder || window.BlobBuilder;
 
-function strToBuffer(str){
-	var n = str.length,
-		idx = -1,
-		utf8 = [],
-		i, j, c;
-	
-	//http://user1.matsumoto.ne.jp/~goma/js/utf.js
-	for(i = 0; i < n; ++i){
-		c = str.charCodeAt(i);
-		if(c <= 0x7F){
-			utf8[++idx] = c;
-		} else if(c <= 0x7FF){
-			utf8[++idx] = 0xC0 | (c >>> 6);
-			utf8[++idx] = 0x80 | (c & 0x3F);
-		} else if(c <= 0xFFFF){
-			utf8[++idx] = 0xE0 | (c >>> 12);
-			utf8[++idx] = 0x80 | ((c >>> 6) & 0x3F);
-			utf8[++idx] = 0x80 | (c & 0x3F);
-		} else {
-			j = 4;
-			while(c >> (6 * j)) ++j;
-			utf8[++idx] = ((0xFF00 >>> j) & 0xFF) | (c >>> (6 * --j));
-			while(j--)
-				utf8[++idx] = 0x80 | ((c >>> (6 * j)) & 0x3F);
-		}
-	}
-	return new Uint8Array(utf8).buffer;
-}
-
-function getEndCentDirHeader(n, centralDirHeaderSize, offset){
+/**
+ * @param {number} i index of a File.
+ * @param {number} centralDirHeaderSize
+ * @param {number} offset A start position of a File.
+ * @return {Blob}
+ */
+function getEndCentDirHeader(i, centralDirHeaderSize, offset){
 	var bb = new BlobBuilder();
-	bb.append(getUint(jsziptools.END_SIGNATURE)); //signature
+	bb.append(getUint(jz.zip.END_SIGNATURE)); //signature
 	bb.append(getUshort(0)); //disknum
 	bb.append(getUshort(0)); //startdisknum
-	bb.append(getUshort(n)); //diskdirentry
-	bb.append(getUshort(n)); //direntry
+	bb.append(getUshort(i)); //diskdirentry
+	bb.append(getUshort(i)); //direntry
 	bb.append(getUint(centralDirHeaderSize)); //dirsize
 	bb.append(getUint(offset)); //startpos
 	bb.append(getUshort(0)); //commentlen
 	return bb.getBlob();
 }
 
+
+/**
+ * @constructor
+ * 
+ * @param {ArrayBuffer} buffer
+ * @param {string} filename
+ * @param {Date} date
+ * @param {boolean|number} isDir
+ * @param {boolean|number} isDeflate
+ */
 function HeaderBuilder(buffer, filename, date, offset, isDir, isDeflate){
 	this.buffer = buffer;
 	this.filename = filename;
@@ -58,7 +47,12 @@ function HeaderBuilder(buffer, filename, date, offset, isDir, isDeflate){
 	this._cache = {lf: null, cd: null};
 }
 
+
+
 HeaderBuilder.prototype = {
+	/**
+	 * @return {Blob}
+	 */
 	_getCommonHeader: function(){
 		var bb = new BlobBuilder();
 		bb.append(getUshort(10)); //needvar
@@ -66,7 +60,7 @@ HeaderBuilder.prototype = {
 		bb.append(getUshort(this.defl)); //comptype
 		bb.append(getUshort(getFileTime(this.date))); //filetime
 		bb.append(getUshort(getFileDate(this.date))); //filedate
-		bb.append(getUint(getCrc32(this.buffer))); //crc32
+		bb.append(getUint(jz.algorithms.crc32(this.buffer))); //crc32
 		bb.append(getUint(this.buffer.byteLength)); //compsize
 		bb.append(getUint(this.buffer.byteLength)); //uncompsize
 		bb.append(getUshort(this.filename.length)); //fnamelen
@@ -74,21 +68,27 @@ HeaderBuilder.prototype = {
 		return bb.getBlob();
 	},
 	
+	/**
+	 * @return {Blob}
+	 */
 	getLocalFileHeader: function(){
 		if(this._cache.lf) return this._cache.lf;
 		
 		var bb = new BlobBuilder();
-		bb.append(getUint(jsziptools.LOCAL_FILE_SIGNATURE)); //signature
+		bb.append(getUint(jz.zip.LOCAL_FILE_SIGNATURE)); //signature
 		bb.append(this._commonHeader);
 		bb.append(this.filename);
 		return this._cache.lf = bb.getBlob();
 	},
 	
+	/**
+	 * @return {Blob}
+	 */
 	getCentralDirHeader: function(){
 		if(this._cache.cd) return this._cache.cd;
 		
 		var bb = new BlobBuilder();
-		bb.append(getUint(jsziptools.CENTRAL_DIR_SIGNATURE)); //signature
+		bb.append(getUint(jz.zip.CENTRAL_DIR_SIGNATURE)); //signature
 		bb.append(getUshort(0x14)); //madevar
 		bb.append(this._commonHeader);
 		bb.append(getUshort(0)); //commentlen
@@ -100,52 +100,67 @@ HeaderBuilder.prototype = {
 		return this._cache.cd = bb.getBlob();
 	},
 	
+	/**
+	 * @return {number}
+	 */
 	getAchiveLength: function(){
 		return this.getLocalFileHeader().size + this.buffer.byteLength;
 	}
 };
 
+
+/**
+ * Get a buffer of 16bit unsigned integer.
+ * 
+ * @param {number} i
+ * @return {ArrayBuffer}
+ */
 function getUshort(i){
 	return new Uint16Array([i]).buffer;
 }
 
+
+/**
+ * Get a buffer of 32bit unsigned integer.
+ * 
+ * @param {number} i
+ * @return {ArrayBuffer}
+ */
 function getUint(i){
 	return new Uint32Array([i]).buffer;
 }
 
-var getCrc32 = (function(){
-	var table = (function(){
-		var poly = 0xEDB88320,
-			table = new Uint32Array(new ArrayBuffer(1024)),
-			u, i, j;
-		
-		for(i = 0; i < 256; ++i){
-			u = i;
-			for(j = 0; j < 8; ++j){
-				u = u & 1 ? (u >>> 1) ^ poly : u >>> 1;
-			}
-			table[i] = u;
-		}
-		return table;
-	})();
-	
-	return function(buffer){
-		var result = 0xFFFFFFFF, bytes = new Uint8Array(buffer), i, n, t = table;
-		for(i = 0, n = bytes.length; i < n; ++i)
-			result = (result >>> 8) ^ t[bytes[i] ^ (result & 0xFF)];
-		return ~result;
-	};
-})();
 
+/**
+ * Get DOS style Date(year, month, day).
+ * 
+ * @param {Date} date
+ * @return {number}
+ */
 function getFileDate(date){
 	return ((date.getFullYear() - 1980) << 9) | ((date.getMonth() + 1) << 5) | (date.getDay());
 }
 
+
+/**
+ * Get DOS style Time(hour, minute, second).
+ * 
+ * @param {Date} date
+ * @return {number}
+ */
 function getFileTime(date){
 	return (date.getHours() << 11) | (date.getMinutes() << 5) | (date.getSeconds() >> 1);
 }
 
-jsziptools.zip = function(files, level){
+
+/**
+ * Compress to a zip format file.
+ * 
+ * @param {Array} files
+ * @param {number} level
+ * @return {Blob}
+ */
+jz.zip.compress = function(files, level){
 	var n = 0,
 		offset = 0,
 		achiveBb = new BlobBuilder(),
@@ -166,10 +181,10 @@ jsziptools.zip = function(files, level){
 				compress(item, dir + name);
 			});
 		} else if(obj.url){
-			buffer = jsziptools.loadFileBuffer(obj.url);
+			buffer = jz.utils.loadFileBuffer(obj.url);
 			name = dir + (obj.name || obj.url.split('/').pop());
 		} else if(obj.str){
-			buffer = strToBuffer(obj.str);
+			buffer = jz.utils.stringToArrayBuffer(obj.str);
 			name = dir + obj.name;
 		} else if(obj.buffer){
 			buffer = obj.buffer;
@@ -182,7 +197,7 @@ jsziptools.zip = function(files, level){
 		_level = obj.level || level;
 		
 		if(_level > 1 && typeof obj.children === 'undefined') {
-			buffer = jsziptools._deflate(buffer, _level);
+			buffer = jz.algorithms.deflate(buffer, _level);
 			isDeflate = true;
 		}
 		hb = new HeaderBuilder(buffer, name, date, offset, isDir, isDeflate);
@@ -202,4 +217,4 @@ jsziptools.zip = function(files, level){
 	return achiveBb.getBlob('application/zip');
 };
 
-})(this, jsziptools);
+})(this, jz);

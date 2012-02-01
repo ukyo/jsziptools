@@ -1,67 +1,53 @@
 //author: @ukyo
 //license: GPLv3
 
-(function(window, jsziptools){
+jz.zip = jz.zip || {};
+
+(function(window, jz){
 
 var BlobBuilder = window.MozBlobBuilder || window.WebKitBlobBuilder || window.MSBlobBuilder || window.BlobBuilder;
-
-function readInt(view, offset){
-	return view[offset] | view[offset + 1] << 8 | view[offset + 2] << 16 | view[offset + 3] << 24;
-}
-
-function readShort(view, offset){
-	return view[offset] | view[offset + 1] << 8;
-}
-
-function readStr(view, offset, len){
-	var ret = '';
-	for(var i = offset, l = offset + len; i < l; ++i){
-		ret += String.fromCharCode(view[i]);
-	}
-	return ret;
-}
 
 function getLocalFileHeader(buffer, offset){
 	var view = new Uint8Array(buffer, offset);
 	return {
-		signature: readInt(view, 0),
-		needver: readShort(view, 4),
-		option: readShort(view, 6),
-		comptype: readShort(view, 8),
-		filetime: readShort(view, 10),
-		filedate: readShort(view, 12),
-		crc32: readInt(view, 14),
-		compsize: readInt(view, 18),
-		uncompsize: readInt(view, 22),
-		fnamelen: readShort(view, 26),
-		extralen: readShort(view, 28),
-		filename: readStr(view, 30, readShort(view, 26)),
-		headersize: 30 + readShort(view, 26) + readShort(view, 28),
-		allsize: 30 + readInt(view, 18) + readShort(view, 26) + readShort(view, 28)
+		signature: jz.utils.readUintLE(view, 0),
+		needver: jz.utils.readUshortLE(view, 4),
+		option: jz.utils.readUshortLE(view, 6),
+		comptype: jz.utils.readUshortLE(view, 8),
+		filetime: jz.utils.readUshortLE(view, 10),
+		filedate: jz.utils.readUshortLE(view, 12),
+		crc32: jz.utils.readUintLE(view, 14),
+		compsize: jz.utils.readUintLE(view, 18),
+		uncompsize: jz.utils.readUintLE(view, 22),
+		fnamelen: jz.utils.readUshortLE(view, 26),
+		extralen: jz.utils.readUshortLE(view, 28),
+		filename: jz.utils.readString(view, 30, jz.utils.readUshortLE(view, 26)),
+		headersize: 30 + jz.utils.readUshortLE(view, 26) + jz.utils.readUshortLE(view, 28),
+		allsize: 30 + jz.utils.readUintLE(view, 18) + jz.utils.readUshortLE(view, 26) + jz.utils.readUshortLE(view, 28)
 	}
 }
 
 function getCentralDirHeader(buffer, offset){
 	var view = new Uint8Array(buffer, offset);
 	return {
-		signature: readInt(view, 0),
-		madever: readShort(view, 4),
-		needver: readShort(view, 6),
-		option: readShort(view, 8),
-		comptype: readShort(view, 10),
-		filetime: readShort(view, 12),
-		filedate: readShort(view, 14),
-		crc32: readInt(view, 16),
-		compsize: readInt(view, 20),
-		uncompsize: readInt(view, 24),
-		fnamelen: readShort(view, 28),
-		extralen: readShort(view, 30),
-		commentlen: readShort(view, 32),
-		disknum: readShort(view, 34),
-		inattr: readShort(view, 36),
-		outattr: readInt(view, 38),
-		headerpos: readInt(view, 42),
-		allsize: 46 + readShort(view, 28) + readShort(view, 30) + readShort(view, 32)
+		signature: jz.utils.readUintLE(view, 0),
+		madever: jz.utils.readUshortLE(view, 4),
+		needver: jz.utils.readUshortLE(view, 6),
+		option: jz.utils.readUshortLE(view, 8),
+		comptype: jz.utils.readUshortLE(view, 10),
+		filetime: jz.utils.readUshortLE(view, 12),
+		filedate: jz.utils.readUshortLE(view, 14),
+		crc32: jz.utils.readUintLE(view, 16),
+		compsize: jz.utils.readUintLE(view, 20),
+		uncompsize: jz.utils.readUintLE(view, 24),
+		fnamelen: jz.utils.readUshortLE(view, 28),
+		extralen: jz.utils.readUshortLE(view, 30),
+		commentlen: jz.utils.readUshortLE(view, 32),
+		disknum: jz.utils.readUshortLE(view, 34),
+		inattr: jz.utils.readUshortLE(view, 36),
+		outattr: jz.utils.readUintLE(view, 38),
+		headerpos: jz.utils.readUintLE(view, 42),
+		allsize: 46 + jz.utils.readUshortLE(view, 28) + jz.utils.readUshortLE(view, 30) + jz.utils.readUshortLE(view, 32)
 	}
 }
 
@@ -69,7 +55,7 @@ function getEndCentDirHeader(buffer, offset){
 	
 }
 
-jsziptools.LazyLoader = function(buffer, files, folders, localFileHeaders, centralDirHeaders){
+jz.zip.LazyLoader = function(buffer, files, folders, localFileHeaders, centralDirHeaders){
 	this.buffer = buffer;
 	this.files = files;
 	this.folders = folders;
@@ -77,7 +63,7 @@ jsziptools.LazyLoader = function(buffer, files, folders, localFileHeaders, centr
 	this.centralDirHeaders = centralDirHeaders;
 };
 
-jsziptools.LazyLoader.prototype = {
+jz.zip.LazyLoader.prototype = {
 	getFileNames: function(){
 		var ret = [], i, n;
 		for(i = 0, n = this.files.length; i < n; ++i){
@@ -94,7 +80,7 @@ jsziptools.LazyLoader.prototype = {
 				if(this.centralDirHeaders[i].comptype === 0) {
 					return new Uint8Array(new Uint8Array(this.buffer, offset, len)).buffer;
 				}
-				return jsziptools._inflate(new Uint8Array(this.buffer, offset, len));
+				return jz.algorithms.inflate(new Uint8Array(this.buffer, offset, len));
 			}
 		}
 		return null;
@@ -147,11 +133,11 @@ if(window.FileReaderSync){
 				return new FileReaderSync().readAsDataURL(this.getFileAsBlob(filename));
 			}
 		}
-	}).call(jsziptools.LazyLoader.prototype);
+	}).call(jz.zip.LazyLoader.prototype);
 }
 
 
-jsziptools.unzip = function(data){
+jz.zip.decompress = function(data){
 	var buffer, view, signature, header, i, n,
 		localFileHeaders = [],
 		centralDirHeaders = [],
@@ -162,22 +148,22 @@ jsziptools.unzip = function(data){
 	if(data.constructor === ArrayBuffer) {
 		buffer = data;
 	} else {
-		buffer = jsziptools.loadFileBuffer(data);
+		buffer = jz.utils.loadFileBuffer(data);
 	}
 	
 	view = new Uint8Array(buffer);
 	
 	while(offset < view.length){
-		signature = readInt(view, offset);
-		if(signature === jsziptools.LOCAL_FILE_SIGNATURE){
+		signature = jz.utils.readUintLE(view, offset);
+		if(signature === jz.zip.LOCAL_FILE_SIGNATURE){
 			header = getLocalFileHeader(buffer, offset);
 			localFileHeaders.push(header);
 			offset += header.allsize;
-		} else if(signature === jsziptools.CENTRAL_DIR_SIGNATURE){
+		} else if(signature === jz.zip.CENTRAL_DIR_SIGNATURE){
 			header = getCentralDirHeader(buffer, offset);
 			centralDirHeaders.push(header);
 			offset += header.allsize;
-		} else if(signature === jsziptools.END_SIGNATURE){
+		} else if(signature === jz.zip.END_SIGNATURE){
 			header = getEndCentDirHeader(buffer, offset);
 			break;
 		} else {
@@ -197,7 +183,7 @@ jsziptools.unzip = function(data){
 		}
 	}
 	
-	return new jsziptools.LazyLoader(buffer, files, folders, localFileHeaders, centralDirHeaders);
+	return new jz.zip.LazyLoader(buffer, files, folders, localFileHeaders, centralDirHeaders);
 };
 
-})(this, jsziptools);
+})(this, jz);
