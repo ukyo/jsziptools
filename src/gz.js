@@ -139,4 +139,8 @@ jz.gz.decompress = function(bytes, check){
 	return ret;
 };
 
+//shortcut
+jz.gz.c = jz.gz.compress;
+jz.gz.d = jz.gz.decompress;
+
 })(this, jz);

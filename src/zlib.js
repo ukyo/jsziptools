@@ -82,4 +82,8 @@ jz.zlib.decompress = function(bytes, check){
 	return ret;
 };
 
+//shortcut
+jz.zlib.c = jz.zlib.compress;
+jz.zlib.d = jz.zlib.decompress;
+
 })(this, jz);

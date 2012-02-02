@@ -217,4 +217,8 @@ jz.zip.compress = function(files, level){
 	return achiveBb.getBlob('application/zip');
 };
 
+//shortcut
+jz.zip.c = jz.zip.pack = jz.zip.compress;
+jz.zip.d = jz.zip.unpack = jz.zip.decompress;
+
 })(this, jz);

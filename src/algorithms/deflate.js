@@ -44,7 +44,7 @@ if((zip_WSIZE<<1) > (1<<zip_BITS))
     alert("error: zip_WSIZE is too large");
 if(zip_HASH_BITS > zip_BITS-1)
     alert("error: zip_HASH_BITS is too large");
-if(zip_HASH_BITS < 8 || zip_MAX_MATCH != 258)
+if(zip_HASH_BITS < 8 || zip_MAX_MATCH !== 258)
     alert("error: Code too clever");
 var zip_DIST_BUFSIZE = zip_LIT_BUFSIZE;
 var zip_HASH_SIZE = 1 << zip_HASH_BITS;
@@ -298,7 +298,7 @@ var zip_head2 = function(i, val) {
  */
 var zip_put_byte = function(c) {
     zip_outbuf[zip_outoff + zip_outcnt++] = c;
-    if(zip_outoff + zip_outcnt == zip_OUTBUFSIZ)
+    if(zip_outoff + zip_outcnt === zip_OUTBUFSIZ)
 	zip_qoutbuf();
 }
 
@@ -351,7 +351,7 @@ var zip_D_CODE = function(dist) {
  */
 var zip_SMALLER = function(tree, n, m) {
     return tree[n].fc < tree[m].fc ||
-      (tree[n].fc == tree[m].fc && zip_depth[n] <= zip_depth[m]);
+      (tree[n].fc === tree[m].fc && zip_depth[n] <= zip_depth[m]);
 }
 
 /* ==========================================================================
@@ -447,10 +447,10 @@ var zip_longest_match = function(cur_match) {
 	/* Skip to next match if the match length cannot increase
 	    * or if the match length is less than 2:
 	*/
-	if(zip_window[matchp + best_len]	!= scan_end  ||
-	   zip_window[matchp + best_len - 1]	!= scan_end1 ||
-	   zip_window[matchp]			!= zip_window[scanp] ||
-	   zip_window[++matchp]			!= zip_window[scanp + 1]) {
+	if(zip_window[matchp + best_len]	!== scan_end  ||
+	   zip_window[matchp + best_len - 1]	!== scan_end1 ||
+	   zip_window[matchp]			!== zip_window[scanp] ||
+	   zip_window[++matchp]			!== zip_window[scanp + 1]) {
 	    continue;
 	}
 
@@ -467,14 +467,14 @@ var zip_longest_match = function(cur_match) {
          * the 256th check will be made at strstart+258.
          */
 	do {
-	} while(zip_window[++scanp] == zip_window[++matchp] &&
-		zip_window[++scanp] == zip_window[++matchp] &&
-		zip_window[++scanp] == zip_window[++matchp] &&
-		zip_window[++scanp] == zip_window[++matchp] &&
-		zip_window[++scanp] == zip_window[++matchp] &&
-		zip_window[++scanp] == zip_window[++matchp] &&
-		zip_window[++scanp] == zip_window[++matchp] &&
-		zip_window[++scanp] == zip_window[++matchp] &&
+	} while(zip_window[++scanp] === zip_window[++matchp] &&
+		zip_window[++scanp] === zip_window[++matchp] &&
+		zip_window[++scanp] === zip_window[++matchp] &&
+		zip_window[++scanp] === zip_window[++matchp] &&
+		zip_window[++scanp] === zip_window[++matchp] &&
+		zip_window[++scanp] === zip_window[++matchp] &&
+		zip_window[++scanp] === zip_window[++matchp] &&
+		zip_window[++scanp] === zip_window[++matchp] &&
 		scanp < strendp);
 
       len = zip_MAX_MATCH - (strendp - scanp);
@@ -493,7 +493,7 @@ var zip_longest_match = function(cur_match) {
 	  scan_end   = zip_window[scanp + best_len];
       }
     } while((cur_match = zip_prev[cur_match & zip_WMASK]) > limit
-	    && --chain_length != 0);
+	    && --chain_length !== 0);
 
     return best_len;
 }
@@ -515,7 +515,7 @@ var zip_fill_window = function() {
     /* If the window is almost full and there is insufficient lookahead,
      * move the upper half to the lower one to make room in the upper half.
      */
-    if(more == -1) {
+    if(more === -1) {
 	/* Very unlikely, but possible on 16 bit machine if strstart == 0
          * and lookahead == 1 (input done one byte at time)
          */
@@ -564,7 +564,7 @@ var zip_fill_window = function() {
  * matches. It is used only for the fast compression options.
  */
 var zip_deflate_fast = function() {
-    while(zip_lookahead != 0 && zip_qhead == null) {
+    while(zip_lookahead !== 0 && zip_qhead == null) {
 	var flush; // set if current block must be flushed
 
 	/* Insert the string window[strstart .. strstart+2] in the
@@ -606,7 +606,7 @@ var zip_deflate_fast = function() {
 		     * these bytes are garbage, but it does not matter since
 		     * the next lookahead bytes will be emitted as literals.
 		     */
-		} while(--zip_match_length != 0);
+		} while(--zip_match_length !== 0);
 		zip_strstart++;
 	    } else {
 		zip_strstart += zip_match_length;
@@ -643,7 +643,7 @@ var zip_deflate_fast = function() {
 
 var zip_deflate_better = function() {
     /* Process the input block. */
-    while(zip_lookahead != 0 && zip_qhead == null) {
+    while(zip_lookahead !== 0 && zip_qhead == null) {
 	/* Insert the string window[strstart .. strstart+2] in the
 	 * dictionary, and set hash_head to the head of the hash chain:
 	 */
@@ -668,7 +668,7 @@ var zip_deflate_better = function() {
 		zip_match_length = zip_lookahead;
 
 	    /* Ignore a length 3 match if it is too distant: */
-	    if(zip_match_length == zip_MIN_MATCH &&
+	    if(zip_match_length === zip_MIN_MATCH &&
 	       zip_strstart - zip_match_start > zip_TOO_FAR) {
 		/* If prev_match is also MIN_MATCH, match_start is garbage
 		 * but we will ignore the current match anyway.
@@ -700,7 +700,7 @@ var zip_deflate_better = function() {
 		 * these bytes are garbage, but it does not matter since the
 		 * next lookahead bytes will always be emitted as literals.
 		 */
-	    } while(--zip_prev_length != 0);
+	    } while(--zip_prev_length !== 0);
 	    zip_match_available = 0;
 	    zip_match_length = zip_MIN_MATCH - 1;
 	    zip_strstart++;
@@ -708,7 +708,7 @@ var zip_deflate_better = function() {
 		zip_flush_block(0);
 		zip_block_start = zip_strstart;
 	    }
-	} else if(zip_match_available != 0) {
+	} else if(zip_match_available !== 0) {
 	    /* If there was no match at the previous position, output a
 	     * single literal. If there was a match but the current match
 	     * is longer, truncate the previous match to a single literal.
@@ -776,13 +776,13 @@ var zip_deflate_internal = function(buff, off, buff_size) {
     {
 	zip_init_deflate();
 	zip_initflag = true;
-	if(zip_lookahead == 0) { // empty
+	if(zip_lookahead === 0) { // empty
 	    zip_complete = true;
 	    return 0;
 	}
     }
 
-    if((n = zip_qcopy(buff, off, buff_size)) == buff_size)
+    if((n = zip_qcopy(buff, off, buff_size)) === buff_size)
 	return buff_size;
 
     if(zip_complete)
@@ -792,8 +792,8 @@ var zip_deflate_internal = function(buff, off, buff_size) {
 	zip_deflate_fast();
     else
 	zip_deflate_better();
-    if(zip_lookahead == 0) {
-	if(zip_match_available != 0)
+    if(zip_lookahead === 0) {
+	if(zip_match_available !== 0)
 	    zip_ct_tally(0, zip_window[zip_strstart - 1] & 0xff);
 	zip_flush_block(1);
 	zip_complete = true;
@@ -817,7 +817,7 @@ var zip_qcopy = function(buff, off, buff_size) {
 	zip_qhead.off += i;
 	zip_qhead.len -= i;
 	n += i;
-	if(zip_qhead.len == 0) {
+	if(zip_qhead.len === 0) {
 	    var p;
 	    p = zip_qhead;
 	    zip_qhead = zip_qhead.next;
@@ -825,7 +825,7 @@ var zip_qcopy = function(buff, off, buff_size) {
 	}
     }
 
-    if(n == buff_size)
+    if(n === buff_size)
 	return n;
 
     if(zip_outoff < zip_outcnt) {
@@ -837,7 +837,7 @@ var zip_qcopy = function(buff, off, buff_size) {
 	    buff[off + n + j] = zip_outbuf[zip_outoff + j];
 	zip_outoff += i;
 	n += i;
-	if(zip_outcnt == zip_outoff)
+	if(zip_outcnt === zip_outoff)
 	    zip_outcnt = zip_outoff = 0;
     }
     return n;
@@ -855,7 +855,7 @@ var zip_ct_init = function() {
     var code;	// code value
     var dist;	// distance index
 
-    if(zip_static_dtree[0].dl != 0) return; // ct_init already called
+    if(zip_static_dtree[0].dl !== 0) return; // ct_init already called
 
     zip_l_desc.dyn_tree		= zip_dyn_ltree;
     zip_l_desc.static_tree	= zip_static_ltree;
@@ -1065,13 +1065,13 @@ var zip_gen_bitlen = function(desc) { // the tree descriptor
      * lengths instead of fixing only the wrong ones. This idea is taken
      * from 'ar' written by Haruhiko Okumura.)
      */
-    for(bits = max_length; bits != 0; bits--) {
+    for(bits = max_length; bits !== 0; bits--) {
 	n = zip_bl_count[bits];
-	while(n != 0) {
+	while(n !== 0) {
 	    m = zip_heap[--h];
 	    if(m > max_code)
 		continue;
-	    if(tree[m].dl != bits) {
+	    if(tree[m].dl !== bits) {
 		zip_opt_len += (bits - tree[m].dl) * tree[m].fc;
 		tree[m].fc = bits;
 	    }
@@ -1146,7 +1146,7 @@ var zip_build_tree = function(desc) { // the tree descriptor
     zip_heap_max = zip_HEAP_SIZE;
 
     for(n = 0; n < elems; n++) {
-	if(tree[n].fc != 0) {
+	if(tree[n].fc !== 0) {
 	    zip_heap[++zip_heap_len] = max_code = n;
 	    zip_depth[n] = 0;
 	} else
@@ -1244,8 +1244,8 @@ var zip_scan_tree = function(tree,// the tree to be scanned
 	    continue;
 	else if(count < min_count)
 	    zip_bl_tree[curlen].fc += count;
-	else if(curlen != 0) {
-	    if(curlen != prevlen)
+	else if(curlen !== 0) {
+	    if(curlen !== prevlen)
 		zip_bl_tree[curlen].fc++;
 	    zip_bl_tree[zip_REP_3_6].fc++;
 	} else if(count <= 10)
@@ -1292,9 +1292,9 @@ var zip_send_tree = function(tree, // the tree to be scanned
 	if(++count < max_count && curlen == nextlen) {
 	    continue;
 	} else if(count < min_count) {
-	    do { zip_SEND_CODE(curlen, zip_bl_tree); } while(--count != 0);
-	} else if(curlen != 0) {
-	    if(curlen != prevlen) {
+	    do { zip_SEND_CODE(curlen, zip_bl_tree); } while(--count !== 0);
+	} else if(curlen !== 0) {
+	    if(curlen !== prevlen) {
 		zip_SEND_CODE(curlen, zip_bl_tree);
 		count--;
 	    }
@@ -1345,7 +1345,7 @@ var zip_build_bl_tree = function() {
      * 3 but the actual value used is 4.)
      */
     for(max_blindex = zip_BL_CODES-1; max_blindex >= 3; max_blindex--) {
-	if(zip_bl_tree[zip_bl_order[max_blindex]].dl != 0) break;
+	if(zip_bl_tree[zip_bl_order[max_blindex]].dl !== 0) break;
     }
     /* Update opt_len to include the bit length tree and counts */
     zip_opt_len += 3*(max_blindex+1) + 5+5+4;
@@ -1459,7 +1459,7 @@ var zip_flush_block = function(eof) { // true if this is the last block for a fi
 
     zip_init_block();
 
-    if(eof != 0)
+    if(eof !== 0)
 	zip_bi_windup();
 }
 
@@ -1536,7 +1536,7 @@ var zip_compress_block = function(
     var code;		// the code to send
     var extra;		// number of extra bits to send
 
-    if(zip_last_lit != 0) do {
+    if(zip_last_lit !== 0) do {
 	if((lx & 7) == 0)
 	    flag = zip_flag_buf[fx++];
 	lc = zip_l_buf[lx++] & 0xff;
@@ -1548,7 +1548,7 @@ var zip_compress_block = function(
 	    code = zip_length_code[lc];
 	    zip_SEND_CODE(code+zip_LITERALS+1, ltree); // send the length code
 	    extra = zip_extra_lbits[code];
-	    if(extra != 0) {
+	    if(extra !== 0) {
 		lc -= zip_base_length[code];
 		zip_send_bits(lc, extra); // send the extra length bits
 	    }
@@ -1559,7 +1559,7 @@ var zip_compress_block = function(
 
 	    zip_SEND_CODE(code, dtree);	  // send the distance code
 	    extra = zip_extra_dbits[code];
-	    if(extra != 0) {
+	    if(extra !== 0) {
 		dist -= zip_base_dist[code];
 		zip_send_bits(dist, extra);   // send the extra distance bits
 	    }
@@ -1624,7 +1624,7 @@ var zip_bi_windup = function() {
 }
 
 var zip_qoutbuf = function() {
-    if(zip_outcnt != 0) {
+    if(zip_outcnt !== 0) {
 	var q, i;
 	q = zip_new_queue();
 	if(zip_qhead == null)
