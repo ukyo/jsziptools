@@ -219,6 +219,5 @@ jz.zip.compress = function(files, level){
 
 //shortcut
 jz.zip.c = jz.zip.pack = jz.zip.compress;
-jz.zip.d = jz.zip.unpack = jz.zip.decompress;
 
 })(this, jz);

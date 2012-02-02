@@ -186,4 +186,7 @@ jz.zip.decompress = function(data){
 	return new jz.zip.LazyLoader(buffer, files, folders, localFileHeaders, centralDirHeaders);
 };
 
+//shortcut
+jz.zip.d = jz.zip.unpack = jz.zip.decompress;
+
 })(this, jz);
