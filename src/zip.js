@@ -183,9 +183,6 @@ jz.zip.compress = function(files, level){
 			name = dir + obj.name + (obj.name.substr(-1) === '/' ? '' : '/');
 			buffer = new ArrayBuffer(0);
 			isDir = true;
-			obj.children.forEach(function(item){
-				compress(item, dir + name);
-			});
 		} else if(obj.url){
 			buffer = jz.utils.loadFileBuffer(obj.url);
 			name = dir + (obj.name || obj.url.split('/').pop());
@@ -212,6 +209,12 @@ jz.zip.compress = function(files, level){
 		centralDirBb.append(hb.getCentralDirHeader());
 		offset += hb.getAchiveLength();
 		n++;
+		
+		if(obj.children){
+			obj.children.forEach(function(item){
+				compress(item, name);
+			});
+		}
 	}
 
 	files.forEach(function(item){

@@ -64,3 +64,43 @@ test('test zlib', function(){
 	same(new Uint8Array(decompressed), new Uint8Array(jz.zlib.decompress(compressed)), 'compress test');
 });
 
+asyncTest('test zip', function(){
+	var load = jz.utils.loadFileBuffer;
+	var zipsample = load('zipsample.zip');
+	
+	var unpacked = jz.zip.unpack(zipsample);
+	var a = load('zipsample/a.txt');
+	var b = load('zipsample/folder/b.txt');
+	var aStr = jz.utils.readString(a, 0, a.byteLength);
+	var bStr = jz.utils.readString(b, 0, b.byteLength);
+	var corrects = [aStr, bStr];
+
+	["zipsample/a.txt", "zipsample/folder/b.txt"].forEach(function(v, i){
+		unpacked.getFileAsText(v, function(text){
+			equal(text, corrects[i], 'test unpack');
+			start();
+		});
+	});
+	
+	var packed = jz.zip.pack([
+		{name: 'zipsample', children: [
+			{name: 'a.txt', buffer: a},
+			{name: 'folder', children: [
+				{name: 'b.txt', buffer: b}
+			]}
+		]}
+	]);
+	
+	var fr = new FileReader();
+	
+	fr.onload = function(e){
+		var unpacked = jz.zip.unpack(e.target.result);
+		["zipsample/a.txt", "zipsample/folder/b.txt"].forEach(function(v, i){
+			unpacked.getFileAsText(v, function(text){
+				equal(text, corrects[i], 'test pack');
+				start();
+			});
+		});
+	};
+	fr.readAsArrayBuffer(packed);
+});
