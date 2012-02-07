@@ -1,11 +1,17 @@
-//author: @ukyo
-//license: GPLv3
+/**
+ * Copyright (c) 2012 - Syu Kato <ukyo.web@gmail.com>
+ * 
+ * License: MIT
+ * 
+ * Pack datas to a zip format data.
+ */
 
 jz.zip = jz.zip || {};
 
 (function(window, jz){
 
-var BlobBuilder = window.MozBlobBuilder || window.WebKitBlobBuilder || window.MSBlobBuilder || window.BlobBuilder;
+var BlobBuilder = jz.BlobBuilder;
+
 
 /**
  * @param {number} i index of a File.

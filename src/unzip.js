@@ -1,53 +1,60 @@
-//author: @ukyo
-//license: GPLv3
+/**
+ * Copyright (c) 2012 - Syu Kato <ukyo.web@gmail.com>
+ * 
+ * License: MIT
+ * 
+ * unpack datas from zip format data.
+ */
 
 jz.zip = jz.zip || {};
 
 (function(window, jz){
 
-var BlobBuilder = window.MozBlobBuilder || window.WebKitBlobBuilder || window.MSBlobBuilder || window.BlobBuilder;
+var BlobBuilder = jz.BlobBuilder,
+	uint = jz.utils.readUintLE,
+	ushort = jz.utils.readUshortLE;
 
 function getLocalFileHeader(buffer, offset){
 	var view = new Uint8Array(buffer, offset);
 	return {
-		signature: jz.utils.readUintLE(view, 0),
-		needver: jz.utils.readUshortLE(view, 4),
-		option: jz.utils.readUshortLE(view, 6),
-		comptype: jz.utils.readUshortLE(view, 8),
-		filetime: jz.utils.readUshortLE(view, 10),
-		filedate: jz.utils.readUshortLE(view, 12),
-		crc32: jz.utils.readUintLE(view, 14),
-		compsize: jz.utils.readUintLE(view, 18),
-		uncompsize: jz.utils.readUintLE(view, 22),
-		fnamelen: jz.utils.readUshortLE(view, 26),
-		extralen: jz.utils.readUshortLE(view, 28),
-		filename: jz.utils.readString(view, 30, jz.utils.readUshortLE(view, 26)),
-		headersize: 30 + jz.utils.readUshortLE(view, 26) + jz.utils.readUshortLE(view, 28),
-		allsize: 30 + jz.utils.readUintLE(view, 18) + jz.utils.readUshortLE(view, 26) + jz.utils.readUshortLE(view, 28)
+		signature: uint(view, 0),
+		needver: ushort(view, 4),
+		option: ushort(view, 6),
+		comptype: ushort(view, 8),
+		filetime: ushort(view, 10),
+		filedate: ushort(view, 12),
+		crc32: uint(view, 14),
+		compsize: uint(view, 18),
+		uncompsize: uint(view, 22),
+		fnamelen: ushort(view, 26),
+		extralen: ushort(view, 28),
+		filename: jz.utils.readString(view, 30, ushort(view, 26)),
+		headersize: 30 + ushort(view, 26) + ushort(view, 28),
+		allsize: 30 + uint(view, 18) + ushort(view, 26) + ushort(view, 28)
 	}
 }
 
 function getCentralDirHeader(buffer, offset){
 	var view = new Uint8Array(buffer, offset);
 	return {
-		signature: jz.utils.readUintLE(view, 0),
-		madever: jz.utils.readUshortLE(view, 4),
-		needver: jz.utils.readUshortLE(view, 6),
-		option: jz.utils.readUshortLE(view, 8),
-		comptype: jz.utils.readUshortLE(view, 10),
-		filetime: jz.utils.readUshortLE(view, 12),
-		filedate: jz.utils.readUshortLE(view, 14),
-		crc32: jz.utils.readUintLE(view, 16),
-		compsize: jz.utils.readUintLE(view, 20),
-		uncompsize: jz.utils.readUintLE(view, 24),
-		fnamelen: jz.utils.readUshortLE(view, 28),
-		extralen: jz.utils.readUshortLE(view, 30),
-		commentlen: jz.utils.readUshortLE(view, 32),
-		disknum: jz.utils.readUshortLE(view, 34),
-		inattr: jz.utils.readUshortLE(view, 36),
-		outattr: jz.utils.readUintLE(view, 38),
-		headerpos: jz.utils.readUintLE(view, 42),
-		allsize: 46 + jz.utils.readUshortLE(view, 28) + jz.utils.readUshortLE(view, 30) + jz.utils.readUshortLE(view, 32)
+		signature: uint(view, 0),
+		madever: ushort(view, 4),
+		needver: ushort(view, 6),
+		option: ushort(view, 8),
+		comptype: ushort(view, 10),
+		filetime: ushort(view, 12),
+		filedate: ushort(view, 14),
+		crc32: uint(view, 16),
+		compsize: uint(view, 20),
+		uncompsize: uint(view, 24),
+		fnamelen: ushort(view, 28),
+		extralen: ushort(view, 30),
+		commentlen: ushort(view, 32),
+		disknum: ushort(view, 34),
+		inattr: ushort(view, 36),
+		outattr: uint(view, 38),
+		headerpos: uint(view, 42),
+		allsize: 46 + ushort(view, 28) + ushort(view, 30) + ushort(view, 32)
 	}
 }
 
@@ -154,7 +161,7 @@ jz.zip.decompress = function(data){
 	view = new Uint8Array(buffer);
 	
 	while(offset < view.length){
-		signature = jz.utils.readUintLE(view, offset);
+		signature = uint(view, offset);
 		if(signature === jz.zip.LOCAL_FILE_SIGNATURE){
 			header = getLocalFileHeader(buffer, offset);
 			localFileHeaders.push(header);

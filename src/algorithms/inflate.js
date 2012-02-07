@@ -149,7 +149,7 @@ function zip_HuftBuild(b,	// code lengths in bits (all assumed <= BMAX)
 	    c[p[pidx]]++;	// assume all entries <= BMAX
 	    pidx++;
 	} while(--i > 0);
-	if(c[0] == n) {	// null input--all zero length codes
+	if(c[0] === n) {	// null input--all zero length codes
 	    this.root = null;
 	    this.m = 0;
 	    this.status = 0;
@@ -158,13 +158,13 @@ function zip_HuftBuild(b,	// code lengths in bits (all assumed <= BMAX)
 
 	// Find minimum and maximum length, bound *m by those
 	for(j = 1; j <= this.BMAX; j++)
-	    if(c[j] != 0)
+	    if(c[j] !== 0)
 		break;
 	k = j;			// minimum code length
 	if(mm < j)
 	    mm = j;
-	for(i = this.BMAX; i != 0; i--)
-	    if(c[i] != 0)
+	for(i = this.BMAX; i !== 0; i--)
+	    if(c[i] !== 0)
 		break;
 	g = i;			// maximum code length
 	if(mm > i)
@@ -189,14 +189,14 @@ function zip_HuftBuild(b,	// code lengths in bits (all assumed <= BMAX)
 	p = c;
 	pidx = 1;
 	xp = 2;
-	while(--i > 0)		// note that i == g from above
+	while(--i > 0)		// note that i === g from above
 	    x[xp++] = (j += p[pidx++]);
 
 	// Make a table of values in order of bit lengths
 	p = b; pidx = 0;
 	i = 0;
 	do {
-	    if((j = p[pidx++]) != 0)
+	    if((j = p[pidx++]) !== 0)
 		v[x[j]++] = i;
 	} while(++i < n);
 	n = x[g];			// set n to length of v
@@ -286,12 +286,12 @@ function zip_HuftBuild(b,	// code lengths in bits (all assumed <= BMAX)
 		}
 
 		// backwards increment the k-bit code i
-		for(j = 1 << (k - 1); (i & j) != 0; j >>= 1)
+		for(j = 1 << (k - 1); (i & j) !== 0; j >>= 1)
 		    i ^= j;
 		i ^= j;
 
 		// backup over finished tables
-		while((i & ((1 << w) - 1)) != x[h]) {
+		while((i & ((1 << w) - 1)) !== x[h]) {
 		    w -= lx[h];		// don't need to update q
 		    h--;
 		}
@@ -302,7 +302,7 @@ function zip_HuftBuild(b,	// code lengths in bits (all assumed <= BMAX)
 	this.m = lx[1];
 
 	/* Return true (1) if we were given an incomplete table */
-	this.status = ((y != 0 && g != 1) ? 1 : 0);
+	this.status = ((y !== 0 && g !== 1) ? 1 : 0);
     } /* end of constructor */
 }
 
@@ -310,7 +310,7 @@ function zip_HuftBuild(b,	// code lengths in bits (all assumed <= BMAX)
 /* routines (inflate) */
 
 function zip_GET_BYTE() {
-    if(zip_inflate_data.length == zip_inflate_pos)
+    if(zip_inflate_data.length === zip_inflate_pos)
 	return -1;
     return zip_inflate_data[zip_inflate_pos++];
 }
@@ -338,7 +338,7 @@ function zip_inflate_codes(buff, off, size) {
     var t;		// (zip_HuftNode) pointer to table entry
     var n;
 
-    if(size == 0)
+    if(size === 0)
       return 0;
 
     // inflate the coded data
@@ -348,7 +348,7 @@ function zip_inflate_codes(buff, off, size) {
 	t = zip_tl.list[zip_GETBITS(zip_bl)];
 	e = t.e;
 	while(e > 16) {
-	    if(e == 99)
+	    if(e === 99)
 		return -1;
 	    zip_DUMPBITS(t.b);
 	    e -= 16;
@@ -358,16 +358,16 @@ function zip_inflate_codes(buff, off, size) {
 	}
 	zip_DUMPBITS(t.b);
 
-	if(e == 16) {		// then it's a literal
+	if(e === 16) {		// then it's a literal
 	    zip_wp &= zip_WSIZE - 1;
 	    buff[off + n++] = zip_slide[zip_wp++] = t.n;
-	    if(n == size)
+	    if(n === size)
 		return size;
 	    continue;
 	}
 
 	// exit if end of block
-	if(e == 15)
+	if(e === 15)
 	    break;
 
 	// it's an EOB or a length
@@ -383,7 +383,7 @@ function zip_inflate_codes(buff, off, size) {
 	e = t.e;
 
 	while(e > 16) {
-	    if(e == 99)
+	    if(e === 99)
 		return -1;
 	    zip_DUMPBITS(t.b);
 	    e -= 16;
@@ -405,7 +405,7 @@ function zip_inflate_codes(buff, off, size) {
 		= zip_slide[zip_copy_dist++];
 	}
 
-	if(n == size)
+	if(n === size)
 	    return size;
     }
 
@@ -426,7 +426,7 @@ function zip_inflate_stored(buff, off, size) {
     n = zip_GETBITS(16);
     zip_DUMPBITS(16);
     zip_NEEDBITS(16);
-    if(n != ((~zip_bit_buf) & 0xffff))
+    if(n !== ((~zip_bit_buf) & 0xffff))
 	return -1;			// error in compressed data
     zip_DUMPBITS(16);
 
@@ -443,7 +443,7 @@ function zip_inflate_stored(buff, off, size) {
 	zip_DUMPBITS(8);
     }
 
-    if(zip_copy_leng == 0)
+    if(zip_copy_leng === 0)
       zip_method = -1; // done
     return n;
 }
@@ -472,7 +472,7 @@ function zip_inflate_fixed(buff, off, size) {
 
 	h = new zip_HuftBuild(l, 288, 257, zip_cplens, zip_cplext,
 			      zip_fixed_bl);
-	if(h.status != 0) {
+	if(h.status !== 0) {
 	    alert("HufBuild error: "+h.status);
 	    return -1;
 	}
@@ -543,7 +543,7 @@ function zip_inflate_dynamic(buff, off, size) {
     // build decoding table for trees--single level, 7 bit lookup
     zip_bl = 7;
     h = new zip_HuftBuild(ll, 19, 19, null, null, zip_bl);
-    if(h.status != 0)
+    if(h.status !== 0)
 	return -1;	// incomplete code set
 
     zip_tl = h.root;
@@ -560,7 +560,7 @@ function zip_inflate_dynamic(buff, off, size) {
 	j = t.n;
 	if(j < 16)		// length of code in bits (0..15)
 	    ll[i++] = l = j;	// save last length in l
-	else if(j == 16) {	// repeat last length 3 to 6 times
+	else if(j === 16) {	// repeat last length 3 to 6 times
 	    zip_NEEDBITS(2);
 	    j = 3 + zip_GETBITS(2);
 	    zip_DUMPBITS(2);
@@ -568,7 +568,7 @@ function zip_inflate_dynamic(buff, off, size) {
 		return -1;
 	    while(j-- > 0)
 		ll[i++] = l;
-	} else if(j == 17) {	// 3 to 10 zero length codes
+	} else if(j === 17) {	// 3 to 10 zero length codes
 	    zip_NEEDBITS(3);
 	    j = 3 + zip_GETBITS(3);
 	    zip_DUMPBITS(3);
@@ -577,7 +577,7 @@ function zip_inflate_dynamic(buff, off, size) {
 	    while(j-- > 0)
 		ll[i++] = 0;
 	    l = 0;
-	} else {		// j == 18: 11 to 138 zero length codes
+	} else {		// j === 18: 11 to 138 zero length codes
 	    zip_NEEDBITS(7);
 	    j = 11 + zip_GETBITS(7);
 	    zip_DUMPBITS(7);
@@ -592,10 +592,10 @@ function zip_inflate_dynamic(buff, off, size) {
     // build the decoding tables for literal/length and distance codes
     zip_bl = zip_lbits;
     h = new zip_HuftBuild(ll, nl, 257, zip_cplens, zip_cplext, zip_bl);
-    if(zip_bl == 0)	// no literals or lengths
+    if(zip_bl === 0)	// no literals or lengths
 	h.status = 1;
-    if(h.status != 0) {
-	if(h.status == 1)
+    if(h.status !== 0) {
+	if(h.status === 1)
 	    ;// **incomplete literal tree**
 	return -1;		// incomplete code set
     }
@@ -609,15 +609,15 @@ function zip_inflate_dynamic(buff, off, size) {
     zip_td = h.root;
     zip_bd = h.m;
 
-    if(zip_bd == 0 && nl > 257) {   // lengths but no distances
+    if(zip_bd === 0 && nl > 257) {   // lengths but no distances
 	// **incomplete distance tree**
 	return -1;
     }
 
-    if(h.status == 1) {
+    if(h.status === 1) {
 	;// **incomplete distance tree**
     }
-    if(h.status != 0)
+    if(h.status !== 0)
 	return -1;
 
     // decompress until an end-of-block code
@@ -644,11 +644,11 @@ function zip_inflate_internal(buff, off, size) {
 
     n = 0;
     while(n < size) {
-	if(zip_eof && zip_method == -1)
+	if(zip_eof && zip_method === -1)
 	    return n;
 
 	if(zip_copy_leng > 0) {
-	    if(zip_method != zip_STORED_BLOCK) {
+	    if(zip_method !== zip_STORED_BLOCK) {
 		// STATIC_TREES or DYN_TREES
 		while(zip_copy_leng > 0 && n < size) {
 		    zip_copy_leng--;
@@ -665,20 +665,20 @@ function zip_inflate_internal(buff, off, size) {
 		    buff[off + n++] = zip_slide[zip_wp++] = zip_GETBITS(8);
 		    zip_DUMPBITS(8);
 		}
-		if(zip_copy_leng == 0)
+		if(zip_copy_leng === 0)
 		    zip_method = -1; // done
 	    }
-	    if(n == size)
+	    if(n === size)
 		return n;
 	}
 
-	if(zip_method == -1) {
+	if(zip_method === -1) {
 	    if(zip_eof)
 		break;
 
 	    // read in last block bit
 	    zip_NEEDBITS(1);
-	    if(zip_GETBITS(1) != 0)
+	    if(zip_GETBITS(1) !== 0)
 		zip_eof = true;
 	    zip_DUMPBITS(1);
 
@@ -714,7 +714,7 @@ function zip_inflate_internal(buff, off, size) {
 	    break;
 	}
 
-	if(i == -1) {
+	if(i === -1) {
 	    if(zip_eof)
 		return 0;
 	    return -1;

@@ -1,3 +1,11 @@
+/**
+ * Copyright (c) 2012 - Syu Kato <ukyo.web@gmail.com>
+ * 
+ * License: MIT
+ * 
+ * utils of jsziptools.
+ */
+
 jz.utils = jz.utils || {};
 
 (function(window, jz){

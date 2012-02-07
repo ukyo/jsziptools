@@ -1,4 +1,8 @@
 /**
+ * Copyright (c) 2012 - Syu Kato <ukyo.web@gmail.com>
+ * 
+ * License: MIT
+ * 
  * Compress and decompress RFC 1950 zlib file format binary data.
  * http://tools.ietf.org/rfc/rfc1950.txt
  */

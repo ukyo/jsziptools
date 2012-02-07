@@ -1,3 +1,7 @@
+/**
+ * Calc crc32 checksum.
+ */
+
 jz.algorithms = jz.algorithms || {};
 
 jz.algorithms.crc32 = (function(){

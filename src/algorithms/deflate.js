@@ -159,7 +159,7 @@ var zip_DeflateConfiguration = function(a, b, c, d) {
 var zip_DeflateBuffer = function() {
     this.next = null;
     this.len = 0;
-    this.ptr = new Array(zip_OUTBUFSIZ);
+    this.ptr = new Uint8Array(zip_OUTBUFSIZ);
     this.off = 0;
 }
 
@@ -204,8 +204,8 @@ var zip_deflate_start = function(level) {
 	return;
 
     zip_free_queue = zip_qhead = zip_qtail = null;
-    zip_outbuf = new Array(zip_OUTBUFSIZ);
-    zip_window = new Array(zip_window_size);
+    zip_outbuf = new Uint8Array(zip_OUTBUFSIZ);
+    zip_window = new Uint8Array(zip_window_size);
     zip_d_buf = new Array(zip_DIST_BUFSIZE);
     zip_l_buf = new Array(zip_INBUFSIZ + zip_INBUF_EXTRA);
     zip_prev = new Array(1 << zip_BITS);
