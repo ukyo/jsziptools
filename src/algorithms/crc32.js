@@ -24,6 +24,6 @@ jz.algorithms.crc32 = (function(){
 		var result = 0xFFFFFFFF, bytes = jz.utils.arrayBufferToBytes(buffer), i, n, t = table;
 		for(i = 0, n = bytes.length; i < n; ++i)
 			result = (result >>> 8) ^ t[bytes[i] ^ (result & 0xFF)];
-		return ~result;
+		return new Uint32Array([~result])[0];
 	};
 })();
