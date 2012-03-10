@@ -36,7 +36,7 @@ test('test gzip', function(){
 	var fileBuffer = jz.utils.loadFileBuffer('sample.txt');
 	
 	var decompressed = jz.gz.decompress(gzFileBuffer, true);
-	same(new Uint8Array(decompressed.buffer), new Uint8Array(fileBuffer), 'decompress test');
+	same(new Uint8Array(decompressed), new Uint8Array(fileBuffer), 'decompress test');
 	
 	var compressed = jz.gz.compress(fileBuffer, 6, {fname: 'sample.txt'});
 	
