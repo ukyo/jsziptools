@@ -19,26 +19,24 @@ jz.zlib = jz.zlib || {};
  * @return {ArrayBuffer} zlib format buffer.
  */
 jz.zlib.compress = function(bytes, level){
-	var ret, buffer, i, end, checksum, data;
+	var ret, buffer, i, end, checksum, data, view;
 	
 	//compress to deflate stream
 	data = jz.utils.arrayBufferToBytes(jz.algorithms.deflate(bytes, level));
 	
 	ret = new Uint8Array(data.length + 6);
+	view = new DataView(ret.buffer);
 	
 	//write zlib header
 	ret[0] = 0x78;
 	ret[1] = 0x01;
 	
 	//write zlib deflate stream
-	for(i = 2, end = ret.length - 4; i < end; ++i) ret[i] = data[i - 2];
+	ret.set(data, 2);
 	
 	//write adler32 checksum
-	checksum = jz.algorithms.adler32(ret);
-	ret[ret.length - 4] = checksum >> 24;
-	ret[ret.length - 3] = (checksum & 0xFF0000) >> 16;
-	ret[ret.length - 2] = (checksum & 0xFF00) >> 8;
-	ret[ret.length - 1] = checksum & 0xFF;
+	checksum = jz.algorithms.adler32(bytes);
+	view.setUint32(ret.length - 4, checksum);
 	
 	return ret.buffer;
 };
@@ -52,10 +50,11 @@ jz.zlib.compress = function(bytes, level){
  * @return {ArrayBuffer} buffer.
  */
 jz.zlib.decompress = function(bytes, check){
-	var b, cm, cinfo, fcheck, fdict,
+	var b, cm, cinfo, fcheck, fdict, view,
 		flevel, dictid, checksum, ret,
 		offset = 0;
 	bytes = jz.utils.arrayBufferToBytes(bytes);
+	view = new DataView(bytes.buffer, bytes.byteOffset);
 	
 	//read zlib header
 	b = bytes[offset++];
@@ -68,18 +67,20 @@ jz.zlib.decompress = function(bytes, check){
 	flevel = b >> 6;
 	
 	if(fdict){
-		dictid = jz.utils.readUintBE(bytes, offset);
+		dictid = view.getUint32(offset);
 		offset += 4;
 	}
 	
 	//read adler32 checksum
-	checksum = jz.utils.readUintBE(bytes, bytes.length - 4);
+	// checksum = jz.utils.readUintBE(bytes, bytes.length - 4);
+	checksum = view.getUint32(bytes.length - 4, false);
 	
 	//decompress from deflate stream
 	ret = jz.algorithms.inflate(bytes.subarray(offset, bytes.length - 4));
+	checksum2 = jz.algorithms.adler32(ret);
 	
 	//check adler32
-	if(check && checksum !== jz.algorithms.adler32(ret)){
+	if(check && checksum !== checksum2){
 		throw 'Error: differ from checksum';
 	}
 	
