@@ -4,6 +4,7 @@
 <head>
 	<title>example</title>
 	<script type="text/javascript" src="../qunit/qunit.js"></script>
+	<script type="text/javascript" src="../lib/dataview.min.js"></script>
 	<script type="text/javascript" src="../src/jsziptools.js"></script>
 	<script type="text/javascript" src="../src/utils.js"></script>
 	<script type="text/javascript" src="../src/algorithms/adler32.js"></script>
@@ -24,7 +25,9 @@
 					$("unzip").value = result;
 				});
 			};
-			fr.readAsArrayBuffer(b);
+			var bb = new jz.BlobBuilder;
+			bb.append(b);
+			fr.readAsArrayBuffer(bb.getBlob());
 		});
   };
   </script>
