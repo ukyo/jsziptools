@@ -4,7 +4,7 @@ It's a utility of zlib, gzip and zip format binary data.
 
 ## required
 
-If you want to run in firefox, required ffDataview(http://github.com/ukyo/ffDataView).
+required ffDataview(http://github.com/ukyo/ffDataView).
 
 ## zlib
 
