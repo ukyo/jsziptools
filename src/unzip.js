@@ -10,51 +10,49 @@ jz.zip = jz.zip || {};
 
 (function(window, jz){
 
-var BlobBuilder = jz.BlobBuilder,
-	uint = jz.utils.readUintLE,
-	ushort = jz.utils.readUshortLE;
+var BlobBuilder = jz.BlobBuilder;
 
 function getLocalFileHeader(buffer, offset){
-	var view = new Uint8Array(buffer, offset);
+	var view = new DataView(buffer, offset);
 	return {
-		signature: uint(view, 0),
-		needver: ushort(view, 4),
-		option: ushort(view, 6),
-		comptype: ushort(view, 8),
-		filetime: ushort(view, 10),
-		filedate: ushort(view, 12),
-		crc32: uint(view, 14),
-		compsize: uint(view, 18),
-		uncompsize: uint(view, 22),
-		fnamelen: ushort(view, 26),
-		extralen: ushort(view, 28),
-		filename: jz.utils.readString(view, 30, ushort(view, 26)),
-		headersize: 30 + ushort(view, 26) + ushort(view, 28),
-		allsize: 30 + uint(view, 18) + ushort(view, 26) + ushort(view, 28)
+		signature: view.getUint32(0, true),
+		needver: view.getUint16(4, true),
+		option: view.getUint16(6, true),
+		comptype: view.getUint16(8, true),
+		filetime: view.getUint16(10, true),
+		filedate: view.getUint16(12, true),
+		crc32: view.getUint32(14, true),
+		compsize: view.getUint32(18, true),
+		uncompsize: view.getUint32(22, true),
+		fnamelen: view.getUint16(26, true),
+		extralen: view.getUint16(28, true),
+		filename: view.getString(30, view.getUint16(26, true)),
+		headersize: 30 + view.getUint16(26, true) + view.getUint16(28, true),
+		allsize: 30 + view.getUint32(18, true) + view.getUint16(26, true) + view.getUint16(28, true)
 	}
 }
 
 function getCentralDirHeader(buffer, offset){
-	var view = new Uint8Array(buffer, offset);
+	var view = new DataView(buffer, offset);
 	return {
-		signature: uint(view, 0),
-		madever: ushort(view, 4),
-		needver: ushort(view, 6),
-		option: ushort(view, 8),
-		comptype: ushort(view, 10),
-		filetime: ushort(view, 12),
-		filedate: ushort(view, 14),
-		crc32: uint(view, 16),
-		compsize: uint(view, 20),
-		uncompsize: uint(view, 24),
-		fnamelen: ushort(view, 28),
-		extralen: ushort(view, 30),
-		commentlen: ushort(view, 32),
-		disknum: ushort(view, 34),
-		inattr: ushort(view, 36),
-		outattr: uint(view, 38),
-		headerpos: uint(view, 42),
-		allsize: 46 + ushort(view, 28) + ushort(view, 30) + ushort(view, 32)
+		signature: view.getUint32(0, true),
+		madever: view.getUint16(4, true),
+		needver: view.getUint16(6, true),
+		option: view.getUint16(8, true),
+		comptype: view.getUint16(10, true),
+		filetime: view.getUint16(12, true),
+		filedate: view.getUint16(14, true),
+		crc32: view.getUint32(16, true),
+		compsize: view.getUint32(20, true),
+		uncompsize: view.getUint32(24, true),
+		fnamelen: view.getUint16(28, true),
+		extralen: view.getUint16(30, true),
+		commentlen: view.getUint16(32, true),
+		disknum: view.getUint16(34, true),
+		inattr: view.getUint16(36, true),
+		outattr: view.getUint32(38, true),
+		headerpos: view.getUint32(42, true),
+		allsize: 46 + view.getUint16(28, true) + view.getUint16(30, true) + view.getUint16(32, true)
 	}
 }
 
@@ -158,10 +156,10 @@ jz.zip.decompress = function(data){
 		buffer = jz.utils.loadFileBuffer(data);
 	}
 	
-	view = new Uint8Array(buffer);
+	view = new DataView(buffer);
 	
-	while(offset < view.length){
-		signature = uint(view, offset);
+	while(offset < buffer.byteLength){
+		signature = view.getUint32(offset, true);
 		if(signature === jz.zip.LOCAL_FILE_SIGNATURE){
 			header = getLocalFileHeader(buffer, offset);
 			localFileHeaders.push(header);
@@ -193,7 +191,7 @@ jz.zip.decompress = function(data){
 	return new jz.zip.LazyLoader(buffer, files, folders, localFileHeaders, centralDirHeaders);
 };
 
-//shortcut
+//alias
 jz.zip.d = jz.zip.unpack = jz.zip.decompress;
 
 })(this, jz);
