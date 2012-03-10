@@ -142,4 +142,23 @@ jz.utils.loadFileBuffer = function(url){
 	return xhr.response;
 };
 
+/**
+ * @param {...(Uint8Array|int8Array)} byteArrays
+ * @return {Uint8Array}
+ */
+jz.utils.concatByteArrays = function(byteArrays){
+	var byteArrays = Array.isArray(byteArrays) ? byteArrays : Array.prototype.slice.call(arguments, 0),
+		size = 0,
+		offset = 0,
+		i, n, ret;
+	
+	for(i = 0, n = byteArrays.length; i < n; ++i) size += byteArrays[i].length;
+	ret = new Uint8Array(size);
+	for(i = 0; i < n; ++i) {
+		ret.set(byteArrays[i], offset);
+		offset += byteArrays[i].length;
+	}
+	return ret;
+};
+
 })(this, jz);
