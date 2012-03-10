@@ -77,7 +77,7 @@ asyncTest('test zip', function(){
 
 	["zipsample/a.txt", "zipsample/folder/b.txt"].forEach(function(v, i){
 		unpacked.getFileAsText(v, function(text){
-			equal(text, corrects[i], 'test unpack');
+			equal(text.replace("\r\n", "\n"), corrects[i].replace("\r\n", "\n"), 'test unpack');
 			start();
 		});
 	});

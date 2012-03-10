@@ -17,18 +17,28 @@ var BlobBuilder = jz.BlobBuilder;
  * @param {number} i index of a File.
  * @param {number} centralDirHeaderSize
  * @param {number} offset A start position of a File.
- * @return {Blob}
+ * @return {Uint8Array}
  */
 function getEndCentDirHeader(i, centralDirHeaderSize, offset){
 	var bb = new BlobBuilder();
-	bb.append(getUint(jz.zip.END_SIGNATURE)); //signature
-	bb.append(getUshort(0)); //disknum
-	bb.append(getUshort(0)); //startdisknum
-	bb.append(getUshort(i)); //diskdirentry
-	bb.append(getUshort(i)); //direntry
-	bb.append(getUint(centralDirHeaderSize)); //dirsize
-	bb.append(getUint(offset)); //startpos
-	bb.append(getUshort(0)); //commentlen
+	var view = new DataView(new ArrayBuffer(22));
+	view.setUint32(0, jz.zip.END_SIGNATURE, true);
+	view.setUint16(4, 0, true);
+	view.setUint16(6, 0, true);
+	view.setUint16(8, i, true);
+	view.setUint16(10, i, true);
+	view.setUint32(12, centralDirHeaderSize, true);
+	view.setUint32(16, offset, true);
+	view.setUint16(20, 0, true);
+	// bb.append(getUint(jz.zip.END_SIGNATURE)); //signature
+	// bb.append(getUshort(0)); //disknum
+	// bb.append(getUshort(0)); //startdisknum
+	// bb.append(getUshort(i)); //diskdirentry
+	// bb.append(getUshort(i)); //direntry
+	// bb.append(getUint(centralDirHeaderSize)); //dirsize
+	// bb.append(getUint(offset)); //startpos
+	// bb.append(getUshort(0)); //commentlen
+	bb.append(view.buffer);
 	return bb.getBlob();
 }
 
@@ -47,8 +57,8 @@ function HeaderBuilder(buffer, filename, date, offset, isDir, isDeflate){
 	this.filename = filename;
 	this.date = date;
 	this.offset = offset;
-	this.dir = isDir ? 0x10 : 0;
-	this.defl = isDeflate ? 0x8 : 0;
+	this.dirFlag = isDir ? 0x10 : 0;
+	this.deflateFlag = isDeflate ? 0x8 : 0;
 	this._commonHeader = this._getCommonHeader();
 	this._cache = {lf: null, cd: null};
 }
@@ -57,20 +67,33 @@ function HeaderBuilder(buffer, filename, date, offset, isDir, isDeflate){
 
 HeaderBuilder.prototype = {
 	/**
-	 * @return {Blob}
+	 * @return {Uint8Array}
 	 */
 	_getCommonHeader: function(){
 		var bb = new BlobBuilder();
-		bb.append(getUshort(10)); //needvar
-		bb.append(getUshort(0)); //option
-		bb.append(getUshort(this.defl)); //comptype
-		bb.append(getUshort(getFileTime(this.date))); //filetime
-		bb.append(getUshort(getFileDate(this.date))); //filedate
-		bb.append(getUint(jz.algorithms.crc32(this.buffer))); //crc32
-		bb.append(getUint(this.buffer.byteLength)); //compsize
-		bb.append(getUint(this.buffer.byteLength)); //uncompsize
-		bb.append(getUshort(this.filename.length)); //fnamelen
-		bb.append(getUshort(0)); //extralen
+		var view = new DataView(new ArrayBuffer(26));
+		var compsize = this.buffer.byteLength;
+		view.setUint16(0, 10, true);
+		view.setUint16(2, 0, true);
+		view.setUint16(4, this.deflateFlag, true);
+		view.setUint16(6, getFileTime(this.date), true);
+		view.setUint16(8, getFileDate(this.date), true);
+		view.setUint32(10, jz.algorithms.crc32(this.buffer), true);
+		view.setUint32(14, compsize, true);
+		view.setUint32(18, compsize, true);
+		view.setUint16(22, this.filename.length, true);
+		view.setUint16(24, 0, true);
+		// bb.append(getUshort(10)); //needvar
+		// bb.append(getUshort(0)); //option
+		// bb.append(getUshort(this.deflateFlag)); //comptype
+		// bb.append(getUshort(getFileTime(this.date))); //filetime
+		// bb.append(getUshort(getFileDate(this.date))); //filedate
+		// bb.append(getUint(jz.algorithms.crc32(this.buffer))); //crc32
+		// bb.append(getUint(this.buffer.byteLength)); //compsize
+		// bb.append(getUint(this.buffer.byteLength)); //uncompsize
+		// bb.append(getUshort(this.filename.length)); //fnamelen
+		// bb.append(getUshort(0)); //extralen
+		bb.append(view.buffer);
 		return bb.getBlob();
 	},
 	
@@ -100,7 +123,7 @@ HeaderBuilder.prototype = {
 		bb.append(getUshort(0)); //commentlen
 		bb.append(getUshort(0)); //disknum
 		bb.append(getUshort(0)); //inattr
-		bb.append(getUint(this.dir)); //outattr
+		bb.append(getUint(this.dirFlag)); //outattr
 		bb.append(getUint(this.offset)); //offset
 		bb.append(this.filename);
 		return this._cache.cd = bb.getBlob();
