@@ -151,8 +151,6 @@ function getFileTime(date){
 jz.zip.compress = function(files, level){
 	var n = 0,
 		offset = 0,
-		achiveBb = new BlobBuilder(),
-		centralDirBb = new BlobBuilder(),
 		achiveArr = [],
 		centralDirArr = [],
 		date = new Date();

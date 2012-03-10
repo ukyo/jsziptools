@@ -102,5 +102,8 @@ asyncTest('test zip', function(){
 			});
 		});
 	};
-	fr.readAsArrayBuffer(packed);
+	
+	var bb = new jz.BlobBuilder();
+	bb.append(packed)
+	fr.readAsArrayBuffer(bb.getBlob(packed));
 });
