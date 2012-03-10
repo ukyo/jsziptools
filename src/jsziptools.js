@@ -1,5 +1,5 @@
 /**
- * @license Copyright (c) 2012 - Syu Kato <ukyo.web@gmail.com>
+ * Copyright (c) 2012 - Syu Kato <ukyo.web@gmail.com>
  * 
  * jsziptools 1.1
  * 
