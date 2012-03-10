@@ -155,7 +155,7 @@ jz.zip.compress = function(files, level){
 		centralDirArr = [],
 		date = new Date();
 	
-	level = level || 1;
+	level = level || 6;
 	
 	function compress(obj, dir){
 		var name, buffer, hb, isDir, isDeflate, _level;
@@ -181,7 +181,7 @@ jz.zip.compress = function(files, level){
 		//if you don't set compression level to this file, set level of the whole file.
 		_level = obj.level || level;
 		
-		if(_level >= 1 && typeof obj.children === 'undefined') {
+		if(_level > 0 && typeof obj.children === 'undefined') {
 			buffer = jz.algorithms.deflate(buffer, _level);
 			isDeflate = true;
 		}
