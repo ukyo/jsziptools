@@ -5,13 +5,6 @@ test('test utility functions', function(){
 	//char codes of 'util'
 	var ui8arr = new Uint8Array([117, 116, 105, 108]);
 	same(new Uint8Array(jz.utils.stringToArrayBuffer('util')), ui8arr, 'string to arraybuffer');
-	equal(jz.utils.readString(ui8arr, 0, 4), 'util', 'read string');
-	
-	ui8arr = new Uint8Array([1, 2, 4, 8]);
-	equal(jz.utils.readUintLE(ui8arr, 0), 0x08040201, 'read uint(little endian)');
-	equal(jz.utils.readUintBE(ui8arr, 0), 0x01020408, 'read uint(big endian)');
-	equal(jz.utils.readUshortLE(ui8arr, 0), 0x0201, 'read ushort(little endian)');
-	equal(jz.utils.readUshortBE(ui8arr, 0), 0x0102, 'read ushort(big endian)');
 });
 
 test('test compress algorithm', function(){
@@ -40,13 +33,7 @@ test('test gzip', function(){
 	
 	var compressed = jz.gz.compress(fileBuffer, 6, {fname: 'sample.txt'});
 	
-	var checksum1 = jz.utils.readUintLE(gzFileBuffer, gzFileBuffer.byteLength - 8);
-	var checksum2 = jz.utils.readUintLE(compressed, compressed.byteLength - 8);
-	equal(checksum1, checksum2, 'check checksum');
-	
-	var data1 = new Uint8Array(gzFileBuffer).subarray(20);
-	var data2 = new Uint8Array(compressed).subarray(20);
-	same(data1, data2, 'check compressed data');
+	ok(jz.gz.decompress(compressed, true), 'check checksum');
 });
 
 test('test zlib', function(){
@@ -55,13 +42,12 @@ test('test zlib', function(){
 	var swf = jz.utils.loadFileBuffer('nicowari.swf');
 	var zlibBytes = new Uint8Array(swf).subarray(8);
 	//decompressed file size
-	var size = jz.utils.readUintLE(swf, 4);
 	
 	var decompressed = jz.zlib.decompress(zlibBytes, true);
-	equal(decompressed.byteLength + 8, size, 'decompress test');
+	ok(decompressed, 'decompress test');
 	
-	var compressed = new Uint8Array(jz.zlib.compress(decompressed));
-	same(new Uint8Array(decompressed), new Uint8Array(jz.zlib.decompress(compressed)), 'compress test');
+	var compressed = jz.zlib.compress(decompressed);
+	ok(jz.zlib.decompress(compressed, true), 'compress test');
 });
 
 asyncTest('test zip', function(){
@@ -71,8 +57,10 @@ asyncTest('test zip', function(){
 	var unpacked = jz.zip.unpack(zipsample);
 	var a = load('zipsample/a.txt');
 	var b = load('zipsample/folder/b.txt');
-	var aStr = jz.utils.readString(a, 0, a.byteLength);
-	var bStr = jz.utils.readString(b, 0, b.byteLength);
+	var aView = new DataView(a);
+	var bView = new DataView(b);
+	var aStr = aView.getString(0, a.byteLength);
+	var bStr = bView.getString(0, b.byteLength);
 	var corrects = [aStr, bStr];
 
 	["zipsample/a.txt", "zipsample/folder/b.txt"].forEach(function(v, i){
