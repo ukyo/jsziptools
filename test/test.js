@@ -97,7 +97,7 @@ asyncTest('test zip', function(){
 		var unpacked = jz.zip.unpack(e.target.result);
 		["zipsample/a.txt", "zipsample/folder/b.txt"].forEach(function(v, i){
 			unpacked.getFileAsText(v, function(text){
-				equal(text, corrects[i], 'test pack');
+				equal(text.replace("\r\n", "\n"), corrects[i].replace("\r\n", "\n"), 'test pack');
 				start();
 			});
 		});
