@@ -21,7 +21,7 @@ jz.gz = jz.gz || {};
  * @return {ArrayBuffer}
  */
 jz.gz.compress = function(bytes, level, metadata){
-	var data, ret, i, end, ui32view, checksum, isize,
+	var deflatedBytes, ret, i, end, view, checksum, isize,
 		flg = 0,
 		headerLength = 10,
 		offset = 0,
@@ -29,7 +29,7 @@ jz.gz.compress = function(bytes, level, metadata){
 	metadata = metadata || {};
 	bytes = jz.utils.arrayBufferToBytes(bytes);
 	
-	data = new Uint8Array(jz.algorithms.deflate(bytes, level));
+	deflatedBytes = new Uint8Array(jz.algorithms.deflate(bytes, level));
 	
 	//calc metadata length
 	if(metadata.fname){
@@ -42,47 +42,41 @@ jz.gz.compress = function(bytes, level, metadata){
 		flg |= 0x10;
 	}
 	
-	ret = new Uint8Array(data.length + headerLength + 8);
-	
-	function writeUint(val, offset){
-		ret[offset++] = val & 0xFF;
-		ret[offset++] = (val & 0xFF00) >> 8;
-		ret[offset++] = (val & 0xFF0000) >> 16;
-		ret[offset++] = val >> 24;
-	}
+	ret = new Uint8Array(deflatedBytes.length + headerLength + 8);
+	view = new DataView(ret.buffer);
 	
 	//write gzip header
 	ret[offset++] = 0x1F;
 	ret[offset++] = 0x8B;
-	
 	ret[offset++] = 0x8;
-	
 	ret[offset++] = flg;
 	
-	writeUint(now, offset);
+	view.setUint32(offset, now, true);
 	offset += 4;
 	
 	ret[offset++] = 4;
 	ret[offset++] = 0xFF;
 	
 	if(metadata.fname){
-		for(i = 0; i < metadata.fname.length; ++i) ret[offset++] = metadata.fname.charCodeAt(i);
+		view.setString(offset, metadata.fname);
+		offset += metadata.fname.length;
 		ret[offset++] = 0;
 	}
 	
 	if(metadata.fcomment){
-		for(i = 0; i < metadata.fcomment.length; ++i) ret[offset++] = metadata.fcomment.charCodeAt(i);
+		view.setString(offset, metadata.fcomment);
+		offset += metadata.fcomment.length;
 		ret[offset++] = 0;
 	}
 	
 	//write crc32 checksum
-	writeUint(jz.algorithms.crc32(bytes), ret.length - 8);
+	view.setUint32(ret.length - 8, jz.algorithms.crc32(bytes), true);
 	
 	//write isize
-	writeUint(bytes.length % 0xFFFFFFFF, ret.length - 4);
+	view.setUint32(ret.length - 4, bytes.length % 0xFFFFFFFF, true);
 	
 	//copy data
-	for(i = headerLength, end = ret.length - 8; i < end; ++i) ret[i] = data[i - headerLength];
+	ret.set(deflatedBytes, headerLength);
 	
 	return ret.buffer;
 };
@@ -96,19 +90,20 @@ jz.gz.compress = function(bytes, level, metadata){
  * @return {ArrayBuffer}
  */
 jz.gz.decompress = function(bytes, check){
-	var ret = {}, flg, offset = 10, checksum;
+	var ret = {}, flg, offset = 10, checksum, view;
 	bytes = jz.utils.arrayBufferToBytes(bytes);
+	view = new DataView(bytes.buffer);
 	
 	if(bytes[0] !== 0x1F || bytes[1] !== 0x8B) throw 'Error: invalid gzip file.';
 	if(bytes[2] !== 0x8) throw 'Error: not deflate.';
 	
 	flg = bytes[3];
 	
-	ret.mtime = jz.utils.readUintLE(bytes, 4);
+	ret.mtime = view.getUint32(4, true);
 	
 	//fextra
 	if(flg & 0x4) {
-		offset += jz.utils.readUshortLE(bytes, offset) + 2;
+		offset += view.getUint16(offset, true) + 2;
 	}
 	
 	//fname
@@ -130,12 +125,11 @@ jz.gz.decompress = function(bytes, check){
 		offset += 2;
 	}
 	
-	console.log(offset);
-	ret.buffer = jz.algorithms.inflate(bytes.subarray(offset, bytes.length - 8));
+	ret = jz.algorithms.inflate(bytes.subarray(offset, bytes.length - 8));
 	
 	if(check) {
-		checksum = jz.utils.readUintLE(bytes, bytes.length - 8);
-		if(checksum !== jz.algorithms.crc32(ret.buffer)) {
+		checksum = view.getUint32(bytes.length - 8, true);
+		if(checksum !== jz.algorithms.crc32(ret)) {
 			throw 'Error: deffer from checksum.';
 		}
 	}
@@ -143,7 +137,7 @@ jz.gz.decompress = function(bytes, check){
 	return ret;
 };
 
-//shortcut
+//alias
 jz.gz.c = jz.gz.compress;
 jz.gz.d = jz.gz.decompress;
 
