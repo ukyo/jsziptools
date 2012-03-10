@@ -1,7 +1,7 @@
 /**
  * @license Copyright (c) 2012 - Syu Kato <ukyo.web@gmail.com>
  * 
- * jsziptools 1.0
+ * jsziptools 1.1
  * 
  * License: MIT
  * 
@@ -32,4 +32,4 @@ jz.zip.CENTRAL_DIR_SIGNATURE = 0x02014B50;
  */
 jz.zip.END_SIGNATURE = 0x06054B50;
 
-jz.BlobBuilder = window.MozBlobBuilder || window.WebKitBlobBuilder || window.MSBlobBuilder || window.BlobBuilder;
+jz.BlobBuilder = this.MozBlobBuilder || this.WebKitBlobBuilder || this.MSBlobBuilder || this.BlobBuilder;
