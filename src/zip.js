@@ -95,6 +95,7 @@ HeaderBuilder.prototype = {
 		// bb.append(getUshort(0)); //extralen
 		bb.append(view.buffer);
 		return bb.getBlob();
+		return new Uint8Array(view.buffer);
 	},
 	
 	/**
@@ -104,9 +105,21 @@ HeaderBuilder.prototype = {
 		if(this._cache.lf) return this._cache.lf;
 		
 		var bb = new BlobBuilder();
+		var view = new DataView(new ArrayBuffer(4 + this._commonHeader.length + this.filename.length));
+		var arr = new Uint8Array(view.buffer);
+		var offset = 0;
+		
+		// view.setUint32(offset, jz.zip.LOCAL_FILE_SIGNATURE, true);
+		// offset += 4;
+		// arr.set(this._commonHeader, offset);
+		// offset += this._commonHeader.length;
+		// view.setString(offset, this.filename);
+		// bb.append(view.buffer);
+		
 		bb.append(getUint(jz.zip.LOCAL_FILE_SIGNATURE)); //signature
 		bb.append(this._commonHeader);
 		bb.append(this.filename);
+		
 		return this._cache.lf = bb.getBlob();
 	},
 	
@@ -117,16 +130,39 @@ HeaderBuilder.prototype = {
 		if(this._cache.cd) return this._cache.cd;
 		
 		var bb = new BlobBuilder();
-		bb.append(getUint(jz.zip.CENTRAL_DIR_SIGNATURE)); //signature
-		bb.append(getUshort(0x14)); //madevar
-		bb.append(this._commonHeader);
-		bb.append(getUshort(0)); //commentlen
-		bb.append(getUshort(0)); //disknum
-		bb.append(getUshort(0)); //inattr
-		bb.append(getUint(this.dirFlag)); //outattr
-		bb.append(getUint(this.offset)); //offset
-		bb.append(this.filename);
+		var view = new DataView(new Uint8Array(20 + this._commonHeader + this.filename));
+		var arr = new Uint8Array(view.buffer);
+		var offset = 0;
+		
+		view.setUint32(0, jz.zip.CENTRAL_DIR_SIGNATURE, true);
+		offset += 4;
+		view.setUint16(offset, 0x14, true);
+		arr.set(this._commonHeader, offset);
+		offset += this._commonHeader.length;
+		view.setUint16(offset, 0, true);
+		offset += 2;
+		view.setUint16(offset, 0, true);
+		offset += 2;
+		view.setUint16(offset, 0, true);
+		offset += 2;
+		view.setUint32(offset, this.dirFlag, true);
+		offset += 4;
+		view.setUint32(offset, this.offset, true);
+		offset += 4;
+		view.setString(offset, this.filename);
+		bb.append(view.buffer);
+		
+		// bb.append(getUint(jz.zip.CENTRAL_DIR_SIGNATURE)); //signature
+		// bb.append(getUshort(0x14)); //madevar
+		// bb.append(this._commonHeader);
+		// bb.append(getUshort(0)); //commentlen
+		// bb.append(getUshort(0)); //disknum
+		// bb.append(getUshort(0)); //inattr
+		// bb.append(getUint(this.dirFlag)); //outattr
+		// bb.append(getUint(this.offset)); //offset
+		// bb.append(this.filename);
 		return this._cache.cd = bb.getBlob();
+		
 	},
 	
 	/**
