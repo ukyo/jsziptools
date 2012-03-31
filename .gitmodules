@@ -1,0 +1,3 @@
+[submodule "lib/zpipe"]
+	path = lib/zpipe
+	url = git://github.com/richardassar/zpipe.git
