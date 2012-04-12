@@ -10,6 +10,7 @@ REPOSITORY_URL = "http://github.com/ukyo/jsziptools"
 OUTPUT_NAME = "jsziptools.min.js"
 
 JS_FILES = (
+    "../lib/zpipe/dist/zpipe.min.js",
     "../src/jsziptools.js",
     "../src/utils.js",
     "../src/algorithms/adler32.js",
