@@ -58,7 +58,7 @@ jz.utils.stringToArrayBuffer = function(str){
 
 
 /**
- * Load a Buffer with Ajax.
+ * Load buffer with Ajax.
  * 
  * @param {string} url
  * @return {ArrayBuffer}
@@ -71,6 +71,31 @@ jz.utils.loadFileBuffer = function(url){
 	xhr.responseType = 'arraybuffer';
 	xhr.send();
 	return xhr.response;
+};
+
+/**
+ * Load buffer with Ajax async.
+ * @param {string} url
+ * @param {Function} success
+ * @param {Function} error
+ */
+jz.utils.loadAsync = function(url, success, error){
+	success = success || function(){};
+	error = success || function(){};
+	var xhr = new XMLHttpRequest;
+	xhr.open('GET', url);
+	xhr.responseType = 'arraybuffer';
+	xhr.onreadystatechange = function(){
+		var s = xhr.status;
+		if(xhr.readyState == 4) {
+			if(s == 200 || s == 206 || s == 0) {
+				success(xhr.response);
+			} else {
+				error(xhr);
+			}
+		}
+	};
+	xhr.send();
 };
 
 /**
