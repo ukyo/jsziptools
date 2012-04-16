@@ -146,16 +146,49 @@ function getFileTime(date){
  * 
  * @param {Array} files
  * @param {number} level
+ * @param {Function} callback
  * @return {ArrayBuffer}
  */
-jz.zip.compress = function(files, level){
+jz.zip.compress = function(files, level, callback){
 	var n = 0,
 		offset = 0,
 		achiveArr = [],
 		centralDirArr = [],
-		date = new Date();
+		date = new Date(),
+		stack = [],
+		stackIndex = 0;
 	
 	level = level || 6;
+	
+	function loadFiles(obj){
+		if(typeof obj === 'undefined') return;
+		if(obj.children) {
+			obj.children.forEach(loadFiles);
+		} else if(obj.url) {
+			jz.utils.loadAsync(obj.url, (function(i){
+				return function(response){
+					obj.buffer = response;
+					delete obj.url;
+					stack[i] = "load!";
+				};
+			})(stackIndex));
+			stack[stackIndex] = 0;
+			stackIndex++;
+		}
+	}
+	
+	function wait(){
+		if(stack.indexOf(0) !== -1) {
+			setTimeout(wait, 10);
+		} else {
+			files.forEach(function(item){
+				compress(item, '');
+			});
+			achiveArr = achiveArr.concat(centralDirArr);
+			achiveArr.push(getEndCentDirHeader(n, jz.utils.concatByteArrays(centralDirArr).length, offset));
+			callback(jz.utils.concatByteArrays(achiveArr).buffer);
+		}
+	}
 	
 	function compress(obj, dir){
 		var name, buffer, hb, isDir, isDeflate, _level;
@@ -201,14 +234,14 @@ jz.zip.compress = function(files, level){
 		}
 	}
 
-	files.forEach(function(item){
-		compress(item, '');
-	});
+	// files.forEach(function(item){
+		// compress(item, '');
+	// });
 	
-	achiveArr = achiveArr.concat(centralDirArr);
-	achiveArr.push(getEndCentDirHeader(n, jz.utils.concatByteArrays(centralDirArr).length, offset));
-	
-	return jz.utils.concatByteArrays(achiveArr).buffer;
+	// achiveArr = achiveArr.concat(centralDirArr);
+	// achiveArr.push(getEndCentDirHeader(n, jz.utils.concatByteArrays(centralDirArr).length, offset));
+// 	
+	// return jz.utils.concatByteArrays(achiveArr).buffer;
 };
 
 //alias
