@@ -1,0 +1,3 @@
+[submodule "lib/ffDataView"]
+	path = lib/ffDataView
+	url = git@github.com:ukyo/ffDataView.git
