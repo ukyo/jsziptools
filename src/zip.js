@@ -142,12 +142,28 @@ function getFileTime(date){
 
 
 /**
- * Compress to a zip format file.
+ * Pack to a zip format file.
  * 
  * @param {Object} params
  * @return {ArrayBuffer}
+ * 
+ * @example
+ * 
+ * //async(recommend!):
+ * jz.zip.pack({
+ * 	files: [{name: 'a.txt', buffer: bytes.buffer}, {name: 'b.txt', url: 'b.txt'}, {name: 'c.txt', str: 'hello!'}],
+ * 	async: true, //default
+ * 	complete: function(data){console.log(data)},
+ * 	error: function(e){alert(e)}
+ * });
+ * 
+ * //sync:
+ * var data = jz.zip.pack({
+ * 	files: files,
+ * 	async: false
+ * });
  */
-jz.zip.compress = function(params){
+jz.zip.pack = function(params){
 	var n = 0,
 		offset = 0,
 		achiveArr = [],
@@ -163,13 +179,15 @@ jz.zip.compress = function(params){
 	error = typeof params.error !== 'function' ? params.error : function(e){
 		throw e;
 	};
+	async = params.async != null ? async : true;
 	
+	//load files with ajax(async).
 	function loadFiles(obj){
 		if(typeof obj === 'undefined') return;
 		if(obj.children) {
 			obj.children.forEach(loadFiles);
 		} else if(obj.url) {
-			jz.utils.loadAsync(obj.url, (function(i){
+			jz.utils.load(obj.url, (function(i){
 				return function(response){
 					obj.buffer = response;
 					delete obj.url;
@@ -181,20 +199,16 @@ jz.zip.compress = function(params){
 		}
 	}
 	
+	//wait to load complete.
 	function wait(){
 		if(stack.indexOf(0) !== -1) {
 			setTimeout(wait, 10);
 		} else {
-			files.forEach(function(item){
-				compress(item, '');
-			});
-			achiveArr = achiveArr.concat(centralDirArr);
-			achiveArr.push(getEndCentDirHeader(n, jz.utils.concatByteArrays(centralDirArr).length, offset));
-			complete(jz.utils.concatByteArrays(achiveArr).buffer);
+			complete(pack());
 		}
 	}
 	
-	function compress(obj, dir){
+	function _pack(obj, dir){
 		var name, buffer, hb, isDir, isDeflate, _level;
 		
 		if(typeof obj === 'undefined') return;
@@ -233,24 +247,29 @@ jz.zip.compress = function(params){
 		
 		if(obj.children){
 			obj.children.forEach(function(item){
-				compress(item, name);
+				_pack(item, name);
 			});
 		}
 	}
 
-	files.forEach(loadFiles);
-	wait();
+	function pack(){
+		files.forEach(function(item){
+			_pack(item, '');
+		});
+		achiveArr = achiveArr.concat(centralDirArr);
+		achiveArr.push(getEndCentDirHeader(n, jz.utils.concatByteArrays(centralDirArr).length, offset));
+		return jz.utils.concatByteArrays(achiveArr).buffer;
+	}
 	
-	files.forEach(function(item){
-		compress(item, '');
-	});
-	achiveArr = achiveArr.concat(centralDirArr);
-	achiveArr.push(getEndCentDirHeader(n, jz.utils.concatByteArrays(centralDirArr).length, offset));
-	
-	return hoge = jz.utils.concatByteArrays(achiveArr).buffer;
+	if(async){
+		files.forEach(loadFiles);
+		wait();
+	} else {
+		return pack();
+	}
 };
 
 //alias
-jz.zip.c = jz.zip.pack = jz.zip.compress;
+jz.zip.compress = jz.zip.pack;
 
 })(this, jz);
