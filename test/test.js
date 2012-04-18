@@ -55,15 +55,17 @@ asyncTest('test zip', function(){
 	var zipsample = load('zipsample.zip');
 	
 	var unpacked = jz.zip.unpack(zipsample);
-	var a = load('zipsample/a.txt');
-	var b = load('zipsample/folder/b.txt');
+	var aPath = 'zipsample/a.txt';
+	var bPath = 'zipsample/folder/b.txt';
+	var a = load(aPath);
+	var b = load(bPath);
 	var aView = new DataView(a);
 	var bView = new DataView(b);
 	var aStr = aView.getString(0, a.byteLength);
 	var bStr = bView.getString(0, b.byteLength);
 	var corrects = [aStr, bStr];
 
-	["zipsample/a.txt", "zipsample/folder/b.txt"].forEach(function(v, i){
+	[aPath, bPath].forEach(function(v, i){
 		unpacked.getFileAsText(v, function(text){
 			equal(text.replace("\r\n", "\n"), corrects[i].replace("\r\n", "\n"), 'test unpack');
 			start();
@@ -77,13 +79,15 @@ asyncTest('test zip', function(){
 				{name: 'b.txt', buffer: b}
 			]}
 		]}
-	]);
+	], 6, function(data){
+		console.log(data);
+	});
 	
 	var fr = new FileReader();
 	
 	fr.onload = function(e){
 		var unpacked = jz.zip.unpack(e.target.result);
-		["zipsample/a.txt", "zipsample/folder/b.txt"].forEach(function(v, i){
+		[aPath, bPath].forEach(function(v, i){
 			unpacked.getFileAsText(v, function(text){
 				equal(text.replace("\r\n", "\n"), corrects[i].replace("\r\n", "\n"), 'test pack');
 				start();
