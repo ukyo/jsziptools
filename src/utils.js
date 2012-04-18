@@ -81,7 +81,7 @@ jz.utils.loadFileBuffer = function(url){
 jz.utils.load = function(urls, complete){
 	urls = Array.isArray(urls) ? urls : [urls];
 	complete = complete || function(){};
-	var stack = [];
+	var results = [];
 	
 	urls.forEach(function(url, i){
 		var xhr = new XMLHttpRequest;
@@ -90,20 +90,20 @@ jz.utils.load = function(urls, complete){
 		xhr.onloadend = function(){
 			var s = xhr.status;
 			if(s == 200 || s == 206 || s == 0) {
-				stack[i] = xhr.response;
+				results[i] = xhr.response;
 			} else {
 				throw "Load Error: " + s;
 			}
 		};
-		stack[i] = 0;
+		results[i] = 0;
 		xhr.send();
 	});
 	
 	(function wait(){
-		if(stack.indexOf(0) !== -1) {
+		if(results.indexOf(0) !== -1) {
 			setTimeout(wait, 5);
 		} else {
-			complete.apply(null, stack);
+			complete.apply(null, results);
 		}
 	})();
 };
