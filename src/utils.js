@@ -74,28 +74,38 @@ jz.utils.loadFileBuffer = function(url){
 };
 
 /**
- * Load buffer with Ajax async.
- * @param {string} url
- * @param {Function} success
- * @param {Function} error
+ * Load buffer with Ajax(async).
+ * @param {Array.<string>|string} urls
+ * @param {Function} complete
  */
-jz.utils.loadAsync = function(url, success, error){
-	success = success || function(){};
-	error = success || function(){};
-	var xhr = new XMLHttpRequest;
-	xhr.open('GET', url);
-	xhr.responseType = 'arraybuffer';
-	xhr.onreadystatechange = function(){
-		var s = xhr.status;
-		if(xhr.readyState == 4) {
+jz.utils.load = function(urls, complete){
+	urls = Array.isArray(urls) ? urls : [urls];
+	complete = complete || function(){};
+	var stack = [];
+	
+	urls.forEach(function(url, i){
+		var xhr = new XMLHttpRequest;
+		xhr.open('GET', url);
+		xhr.responseType = 'arraybuffer';
+		xhr.onloadend = function(){
+			var s = xhr.status;
 			if(s == 200 || s == 206 || s == 0) {
-				success(xhr.response);
+				stack[i] = xhr.response;
 			} else {
-				error(xhr);
+				throw "Load Error: " + s;
 			}
+		};
+		stack[i] = 0;
+		xhr.send();
+	});
+	
+	(function wait(){
+		if(stack.indexOf(0) !== -1) {
+			setTimeout(wait, 5);
+		} else {
+			complete.apply(null, stack);
 		}
-	};
-	xhr.send();
+	})();
 };
 
 /**
