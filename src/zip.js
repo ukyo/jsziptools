@@ -144,21 +144,25 @@ function getFileTime(date){
 /**
  * Compress to a zip format file.
  * 
- * @param {Array} files
- * @param {number} level
- * @param {Function} callback
+ * @param {Object} params
  * @return {ArrayBuffer}
  */
-jz.zip.compress = function(files, level, callback){
+jz.zip.compress = function(params){
 	var n = 0,
 		offset = 0,
 		achiveArr = [],
 		centralDirArr = [],
 		date = new Date(),
 		stack = [],
-		stackIndex = 0;
+		stackIndex = 0,
+		files, level, complete, error, async;
 	
-	level = level || 6;
+	files = params.files;
+	level = params.level != null ? params.level : 6;
+	complete = typeof params.complete !== 'function' ? params.complete : function(){};
+	error = typeof params.error !== 'function' ? params.error : function(e){
+		throw e;
+	};
 	
 	function loadFiles(obj){
 		if(typeof obj === 'undefined') return;
@@ -186,7 +190,7 @@ jz.zip.compress = function(files, level, callback){
 			});
 			achiveArr = achiveArr.concat(centralDirArr);
 			achiveArr.push(getEndCentDirHeader(n, jz.utils.concatByteArrays(centralDirArr).length, offset));
-			callback(jz.utils.concatByteArrays(achiveArr).buffer);
+			complete(jz.utils.concatByteArrays(achiveArr).buffer);
 		}
 	}
 	
@@ -208,7 +212,7 @@ jz.zip.compress = function(files, level, callback){
 			buffer = obj.buffer;
 			name = dir + obj.name;
 		} else {
-			throw 'This type is not supported.';
+			error('This type is not supported.');
 		}
 		
 		//if you don't set compression level to this file, set level of the whole file.
@@ -234,14 +238,16 @@ jz.zip.compress = function(files, level, callback){
 		}
 	}
 
-	// files.forEach(function(item){
-		// compress(item, '');
-	// });
+	files.forEach(loadFiles);
+	wait();
 	
-	// achiveArr = achiveArr.concat(centralDirArr);
-	// achiveArr.push(getEndCentDirHeader(n, jz.utils.concatByteArrays(centralDirArr).length, offset));
-// 	
-	// return jz.utils.concatByteArrays(achiveArr).buffer;
+	files.forEach(function(item){
+		compress(item, '');
+	});
+	achiveArr = achiveArr.concat(centralDirArr);
+	achiveArr.push(getEndCentDirHeader(n, jz.utils.concatByteArrays(centralDirArr).length, offset));
+	
+	return hoge = jz.utils.concatByteArrays(achiveArr).buffer;
 };
 
 //alias
