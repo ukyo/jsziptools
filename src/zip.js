@@ -175,11 +175,8 @@ jz.zip.pack = function(params){
 	
 	files = params.files;
 	level = params.level != null ? params.level : 6;
-	complete = typeof params.complete !== 'function' ? params.complete : function(){};
-	error = typeof params.error !== 'function' ? params.error : function(e){
-		throw e;
-	};
-	async = params.async != null ? async : true;
+	complete = typeof params.complete === 'function' ? params.complete : function(){};
+	async = params.async != null ? params.async : true;
 	
 	//load files with ajax(async).
 	function loadFiles(obj){
@@ -199,12 +196,11 @@ jz.zip.pack = function(params){
 		}
 	}
 	
-	//wait to load complete.
 	function wait(){
-		if(stack.indexOf(0) !== -1) {
-			setTimeout(wait, 10);
-		} else {
+		if(stack.indexOf(0) === -1 || stack.length === 0) {
 			complete(pack());
+		} else {
+			setTimeout(wait, 5);
 		}
 	}
 	
@@ -263,7 +259,7 @@ jz.zip.pack = function(params){
 	
 	if(async){
 		files.forEach(loadFiles);
-		wait();
+		setTimeout(wait, 5);
 	} else {
 		return pack();
 	}
