@@ -92,8 +92,7 @@ asyncTest('test jz.zip.pack(sync)', function(){
 		
 		var packed = jz.zip.pack({
 			files: files,
-			level: 6,
-			async: false
+			level: 6
 		});
 		
 		var fr = new FileReader();
@@ -138,7 +137,6 @@ asyncTest('test jz.zip.pack(async)', function(){
 		jz.zip.pack({
 			files: files,
 			level: 6,
-			async: true,
 			complete: function(packed){
 				var fr = new FileReader();
 		
