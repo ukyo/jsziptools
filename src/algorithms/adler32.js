@@ -1,7 +1,11 @@
+/**
+ * Calc adler32 checksum.
+ */
+
 jz.algorithms = jz.algorithms || {};
 
 jz.algorithms.adler32 = function(buffer){
-	var bytes = jz.utils.arrayBufferToBytes(buffer),
+	var bytes = jz.utils.toBytes(buffer),
 		a = 1,
 		b = 0,
 		i = 0,

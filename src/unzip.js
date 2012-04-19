@@ -1,11 +1,3 @@
-/**
- * Copyright (c) 2012 - Syu Kato <ukyo.web@gmail.com>
- * 
- * License: MIT
- * 
- * unpack datas from zip format data.
- */
-
 jz.zip = jz.zip || {};
 
 (function(window, jz){

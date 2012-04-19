@@ -1,8 +1,4 @@
 /**
- * Copyright (c) 2012 - Syu Kato <ukyo.web@gmail.com>
- * 
- * License: MIT
- * 
  * Compress and decompress RFC 1950 zlib file format binary data.
  * http://tools.ietf.org/rfc/rfc1950.txt
  */
@@ -22,7 +18,7 @@ jz.zlib.compress = function(bytes, level){
 	var ret, buffer, i, end, checksum, data, view;
 	
 	//compress to deflate stream
-	data = jz.utils.arrayBufferToBytes(jz.algorithms.deflate(bytes, level));
+	data = jz.utils.toBytes(jz.algorithms.deflate(bytes, level));
 	
 	ret = new Uint8Array(data.length + 6);
 	view = new DataView(ret.buffer);
@@ -53,7 +49,7 @@ jz.zlib.decompress = function(bytes, check){
 	var b, cm, cinfo, fcheck, fdict, view,
 		flevel, dictid, checksum, ret,
 		offset = 0;
-	bytes = jz.utils.arrayBufferToBytes(bytes);
+	bytes = jz.utils.toBytes(bytes);
 	view = DataView.create(bytes);
 	
 	//read zlib header

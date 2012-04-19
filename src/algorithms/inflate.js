@@ -472,7 +472,7 @@ var FlateStream = (function() {
  * @return {ArrayBuffer}
  */
 jz.algorithms.inflate = function(bytes){
-	bytes = jz.utils.arrayBufferToBytes(bytes);
+	bytes = jz.utils.toBytes(bytes);
 	return new Uint8Array(new FlateStream(bytes).getBytes()).buffer;
 };
 

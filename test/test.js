@@ -1,6 +1,6 @@
 test('test utility functions', function(){
-	equal(jz.utils.arrayBufferToBytes(new ArrayBuffer(10)).constructor, Uint8Array, 'arraybuffer to uint8array');
-	equal(jz.utils.arrayBufferToBytes(new Uint8Array(10)).constructor, Uint8Array, 'uint8array to uint8array');
+	equal(jz.utils.toBytes(new ArrayBuffer(10)).constructor, Uint8Array, 'arraybuffer to uint8array');
+	equal(jz.utils.toBytes(new Uint8Array(10)).constructor, Uint8Array, 'uint8array to uint8array');
 	
 	//char codes of 'util'
 	var ui8arr = new Uint8Array([117, 116, 105, 108]);

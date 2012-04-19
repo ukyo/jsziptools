@@ -27,7 +27,7 @@ jz.gz.compress = function(bytes, level, metadata){
 		offset = 0,
 		now = Date.now();
 	metadata = metadata || {};
-	bytes = jz.utils.arrayBufferToBytes(bytes);
+	bytes = jz.utils.toBytes(bytes);
 	
 	deflatedBytes = new Uint8Array(jz.algorithms.deflate(bytes, level));
 	
@@ -91,7 +91,7 @@ jz.gz.compress = function(bytes, level, metadata){
  */
 jz.gz.decompress = function(bytes, check){
 	var ret = {}, flg, offset = 10, checksum, view;
-	bytes = jz.utils.arrayBufferToBytes(bytes);
+	bytes = jz.utils.toBytes(bytes);
 	view = new DataView(bytes.buffer, bytes.byteOffset);
 	
 	if(bytes[0] !== 0x1F || bytes[1] !== 0x8B) throw 'Error: invalid gzip file.';

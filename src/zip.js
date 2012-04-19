@@ -1,12 +1,7 @@
-/**
- * Copyright (c) 2012 - Syu Kato <ukyo.web@gmail.com>
- * 
- * License: MIT
- * 
- * Pack datas to a zip format data.
- */
-
 jz.zip = jz.zip || {};
+jz.zip.LOCAL_FILE_SIGNATURE = 0x04034B50;
+jz.zip.CENTRAL_DIR_SIGNATURE = 0x02014B50;
+jz.zip.END_SIGNATURE = 0x06054B50;
 
 (function(window, jz){
 
@@ -152,15 +147,13 @@ function getFileTime(date){
  * //async(recommend!):
  * jz.zip.pack({
  * 	files: [{name: 'a.txt', buffer: bytes.buffer}, {name: 'b.txt', url: 'b.txt'}, {name: 'c.txt', str: 'hello!'}],
- * 	async: true, //default
- * 	complete: function(data){console.log(data)},
- * 	error: function(e){alert(e)}
+ * 	complete: function(data){console.log(data)}
  * });
  * 
  * //sync:
  * var data = jz.zip.pack({
  * 	files: files,
- * 	async: false
+ * 	level: 7
  * });
  */
 jz.zip.pack = function(params){
@@ -213,7 +206,7 @@ jz.zip.pack = function(params){
 			buffer = new ArrayBuffer(0);
 			isDir = true;
 		} else if(obj.url){
-			buffer = jz.utils.loadFileBuffer(obj.url);
+			buffer = jz.utils.loadSync(obj.url);
 			name = dir + (obj.name || obj.url.split('/').pop());
 		} else if(obj.str){
 			buffer = jz.utils.stringToArrayBuffer(obj.str);

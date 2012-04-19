@@ -11,13 +11,13 @@ jz.utils = jz.utils || {};
 (function(window, jz){
 
 /**
- * If a argument is ArrayBuffer, return a Uint8Array view.
+ * Array, ArrayBuffer convert to Uint8Array.
  * 
- * @param {ArrayBuffer|Uint8Array} buffer
+ * @param {ArrayBuffer|Uint8Array|Array} buffer
  * @return {Uint8Array}
  */
-jz.utils.arrayBufferToBytes = function(buffer){
-	return buffer.constructor === Uint8Array ? buffer : new Uint8Array(buffer); 
+jz.utils.toBytes = function(buffer){
+	return (buffer.constructor === ArrayBuffer || Array.isArray(buffer)) ? new Uint8Array(buffer) : buffer; 
 };
 
 
@@ -63,7 +63,7 @@ jz.utils.stringToArrayBuffer = function(str){
  * @param {string} url
  * @return {ArrayBuffer}
  */
-jz.utils.loadFileBuffer = function(url){
+jz.utils.loadSync = function(url){
 	var xhr = new XMLHttpRequest();
 	xhr.open('GET', url, false);
 	//304対策
