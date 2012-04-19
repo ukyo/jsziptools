@@ -1,10 +1,10 @@
 /**
  * Copyright (c) 2012 - Syu Kato <ukyo.web@gmail.com>
  * 
- * jsziptools 1.1
+ * jsziptools 2.0
  * 
  * License: MIT
- * 
+ * https://github.com/ukyo/jsziptools/LICENSE
  */
 
 var jz = jz || {};
