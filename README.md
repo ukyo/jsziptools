@@ -6,46 +6,72 @@ It's a utility of zlib, gzip and zip format binary data.
 
 required ffDataview(http://github.com/ukyo/ffDataView).
 
-## zlib
+## example
+
+### zlib
 
 decompress compressed swf file:
 
-    var swf = jz.utils.loadFileBuffer('compressed.swf');
-    var header = new Uint8Array(swf, 0, 8);
-    var decompressedData = jz.zlib.decompress(new Uint8Array(swf, 8));
+    jz.utils.load('compressed.swf', function(swf){
+      var header = new Uint8Array(swf, 0, 8);
+      var decompressedData = jz.zlib.decompress(new Uint8Array(swf, 8));
+    });
+    
 
 
-## gzip
+### gzip
 
 compress and download:
 
     var text = 'aaaaaabbbbbbbbbbbccccccccc';
     var gzbuff = jz.gz.compress(jz.utils.stringToArrayBuffer(text));
-    var BlobBuilder = window.MozBlobBuilder || window.WebKitBlobBuilder;
     var URL = window.URL || window.webkitURL;
-    var bb = new BlobBuilder();
+    var bb = new jz.BlobBuilder();
     bb.append(gzbuff);
     location.href = URL.createObjectURL(bb.getBlob());
-    //rename a download file.
 
-## zip
+### zip
 
 zip:
 
-    var buffer = jz.zip.compress([
+    var files = [
       {name: "foo", childern: [ //folder
         {name: "hello.txt", str: "Hello World!"}, //string
-        {name: "bar.js", url: "../src/bar.js"} //xhr
+        {name: "bar.js", buffer: buffer}, //ArrayBuffer
+        {name: "hoge.mp3", url: "audiodata/hoge.mp3"} //xhr
       ]}
-    ]);
+    ];
     
-    //個別に圧縮レベルを設定する場合
-    var buffer = jz.zip.compress([
+    //sync
+    var buffer = jz.zip.pack({
+      files: files,
+      level: 4 //compress level
+    });
+    
+    //async(recommend!)
+    jz.zip.pack({
+      files: files,
+      level: 5,
+      complete: function(buffer){
+        //do anything.
+      }
+    })
+    
+    //set compress level each files.
+    var files = [
       {name: "foo", childern: [ //folder
-        {name: "hello.txt", str: "Hello World!", level: 3}, //string
-        {name: "bar.js", url: "../src/bar.js", level: 9} //xhr
+        {name: "hello.txt", str: "Hello World!", level: 0}, //string
+        {name: "bar.js", buffer: buffer, level: 9}, //ArrayBuffer
+        {name: "hoge.mp3", url: "audiodata/hoge.mp3", level: 3} //xhr
       ]}
-    ]);
+    ];
+    
+    jz.zip.pack({
+      files: files,
+      complete: function(buffer){
+        //do anything.
+      }
+    });
 
 
 unzip:
