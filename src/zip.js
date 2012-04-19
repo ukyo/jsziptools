@@ -168,8 +168,8 @@ jz.zip.pack = function(params){
 	
 	files = params.files;
 	level = params.level != null ? params.level : 6;
+	async = typeof params.complete === 'function';
 	complete = typeof params.complete === 'function' ? params.complete : function(){};
-	async = params.async != null ? params.async : true;
 	
 	//load files with ajax(async).
 	function loadFiles(obj){
