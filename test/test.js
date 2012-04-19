@@ -50,10 +50,10 @@ asyncTest('test jz.gz.compress, jz.gz.decompress', function(){
 	});
 });
 
-asyncTest('test jz.zip.pack, jz.zip.unpack(sync)', function(){
+asyncTest('test jz.zip.unpack', function(){
 	var aPath = 'zipsample/a.txt';
 	var bPath = 'zipsample/folder/b.txt';
-	jz.utils.load(['zipsample.zip', aPath, bPath], function(zipsample, a, b){
+	jz.utils.load(['zipsample.zip', aPath, bPath], function(zipsample, a, b	){
 		var unpacked = jz.zip.unpack(zipsample);
 		var aView = new DataView(a);
 		var bView = new DataView(b);
@@ -67,7 +67,20 @@ asyncTest('test jz.zip.pack, jz.zip.unpack(sync)', function(){
 				start();
 			});
 		});
-		
+	});
+});
+
+asyncTest('test jz.zip.pack(sync)', function(){
+	var aPath = 'zipsample/a.txt';
+	var bPath = 'zipsample/folder/b.txt';
+	jz.utils.load(['zipsample.zip', aPath, bPath], function(zipsample, a, b){
+		var unpacked = jz.zip.unpack(zipsample);
+		var aView = new DataView(a);
+		var bView = new DataView(b);
+		var aStr = aView.getString(0, a.byteLength);
+		var bStr = bView.getString(0, b.byteLength);
+		var corrects = [aStr, bStr];
+	
 		var files = [
 			{name: 'zipsample', children: [
 				{name: 'a.txt', buffer: a},
@@ -102,6 +115,47 @@ asyncTest('test jz.zip.pack, jz.zip.unpack(sync)', function(){
 	
 });
 
-asyncTest('test jz.zip.pack, jz.zip.unpack(async)', function(){
-	start();
+asyncTest('test jz.zip.pack(async)', function(){
+	var aPath = 'zipsample/a.txt';
+	var bPath = 'zipsample/folder/b.txt';
+	jz.utils.load(['zipsample.zip', aPath, bPath], function(zipsample, a, b){
+		var unpacked = jz.zip.unpack(zipsample);
+		var aView = new DataView(a);
+		var bView = new DataView(b);
+		var aStr = aView.getString(0, a.byteLength);
+		var bStr = bView.getString(0, b.byteLength);
+		var corrects = [aStr, bStr];
+
+		var files = [
+			{name: 'zipsample', children: [
+				{name: 'a.txt', url: aPath},
+				{name: 'folder', children: [
+					{name: 'b.txt', url: bPath}
+				]}
+			]}
+		];
+		
+		jz.zip.pack({
+			files: files,
+			level: 6,
+			async: true,
+			complete: function(packed){
+				var fr = new FileReader();
+		
+				fr.onload = function(e){
+					var unpacked = jz.zip.unpack(e.target.result);
+					[aPath, bPath].forEach(function(v, i){
+						unpacked.getFileAsText(v, function(text){
+							equal(text.replace("\r\n", "\n"), corrects[i].replace("\r\n", "\n"), 'test pack');
+							start();
+						});
+					});
+				};
+				
+				var bb = new jz.BlobBuilder();
+				bb.append(packed)
+				fr.readAsArrayBuffer(bb.getBlob(packed));
+			}
+		});
+	});
 });
