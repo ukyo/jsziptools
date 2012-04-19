@@ -91,6 +91,7 @@ jz.utils.load = function(urls, complete){
 			var s = xhr.status;
 			if(s == 200 || s == 206 || s == 0) {
 				results[i] = xhr.response;
+				results.indexOf(0) === -1 && complete.apply(null, results);
 			} else {
 				throw "Load Error: " + s;
 			}
@@ -98,14 +99,6 @@ jz.utils.load = function(urls, complete){
 		results[i] = 0;
 		xhr.send();
 	});
-	
-	(function wait(){
-		if(results.indexOf(0) !== -1) {
-			setTimeout(wait, 5);
-		} else {
-			complete.apply(null, results);
-		}
-	})();
 };
 
 /**
