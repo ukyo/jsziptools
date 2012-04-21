@@ -3,31 +3,22 @@
 <html>
 <head>
 	<title>example</title>
-	<script type="text/javascript" src="../qunit/qunit.js"></script>
-	<script type="text/javascript" src="../lib/dataview.min.js"></script>
-	<script type="text/javascript" src="../src/jsziptools.js"></script>
-	<script type="text/javascript" src="../src/utils.js"></script>
-	<script type="text/javascript" src="../src/algorithms/adler32.js"></script>
-	<script type="text/javascript" src="../src/algorithms/crc32.js"></script>
-	<script type="text/javascript" src="../src/algorithms/deflate.js"></script>
-	<script type="text/javascript" src="../src/algorithms/inflate.js"></script>
-	<script type="text/javascript" src="../src/zlib.js"></script>
-	<script type="text/javascript" src="../src/gz.js"></script>
-	<script type="text/javascript" src="../src/zip.js"></script>
-	<script type="text/javascript" src="../src/unzip.js"></script>
+	<script type="text/javascript" src="../lib/ffDataView/build/dataview.min.js"></script>
+	<script type="text/javascript" src="../build/jsziptools.min.js"></script>
 	<script>
 	window.onload = function(){
-		var b, fr = new FileReader(), $ = function(a){return document.getElementById(a)};
+		var b, loader, fr = new FileReader(), $ = function(a){return document.getElementById(a)};
 		$("start").addEventListener("click", function(){
-			b = jz.zip.compress([{name:"foo.txt", str:$("zip").value}], 6);
-			fr.onload = function(){
-				jz.zip.decompress(this.result).getFileAsText("foo.txt", function(result){
-					$("unzip").value = result;
-				});
-			};
-			var bb = new jz.BlobBuilder;
-			bb.append(b);
-			fr.readAsArrayBuffer(bb.getBlob());
+			b = jz.zip.pack({
+				files: [{name:"foo.txt", str:$("zip").value}],
+				level: 6
+			});
+			
+			loader = jz.zip.unpack(b);
+			console.log(loader);
+			loader.getFileAsText(loader.getFileNames()[0], function(text){
+				$("unzip").value = text;
+			});
 		});
   };
   </script>
