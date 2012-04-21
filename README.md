@@ -77,7 +77,7 @@ zip:
 unzip:
 
     //if arg is string, load with xhr.
-    var loader = jz.zip.decompress("foo.zip");
+    var loader = jz.zip.unpack("foo.zip");
     //get file pathes.
     loader.getFileNames();
     //file is read lazy.
