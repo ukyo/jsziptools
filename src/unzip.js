@@ -52,6 +52,9 @@ function getEndCentDirHeader(buffer, offset){
 	
 }
 
+/**
+ * @constructor
+ */
 jz.zip.LazyLoader = function(buffer, files, folders, localFileHeaders, centralDirHeaders){
 	this.buffer = buffer;
 	this.files = files;
@@ -118,35 +121,32 @@ jz.zip.LazyLoader.prototype = {
 //for worker
 if(window.FileReaderSync){
 	(function(){
-		return {
-			getFileAsTextSync: function(filename, encoding){
-				encoding = encodign || 'UTF-8';
-				return new FileReaderSync().readAsText(this.getFileAsBlob(filename), encoidng);
-			},
-			getFileAsBinaryStringSync: function(filename){
-				return new FileReaderSync().readAsBinarySting(this.getFileAsBlob(filename));
-			},
-			getFileAsDataURLSync: function(filename){
-				return new FileReaderSync().readAsDataURL(this.getFileAsBlob(filename));
-			}
-		}
+		this.getFileAsTextSync = function(filename, encoding){
+			encoding = encoding || 'UTF-8';
+			return new FileReaderSync().readAsText(this.getFileAsBlob(filename), encoidng);
+		};
+		this.getFileAsBinaryStringSync = function(filename){
+			return new FileReaderSync().readAsBinarySting(this.getFileAsBlob(filename));
+		};
+		this.getFileAsDataURLSync = function(filename){
+			return new FileReaderSync().readAsDataURL(this.getFileAsBlob(filename));
+		};
 	}).call(jz.zip.LazyLoader.prototype);
 }
 
-
-jz.zip.decompress = function(data){
-	var buffer, view, signature, header, i, n,
+/**
+ * unpack a zip file.
+ * @param {ArrayBuffer} buffer
+ * @return {jz.zip.LazyLoader}
+ * @function
+ */
+jz.zip.unpack = function(buffer){
+	var view, signature, header, i, n,
 		localFileHeaders = [],
 		centralDirHeaders = [],
 		files = [],
 		folders = [],
 		offset = 0;
-	
-	if(data.constructor === ArrayBuffer) {
-		buffer = data;
-	} else {
-		buffer = jz.utils.loadFileBuffer(data);
-	}
 	
 	view = new DataView(buffer);
 	
@@ -184,6 +184,6 @@ jz.zip.decompress = function(data){
 };
 
 //alias
-jz.zip.d = jz.zip.unpack = jz.zip.decompress;
+jz.zip.d = jz.zip.decompress = jz.zip.unpack;
 
 })(this, jz);
