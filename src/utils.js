@@ -11,7 +11,7 @@ jz.utils = jz.utils || {};
 (function(window, jz){
 
 /**
- * Array, ArrayBuffer convert to Uint8Array.
+ * convert Array, ArrayBuffer to Uint8Array.
  * 
  * @param {ArrayBuffer|Uint8Array|Array} buffer
  * @return {Uint8Array}
