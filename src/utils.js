@@ -11,12 +11,13 @@ jz.utils = jz.utils || {};
 (function(window, jz){
 
 /**
- * convert Array, ArrayBuffer to Uint8Array.
+ * convert from Array, ArrayBuffer or String to Uint8Array.
  * 
- * @param {ArrayBuffer|Uint8Array|Array} buffer
+ * @param {ArrayBuffer|Uint8Array|Array|string} buffer
  * @return {Uint8Array}
  */
 jz.utils.toBytes = function(buffer){
+	if(typeof buffer === 'string') buffer = jz.utils.stringToArrayBuffer(buffer);
 	return (buffer.constructor === ArrayBuffer || Array.isArray(buffer)) ? new Uint8Array(buffer) : buffer; 
 };
 
@@ -91,7 +92,6 @@ jz.utils.load = function(urls, complete){
 			var s = xhr.status;
 			if(s == 200 || s == 206 || s == 0) {
 				results[i] = xhr.response;
-				results.indexOf(0) === -1 && complete.apply(null, results);
 			} else {
 				throw "Load Error: " + s;
 			}
@@ -99,6 +99,10 @@ jz.utils.load = function(urls, complete){
 		results[i] = 0;
 		xhr.send();
 	});
+	
+	(function wait(){
+		results.indexOf(0) === -1 ? complete.apply(null, results) : setTimeout(wait, 5);
+	})();
 };
 
 /**
