@@ -198,24 +198,24 @@ jz.zip.pack = function(params){
 		}
 	}
 	
-	function _pack(obj, path	){
+	function _pack(obj, path){
 		var name, buffer, hb, isDir, isDeflate, _level,
 			dir = obj.children || obj.dir || obj.folder;
 		
 		if(typeof obj === 'undefined') return;
 		if(dir){
-			name = path	 + obj.name + (obj.name.substr(-1) === '/' ? '' : '/');
+			name = path + obj.name + (obj.name.substr(-1) === '/' ? '' : '/');
 			buffer = new ArrayBuffer(0);
 			isDir = true;
 		} else if(obj.url){
 			buffer = jz.utils.loadSync(obj.url);
-			name = path	 + (obj.name || obj.url.split('/').pop());
+			name = path + (obj.name || obj.url.split('/').pop());
 		} else if(obj.str){
 			buffer = jz.utils.stringToArrayBuffer(obj.str);
-			name = path	 + obj.name;
+			name = path + obj.name;
 		} else if(obj.buffer){
 			buffer = obj.buffer;
-			name = path	 + obj.name;
+			name = path + obj.name;
 		} else {
 			error('This type is not supported.');
 		}
