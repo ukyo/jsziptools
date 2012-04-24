@@ -1,0 +1,137 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>Jsziptools by ukyo</title>
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+    <script src="javascripts/respond.js"></script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <!--[if lt IE 8]>
+    <link rel="stylesheet" href="stylesheets/ie.css">
+    <![endif]-->
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+
+  </head>
+  <body>
+
+      <div id="header">
+        <nav>
+          <li class="fork"><a href="https://github.com/ukyo/jsziptools">Fork On GitHub</a></li>
+          <li class="downloads"><a href="https://github.com/ukyo/jsziptools/zipball/master">ZIP</a></li>
+          <li class="downloads"><a href="https://github.com/ukyo/jsziptools/tarball/master">TAR</a></li>
+          <li class="title">DOWNLOADS</li>
+        </nav>
+      </div><!-- end header -->
+
+    <div class="wrapper">
+
+      <section>
+        <div id="title">
+          <h1>Jsziptools</h1>
+          <p>zip utility implemented with JavaScript</p>
+          <hr>
+          <span class="credits left">Project maintained by <a href="https://github.com/ukyo">ukyo</a></span>
+          <span class="credits right">Hosted on GitHub Pages &mdash; Theme by <a href="http://twitter.com/#!/michigangraham">mattgraham</a></span>
+        </div>
+
+        <h1>jsziptools</h1>
+
+<p>It's a utility of zlib, gzip and zip format binary data.</p>
+
+<h2>required</h2>
+
+<p>required ffDataview(<a href="http://github.com/ukyo/ffDataView">http://github.com/ukyo/ffDataView</a>).</p>
+
+<h2>example</h2>
+
+<h3>zlib</h3>
+
+<p>decompress compressed swf file:</p>
+
+<pre><code>jz.utils.load('compressed.swf', function(swf){
+  var header = new Uint8Array(swf, 0, 8);
+  var decompressedData = jz.zlib.decompress(new Uint8Array(swf, 8));
+});
+</code></pre>
+
+<h3>gzip</h3>
+
+<p>compress and download:</p>
+
+<pre><code>var text = 'aaaaaabbbbbbbbbbbccccccccc';
+var gzbuff = jz.gz.compress(jz.utils.stringToArrayBuffer(text));
+var URL = window.URL || window.webkitURL;
+var bb = new jz.BlobBuilder();
+bb.append(gzbuff);
+location.href = URL.createObjectURL(bb.getBlob());
+</code></pre>
+
+<h3>zip</h3>
+
+<p>zip:</p>
+
+<pre><code>var files = [
+  {name: "foo", childern: [ //folder
+    {name: "hello.txt", str: "Hello World!"}, //string
+    {name: "bar.js", buffer: buffer}, //ArrayBuffer
+    {name: "hoge.mp3", url: "audiodata/hoge.mp3"} //xhr
+  ]}
+];
+
+//sync
+var buffer = jz.zip.pack({
+  files: files,
+  level: 4 //compress level
+});
+
+//async(recommend!)
+jz.zip.pack({
+  files: files,
+  level: 5,
+  complete: function(buffer){
+    //do anything.
+  }
+})
+
+//set compress level each files.
+var files = [
+  {name: "foo", childern: [ //folder
+    {name: "hello.txt", str: "Hello World!", level: 0}, //string
+    {name: "bar.js", buffer: buffer, level: 9}, //ArrayBuffer
+    {name: "hoge.mp3", url: "audiodata/hoge.mp3", level: 3} //xhr
+  ]}
+];
+
+jz.zip.pack({
+  files: files,
+  complete: function(buffer){
+    //do anything.
+  }
+});
+</code></pre>
+
+<p>unzip:</p>
+
+<pre><code>//if arg is string, load with xhr.
+var loader = jz.zip.decompress("foo.zip");
+//get file pathes.
+loader.getFileNames();
+//file is read lazy.
+loader.getFileAsText(loader.getFileNames[0], function(result){
+  alert(result);
+});
+</code></pre>
+
+<p>support chrome, firefox, IE10.</p>
+      </section>
+
+    </div>
+    <!--[if !IE]><script>fixScale(document);</script><!--<![endif]-->
+    
+  </body>
+</html>
