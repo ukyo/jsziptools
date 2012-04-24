@@ -468,7 +468,7 @@ var FlateStream = (function() {
 })();
 
 /**
- * @param {ArrayBuffer|Uint8Array} bytes
+ * @param {ArrayBuffer|Uint8Array|Array|string} bytes
  * @return {ArrayBuffer}
  */
 jz.algorithms.inflate = function(bytes){

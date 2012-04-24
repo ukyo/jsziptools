@@ -14,7 +14,7 @@ jz.gz = jz.gz || {};
 /**
  * Compress to a gzip format buffer.
  * 
- * @param {ArrayBuffer|Uint8Array} bytes
+ * @param {ArrayBuffer|Uint8Array|Array|string} bytes
  * @param {number} level compress level.
  * @param {Object} metadata This function supports
  * fname(file name) and fcomment (file comment).
@@ -85,7 +85,7 @@ jz.gz.compress = function(bytes, level, metadata){
 /**
  * Decompress from a gzip format buffer.
  * 
- * @param {ArrayBuffer|Uint8Array} bytes
+ * @param {ArrayBuffer|Uint8Array|Array|string} bytes
  * @param {boolean} check If check crc32 checksum, set true.
  * @return {ArrayBuffer}
  */

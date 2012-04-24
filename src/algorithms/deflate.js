@@ -12,12 +12,12 @@ return new Uint8Array(Module.ret()).buffer;
 }
 
 /**
- * @param {ArrayBuffer|Uint8Array|Array} input
+ * @param {ArrayBuffer|Uint8Array|Array|string} bytes
  * @param {number} level
  * @return {ArrayBuffer}
  */
-jz.algorithms.deflate = function(input, level){
-    return deflate(jz.utils.toBytes(input), level);
+jz.algorithms.deflate = function(bytes, level){
+    return deflate(jz.utils.toBytes(bytes), level);
 };
 
 })(jz);

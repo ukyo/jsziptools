@@ -4,8 +4,8 @@
 
 jz.algorithms = jz.algorithms || {};
 
-jz.algorithms.adler32 = function(buffer){
-	var bytes = jz.utils.toBytes(buffer),
+jz.algorithms.adler32 = function(bytes){
+	var bytes = jz.utils.toBytes(bytes),
 		a = 1,
 		b = 0,
 		i = 0,

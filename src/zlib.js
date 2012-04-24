@@ -10,7 +10,7 @@ jz.zlib = jz.zlib || {};
 /**
  * Compress to a zlib format buffer.
  * 
- * @param {ArrayBuffer|Uint8Array} bytes ArrayBuffer or Uint8Array.
+ * @param {ArrayBuffer|Uint8Array|Array|string} bytes
  * @param {integer} level compress level.
  * @return {ArrayBuffer} zlib format buffer.
  */
@@ -41,7 +41,7 @@ jz.zlib.compress = function(bytes, level){
 /**
  * Decompress from a zlib format buffer.
  * 
- * @param {ArrayBuffer|Uint8Array} bytes zlib format buffer.
+ * @param {ArrayBuffer|Uint8Array|Array|string} bytes zlib format buffer.
  * @param {boolean} check if check adler32 checksum, set true.
  * @return {ArrayBuffer} buffer.
  */
@@ -82,9 +82,5 @@ jz.zlib.decompress = function(bytes, check){
 	
 	return ret;
 };
-
-//shortcut
-jz.zlib.c = jz.zlib.compress;
-jz.zlib.d = jz.zlib.decompress;
 
 })(this, jz);
