@@ -75,7 +75,7 @@ inflateは <a class="reference external" href="https://github.com/mozilla/pdf.js
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Arguments:</th><td class="field-body"><ul class="first simple">
-<li><strong>bytes</strong> (<em>ArrayBuffer|Uint8Array|Array</em>) &#8211; 圧縮前のバイト列</li>
+<li><strong>bytes</strong> (<em>ArrayBuffer|Uint8Array|Array|string</em>) &#8211; 圧縮前のバイト列</li>
 </ul>
 </td>
 </tr>
@@ -120,7 +120,7 @@ inflateは <a class="reference external" href="https://github.com/mozilla/pdf.js
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Arguments:</th><td class="field-body"><ul class="first simple">
-<li><strong>bytes</strong> (<em>ArrayBuffer|Uint8Array|Array</em>) &#8211; バイト列</li>
+<li><strong>bytes</strong> (<em>ArrayBuffer|Uint8Array|Array|string</em>) &#8211; バイト列</li>
 <li><strong>level</strong> (<em>number</em>) &#8211; 圧縮レベル。省略した場合はデフォルト値として6が指定されます。範囲は0(無圧縮)〜9まで指定することができます</li>
 </ul>
 </td>
@@ -143,7 +143,7 @@ inflateは <a class="reference external" href="https://github.com/mozilla/pdf.js
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Arguments:</th><td class="field-body"><ul class="first simple">
-<li><strong>bytes</strong> (<em>ArrayBuffer|Uint8Array|Array</em>) &#8211; deflate圧縮されたバイト列</li>
+<li><strong>bytes</strong> (<em>ArrayBuffer|Uint8Array|Array|string</em>) &#8211; deflate圧縮されたバイト列</li>
 </ul>
 </td>
 </tr>
@@ -170,7 +170,7 @@ inflateは <a class="reference external" href="https://github.com/mozilla/pdf.js
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Arguments:</th><td class="field-body"><ul class="first simple">
-<li><strong>bytes</strong> (<em>ArrayBuffer|Uint8Array|Array</em>) &#8211; バイト列</li>
+<li><strong>bytes</strong> (<em>ArrayBuffer|Uint8Array|Array|string</em>) &#8211; バイト列</li>
 <li><strong>level</strong> (<em>number</em>) &#8211; 圧縮レベル。省略した場合はデフォルト値として6が指定されます。範囲は0(無圧縮)〜9まで指定することができます</li>
 </ul>
 </td>
@@ -193,7 +193,7 @@ inflateは <a class="reference external" href="https://github.com/mozilla/pdf.js
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Arguments:</th><td class="field-body"><ul class="first simple">
-<li><strong>bytes</strong> (<em>ArrayBuffer|Uint8Array|Array</em>) &#8211; バイト列</li>
+<li><strong>bytes</strong> (<em>ArrayBuffer|Uint8Array|Array|string</em>) &#8211; バイト列</li>
 <li><strong>check</strong> (<em>boolean</em>) &#8211; trueが指定されている場合、adler32 checksumが正しいかチェックを行います。デフォルト値はfalseです</li>
 </ul>
 </td>
@@ -228,7 +228,7 @@ inflateは <a class="reference external" href="https://github.com/mozilla/pdf.js
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Arguments:</th><td class="field-body"><ul class="first simple">
-<li><strong>bytes</strong> (<em>ArrayBuffer|Uint8Array|Array</em>) &#8211; バイト列</li>
+<li><strong>bytes</strong> (<em>ArrayBuffer|Uint8Array|Array|string</em>) &#8211; バイト列</li>
 <li><strong>level</strong> (<em>number</em>) &#8211; 圧縮レベル。省略した場合はデフォルト値として6が指定されます。範囲は0(無圧縮)〜9まで指定することができます</li>
 </ul>
 </td>
@@ -251,7 +251,7 @@ inflateは <a class="reference external" href="https://github.com/mozilla/pdf.js
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Arguments:</th><td class="field-body"><ul class="first simple">
-<li><strong>bytes</strong> (<em>ArrayBuffer|Uint8Array|Array</em>) &#8211; バイト列</li>
+<li><strong>bytes</strong> (<em>ArrayBuffer|Uint8Array|Array|string</em>) &#8211; バイト列</li>
 <li><strong>check</strong> (<em>boolean</em>) &#8211; trueが指定されている場合、crc32 checksumが正しいかチェックを行います。デフォルト値はfalseです</li>
 </ul>
 </td>
@@ -267,6 +267,7 @@ inflateは <a class="reference external" href="https://github.com/mozilla/pdf.js
 </div>
 <div class="section" id="jz-zip">
 <h2>jz.zip<a class="headerlink" href="#jz-zip" title="Permalink to this headline">¶</a></h2>
+<p>zip形式のファイルの圧縮、伸張を行います。</p>
 <div class="section" id="jz-zip-pack">
 <h3>jz.zip.pack<a class="headerlink" href="#jz-zip-pack" title="Permalink to this headline">¶</a></h3>
 <p><a class="reference internal" href="#files">files</a> で表現されるディレクトリ構造を同期的、非同期的にzip形式のアーカイブに変換します。</p>
@@ -290,13 +291,13 @@ inflateは <a class="reference external" href="https://github.com/mozilla/pdf.js
 </dd></dl>
 
 <p>例:</p>
-<div class="highlight-javascript"><div class="highlight"><pre><span class="c1">//同期的</span>
+<div class="highlight-javascript"><div class="highlight"><pre><span class="c1">//同期</span>
 <span class="kd">var</span> <span class="nx">packedSync</span> <span class="o">=</span> <span class="nx">jz</span><span class="p">.</span><span class="nx">zip</span><span class="p">.</span><span class="nx">pack</span><span class="p">({</span>
   <span class="nx">files</span><span class="o">:</span> <span class="nx">files</span><span class="p">,</span>
   <span class="nx">level</span><span class="o">:</span> <span class="mi">8</span>
 <span class="p">});</span>
 
-<span class="c1">//非同期的 completeを設定すると非同期になる</span>
+<span class="c1">//非同期 completeを設定すると非同期になる</span>
 <span class="nx">jz</span><span class="p">.</span><span class="nx">zip</span><span class="p">.</span><span class="nx">pack</span><span class="p">({</span>
   <span class="nx">files</span><span class="o">:</span> <span class="nx">files</span><span class="p">,</span>
   <span class="nx">level</span><span class="o">:</span> <span class="mi">8</span><span class="p">,</span>
@@ -378,8 +379,8 @@ Ajaxで読み込む場合は非同期的に処理することをお勧めしま�
 <div class="section" id="jz-zip-lazyloader">
 <h3>jz.zip.LazyLoader<a class="headerlink" href="#jz-zip-lazyloader" title="Permalink to this headline">¶</a></h3>
 <p><a class="reference internal" href="#jz.zip.unpack">jz.zip.unpack</a> ではいきなり全てを伸張せずに、
-遅延ロードするための <a class="reference internal" href="#jz-zip-lazyloader">jz.zip.LazyLoader</a> クラスを提供します。
-safixにSyncがつくメソッドはworker内だけで有効になります。</p>
+遅延ロード(でいいんだっけ?)するための <a class="reference internal" href="#jz-zip-lazyloader">jz.zip.LazyLoader</a> クラスを提供します。
+suffixにSyncがつくメソッドはworker内だけで有効になります。</p>
 <dl class="function">
 <dt id="jz.zip.LazyLoader.prototype.getFileNames">
 <tt class="descclassname">jz.zip.LazyLoader.prototype.</tt><tt class="descname">getFileNames</tt><big>(</big><big>)</big><a class="headerlink" href="#jz.zip.LazyLoader.prototype.getFileNames" title="Permalink to this definition">¶</a></dt>
@@ -432,13 +433,14 @@ safixにSyncがつくメソッドはworker内だけで有効になります。</
 
 <dl class="function">
 <dt id="jz.zip.LazyLoader.prototype.getFileAsBlob">
-<tt class="descclassname">jz.zip.LazyLoader.prototype.</tt><tt class="descname">getFileAsBlob</tt><big>(</big><em>filename</em><big>)</big><a class="headerlink" href="#jz.zip.LazyLoader.prototype.getFileAsBlob" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">jz.zip.LazyLoader.prototype.</tt><tt class="descname">getFileAsBlob</tt><big>(</big><em>filename</em><span class="optional">[</span>, <em>contentType</em><span class="optional">]</span><big>)</big><a class="headerlink" href="#jz.zip.LazyLoader.prototype.getFileAsBlob" title="Permalink to this definition">¶</a></dt>
 <dd><table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Arguments:</th><td class="field-body"><ul class="first simple">
 <li><strong>filename</strong> (<em>string</em>) &#8211; フルパスのファイル名</li>
+<li><strong>contentType</strong> (<em>string</em>) &#8211; 省略した場合は自動で割り当てます</li>
 </ul>
 </td>
 </tr>
@@ -568,6 +570,7 @@ safixにSyncがつくメソッドはworker内だけで有効になります。</
 </div>
 <div class="section" id="jz-utils">
 <h2>jz.utils<a class="headerlink" href="#jz-utils" title="Permalink to this headline">¶</a></h2>
+<p>便利な関数たち。</p>
 <div class="section" id="jz-utils-tobytes">
 <h3>jz.utils.toBytes<a class="headerlink" href="#jz-utils-tobytes" title="Permalink to this headline">¶</a></h3>
 <p><tt class="docutils literal"><span class="pre">ArrayBuffer</span></tt> , <tt class="docutils literal"><span class="pre">Array</span></tt> , <tt class="docutils literal"><span class="pre">String</span></tt> を <tt class="docutils literal"><span class="pre">Uint8Array</span></tt> に変換します。
@@ -580,7 +583,7 @@ safixにSyncがつくメソッドはworker内だけで有効になります。</
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Arguments:</th><td class="field-body"><ul class="first simple">
-<li><strong>buffer</strong> (<em>ArrayBuffer|Uint8Array|Array</em>) &#8211; </li>
+<li><strong>buffer</strong> (<em>ArrayBuffer|Uint8Array|Array|string</em>) &#8211; </li>
 </ul>
 </td>
 </tr>

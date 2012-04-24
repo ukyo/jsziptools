@@ -38,7 +38,7 @@ jz.algorithms.adler32
 
 .. js:function:: jz.algorithms.adler32(bytes)
 
-   :param ArrayBuffer|Uint8Array|Array bytes: 圧縮前のバイト列
+   :param ArrayBuffer|Uint8Array|Array|string bytes: 圧縮前のバイト列
    :returns: number of adler32 checksum
 
 jz.algorithms.crc32
@@ -56,7 +56,7 @@ jz.algorithms.deflate
 
 .. js:function:: jz.algorithms.deflate(bytes[, level])
 
-   :param ArrayBuffer|Uint8Array|Array bytes: バイト列
+   :param ArrayBuffer|Uint8Array|Array|string bytes: バイト列
    :param number level: 圧縮レベル。省略した場合はデフォルト値として6が指定されます。範囲は0(無圧縮)〜9まで指定することができます
    :returns: deflate圧縮された結果を ``ArrayBuffer`` として返します
 
@@ -65,7 +65,7 @@ jz.algorithms.inflate
 
 .. js:function:: jz.algorithms.inflate(bytes)
 
-   :param ArrayBuffer|Uint8Array|Array bytes: deflate圧縮されたバイト列
+   :param ArrayBuffer|Uint8Array|Array|string bytes: deflate圧縮されたバイト列
    :returns: 伸張された結果を ``ArrayBuffer`` として返します
 
 jz.zlib
@@ -79,7 +79,7 @@ jz.zlib.compress
 
 .. js:function:: jz.zlib.compress(bytes[, level])
 
-   :param ArrayBuffer|Uint8Array|Array bytes: バイト列
+   :param ArrayBuffer|Uint8Array|Array|string bytes: バイト列
    :param number level: 圧縮レベル。省略した場合はデフォルト値として6が指定されます。範囲は0(無圧縮)〜9まで指定することができます
    :returns: zlib形式で圧縮された結果を ``ArrayBuffer`` として返します
 
@@ -88,7 +88,7 @@ jz.zlib.decompress
 
 .. js:function:: jz.zlib.decompress(bytes[, check])
 
-   :param ArrayBuffer|Uint8Array|Array bytes: バイト列
+   :param ArrayBuffer|Uint8Array|Array|string bytes: バイト列
    :param boolean check: trueが指定されている場合、adler32 checksumが正しいかチェックを行います。デフォルト値はfalseです
    :returns: 伸張された結果を ``ArrayBuffer`` として返します
 
@@ -111,7 +111,7 @@ jz.gz.compress
 
 .. js:function:: jz.gz.compress(bytes[, level])
 
-   :param ArrayBuffer|Uint8Array|Array bytes: バイト列
+   :param ArrayBuffer|Uint8Array|Array|string bytes: バイト列
    :param number level: 圧縮レベル。省略した場合はデフォルト値として6が指定されます。範囲は0(無圧縮)〜9まで指定することができます
    :returns: gzip形式で圧縮された結果を ``ArrayBuffer`` として返します
 
@@ -121,12 +121,14 @@ jz.gz.decompress
 
 .. js:function:: jz.gz.decompress(bytes[, check])
 
-   :param ArrayBuffer|Uint8Array|Array bytes: バイト列
+   :param ArrayBuffer|Uint8Array|Array|string bytes: バイト列
    :param boolean check: trueが指定されている場合、crc32 checksumが正しいかチェックを行います。デフォルト値はfalseです
    :returns: 伸張された結果を ``ArrayBuffer`` として返します
 
 jz.zip
 ------
+
+zip形式のファイルの圧縮、伸張を行います。
 
 jz.zip.pack
 ~~~~~~~~~~~
@@ -142,13 +144,13 @@ files_ で表現されるディレクトリ構造を同期的、非同期的にz
 
 .. code-block:: javascript
 
-   //同期的
+   //同期
    var packedSync = jz.zip.pack({
      files: files,
      level: 8
    });
    
-   //非同期的 completeを設定すると非同期になる
+   //非同期 completeを設定すると非同期になる
    jz.zip.pack({
      files: files,
      level: 8,
@@ -218,8 +220,8 @@ jz.zip.LazyLoader
 ~~~~~~~~~~~~~~~~~
 
 jz.zip.unpack_ ではいきなり全てを伸張せずに、
-遅延ロードするための jz.zip.LazyLoader_ クラスを提供します。
-safixにSyncがつくメソッドはworker内だけで有効になります。
+遅延ロード(でいいんだっけ?)するための jz.zip.LazyLoader_ クラスを提供します。
+suffixにSyncがつくメソッドはworker内だけで有効になります。
 
 .. js:function:: jz.zip.LazyLoader.prototype.getFileNames
 
@@ -237,9 +239,10 @@ safixにSyncがつくメソッドはworker内だけで有効になります。
    :param function callback: 処理が完了したときに呼ばれるコールバック関数。引数には処理結果が文字列として渡されます
    
    
-.. js:function:: jz.zip.LazyLoader.prototype.getFileAsBlob(filename)
+.. js:function:: jz.zip.LazyLoader.prototype.getFileAsBlob(filename[, contentType])
 
    :param string filename: フルパスのファイル名
+   :param string contentType: 省略した場合は自動で割り当てます
    :returns: 伸張されたファイルを ``Blob`` として返します
 
 .. js:function:: jz.zip.LazyLoader.prototype.getFileAsBinaryString(filename, callback)
@@ -296,6 +299,8 @@ safixにSyncがつくメソッドはworker内だけで有効になります。
 jz.utils
 --------
 
+便利な関数たち。
+
 jz.utils.toBytes
 ~~~~~~~~~~~~~~~~
 
@@ -304,7 +309,7 @@ jz.utils.toBytes
 
 .. js:function:: jz.utils.toBytes(buffer)
 
-   :param ArrayBuffer|Uint8Array|Array buffer:
+   :param ArrayBuffer|Uint8Array|Array|string buffer:
    :returns: Uint8Array
 
 jz.utils.stringToArrayBuffer
