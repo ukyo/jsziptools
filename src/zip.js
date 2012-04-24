@@ -173,9 +173,10 @@ jz.zip.pack = function(params){
 	
 	//load files with ajax(async).
 	function loadFiles(obj){
+		var dir = obj.children || obj.dir || obj.folder;
 		if(typeof obj === 'undefined') return;
-		if(obj.children) {
-			obj.children.forEach(loadFiles);
+		if(dir) {
+			dir.forEach(loadFiles);
 		} else if(obj.url) {
 			jz.utils.load(obj.url, (function(i){
 				return function(response){
@@ -197,31 +198,32 @@ jz.zip.pack = function(params){
 		}
 	}
 	
-	function _pack(obj, dir){
-		var name, buffer, hb, isDir, isDeflate, _level;
+	function _pack(obj, path	){
+		var name, buffer, hb, isDir, isDeflate, _level,
+			dir = obj.children || obj.dir || obj.folder;
 		
 		if(typeof obj === 'undefined') return;
-		if(obj.children){
-			name = dir + obj.name + (obj.name.substr(-1) === '/' ? '' : '/');
+		if(dir){
+			name = path	 + obj.name + (obj.name.substr(-1) === '/' ? '' : '/');
 			buffer = new ArrayBuffer(0);
 			isDir = true;
 		} else if(obj.url){
 			buffer = jz.utils.loadSync(obj.url);
-			name = dir + (obj.name || obj.url.split('/').pop());
+			name = path	 + (obj.name || obj.url.split('/').pop());
 		} else if(obj.str){
 			buffer = jz.utils.stringToArrayBuffer(obj.str);
-			name = dir + obj.name;
+			name = path	 + obj.name;
 		} else if(obj.buffer){
 			buffer = obj.buffer;
-			name = dir + obj.name;
+			name = path	 + obj.name;
 		} else {
 			error('This type is not supported.');
 		}
 		
 		//if you don't set compression level to this file, set level of the whole file.
-		_level = obj.level || level;
+		_level = obj.level != null ? obj.level : level;
 		
-		if(_level > 0 && typeof obj.children === 'undefined') {
+		if(_level > 0 && typeof dir === 'undefined') {
 			buffer = jz.algorithms.deflate(buffer, _level);
 			isDeflate = true;
 		}
@@ -234,8 +236,8 @@ jz.zip.pack = function(params){
 		offset += hb.getAchiveLength();
 		n++;
 		
-		if(obj.children){
-			obj.children.forEach(function(item){
+		if(dir){
+			dir.forEach(function(item){
 				_pack(item, name);
 			});
 		}
