@@ -8,8 +8,8 @@ JSZIPTOOLS API REFERENCE
 
 `jsziptools <https://github.com/ukyo/jsziptools>`_ のAPIリファレンスです。
 
-Initialize
-----------
+Initation
+---------
 
 `ffDataView <https://github.com/ukyo/ffDataView>`_ と `jsziptools <https://github.com/ukyo/jsziptools>`_ を読み込むだけです。
 
