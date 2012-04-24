@@ -1,0 +1,89 @@
+@import url("basic.css");
+@import url(http://fonts.googleapis.com/css?family=Arimo:400,700,400italic,700italic|Inconsolata|Open+Sans+Condensed:700);
+
+body {
+	font-size: 14px;
+	padding: 0 30px;
+	color: #494949;
+	font-family: Arimo, 'MS Gothic', Meiryo;
+}
+
+.descclassname,
+.descname,
+pre,
+span.pre {
+	font-family: 'Inconsolata';
+}
+
+.body h1,
+.body h2,
+.body h3,
+.body h4,
+.body h5,
+.sphinxsidebar a,
+.related a,
+.footer {
+	color: #175783;
+	font-family: 'Open Sans Condensed';
+}
+
+.footer {
+	text-align: center;
+}
+a {
+	color: #175783;
+}
+.body h1 {font-size: 3em;}
+.body h2 {font-size: 1.7em;}
+.body h3 {font-size: 1.5em;}
+.body h4 {font-size: 1.3em;}
+.body h5 {font-size: 1em;}
+
+.body h1 a,
+.body h2 a,
+.body h3 a,
+.body h4 a,
+.body h5 a {
+	text-decoration: none;
+}
+
+div.documentwrapper {
+	width: 78%;
+	float: left;
+}
+
+div.sphinxsidebar {
+	width: 22%;
+	float: left;
+	margin: 0;
+}
+
+.body ul {
+	list-style-type: none;
+	margin: 0;
+	padding: 0;
+}
+
+.sphinxsidebar ul {
+	margin: 0;
+	padding: 5px;
+	line-height: 1.3em;
+}
+
+.sphinxsideber li {
+	line-height: 1.3em;
+}
+
+.function {
+	margin-bottom: 30px;
+}
+
+.section {
+	margin-bottom: 50px;
+}
+
+pre {
+	padding: 10px 15px;
+	background-color: #f0f0f0;
+	border: 1px solid #dedede;
+}
