@@ -67,17 +67,15 @@ jz.zlib.decompress = function(bytes, check){
 		offset += 4;
 	}
 	
-	//read adler32 checksum
-	// checksum = jz.utils.readUintBE(bytes, bytes.length - 4);
-	checksum = view.getUint32(bytes.length - 4, false);
-	
 	//decompress from deflate stream
 	ret = jz.algorithms.inflate(bytes.subarray(offset, bytes.length - 4));
-	checksum2 = jz.algorithms.adler32(ret);
 	
 	//check adler32
-	if(check && checksum !== checksum2){
-		throw 'Error: differ from checksum';
+	if(check){
+		//read adler32 checksum
+		checksum = view.getUint32(bytes.length - 4, false);
+		checksum2 = jz.algorithms.adler32(ret);
+		if(checksum !== checksum2) throw 'Error: differ from checksum';
 	}
 	
 	return ret;
