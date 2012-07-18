@@ -29,13 +29,15 @@ function getEndCentDirHeader(i, centralDirHeaderSize, offset){
  * @constructor
  * 
  * @param {ArrayBuffer} buffer
+ * @param {ArrayBuffer} compressedBuffer
  * @param {string} filename
  * @param {Date} date
  * @param {boolean|number} isDir
  * @param {boolean|number} isDeflate
  */
-function HeaderBuilder(buffer, filename, date, offset, isDir, isDeflate){
+function HeaderBuilder(buffer, compressedBuffer, filename, date, offset, isDir, isDeflate){
 	this.buffer = buffer;
+	this.compressedBuffer = compressedBuffer;
 	this.filename = filename;
 	this.date = date;
 	this.offset = offset;
@@ -53,7 +55,8 @@ HeaderBuilder.prototype = {
 	 */
 	_getCommonHeader: function(){
 		var view = new DataView(new ArrayBuffer(26)),
-			compsize = this.buffer.byteLength;
+			compsize = this.compressedBuffer.byteLength,
+			uncompsize = this.buffer.byteLength;
 		view.setUint16(0, 10, true);
 		view.setUint16(2, 0, true);
 		view.setUint16(4, this.deflateFlag, true);
@@ -61,7 +64,7 @@ HeaderBuilder.prototype = {
 		view.setUint16(8, getFileDate(this.date), true);
 		view.setUint32(10, jz.algorithms.crc32(this.buffer), true);
 		view.setUint32(14, compsize, true);
-		view.setUint32(18, compsize, true);
+		view.setUint32(18, uncompsize, true);
 		view.setUint16(22, this.filename.length, true);
 		view.setUint16(24, 0, true);
 		return new Uint8Array(view.buffer);
@@ -109,7 +112,7 @@ HeaderBuilder.prototype = {
 	 * @return {number}
 	 */
 	getAchiveLength: function(){
-		return this.getLocalFileHeader().length + this.buffer.byteLength;
+		return this.getLocalFileHeader().length + this.compressedBuffer.byteLength;
 	}
 };
 
@@ -199,7 +202,7 @@ jz.zip.pack = function(params){
 	}
 	
 	function _pack(obj, path){
-		var name, buffer, hb, isDir, isDeflate, _level,
+		var name, buffer, compressedBuffer, hb, isDir, isDeflate, _level,
 			dir = obj.children || obj.dir || obj.folder;
 		
 		if(typeof obj === 'undefined') return;
@@ -219,18 +222,19 @@ jz.zip.pack = function(params){
 		} else {
 			error('This type is not supported.');
 		}
-		
+		compressedBuffer = buffer;
+
 		//if you don't set compression level to this file, set level of the whole file.
 		_level = obj.level != null ? obj.level : level;
 		
 		if(_level > 0 && typeof dir === 'undefined') {
-			buffer = jz.algorithms.deflate(buffer, _level);
+			compressedBuffer = jz.algorithms.deflate(buffer, _level);
 			isDeflate = true;
 		}
 		
-		hb = new HeaderBuilder(buffer, name, date, offset, isDir, isDeflate);
+		hb = new HeaderBuilder(buffer, compressedBuffer, name, date, offset, isDir, isDeflate);
 		achiveArr.push(hb.getLocalFileHeader());
-		achiveArr.push(new Uint8Array(buffer));
+		achiveArr.push(new Uint8Array(compressedBuffer));
 		centralDirArr.push(hb.getCentralDirHeader());
 		
 		offset += hb.getAchiveLength();
