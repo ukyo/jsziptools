@@ -15,7 +15,7 @@ jz.algorithms.crc32 = (function(){
 			for(j = 0; j < 8; ++j){
 				u = u & 1 ? (u >>> 1) ^ poly : u >>> 1;
 			}
-			table[i] = u;
+			table[i] = u >>> 0;
 		}
 		return table;
 	})();
@@ -24,6 +24,6 @@ jz.algorithms.crc32 = (function(){
 		var result = 0xFFFFFFFF, bytes = jz.utils.toBytes(bytes), i, n, t = table;
 		for(i = 0, n = bytes.length; i < n; ++i)
 			result = (result >>> 8) ^ t[bytes[i] ^ (result & 0xFF)];
-		return new Uint32Array([~result])[0];
+		return (~result) >>> 0;
 	};
 })();
