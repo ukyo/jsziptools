@@ -73,7 +73,7 @@ jz.gz.compress = function(bytes, level, metadata){
 	view.setUint32(ret.length - 8, jz.algorithms.crc32(bytes), true);
 	
 	//write isize
-	view.setUint32(ret.length - 4, bytes.length % 0xFFFFFFFF, true);
+	view.setUint32(ret.length - 4, bytes.length, true);
 	
 	//copy data
 	ret.set(deflatedBytes, headerLength);
