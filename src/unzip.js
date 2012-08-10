@@ -1,6 +1,4 @@
-jz.zip = jz.zip || {};
-
-(function(window, jz){
+(function(jz){
 
 var BlobBuilder = jz.BlobBuilder;
 
@@ -108,75 +106,80 @@ jz.zip.LazyLoader = function(buffer, files, folders, localFileHeaders, centralDi
 	this.centralDirHeaders = centralDirHeaders;
 };
 
-jz.zip.LazyLoader.prototype = {
-	getFileNames: function(){
-		var fileNames = [], i, n;
-		for(i = 0, n = this.files.length; i < n; ++i){
-			fileNames.push(this.localFileHeaders[this.files[i]].filename);
-		}
-		return fileNames;
-	},
-	getFileAsArrayBuffer: function(filename){
-		var i, n;
-		for(i = 0, n = this.localFileHeaders.length; i < n; ++i){
-			if(filename === this.localFileHeaders[i].filename) {
-				offset = this.centralDirHeaders[i].headerpos + this.localFileHeaders[i].headersize;
-				len = this.localFileHeaders[i].compsize;
-				if(this.centralDirHeaders[i].comptype === 0) {
-					return new Uint8Array(new Uint8Array(this.buffer, offset, len)).buffer;
-				}
-				return jz.algorithms.inflate(new Uint8Array(this.buffer, offset, len));
-			}
-		}
-		return null;
-	},
-	getFileAsText: function(filename, encoding, callback){
-		var fr = new FileReader();
-		if(encoding.constructor === Function) {
-			callback = encoding;
-			encoding = 'UTF-8';
-		}
-		fr.onload = function(e){
-			callback.call(fr, e.target.result, e);
-		};
-		fr.readAsText(this.getFileAsBlob(filename), encoding);
-	},
-	getFileAsBinaryString: function(filename, callback){
-		var fr = new FileReader();
-		fr.onload = function(e){
-			callback.call(fr, e.target.result, e);
-		};
-		fr.readAsBinaryString(this.getFileAsBlob(filename));
-	},
-	getFileAsDataURL: function(filename, callback){
-		var fr = new FileReader();
-		fr.onload = function(e){
-			callback.call(fr, e.target.result, e);
-		};
-		fr.readAsDataURL(this.getFileAsBlob(filename));
-	},
-	getFileAsBlob: function(filename, contentType){
-		var bb = new BlobBuilder();
-		contentType = contentType || mimetypes.guess(filename);
-		bb.append(this.getFileAsArrayBuffer(filename));
-		return bb.getBlob(contentType);
+var p = jz.zip.LazyLoader.prototype;
+
+p.getFileNames = function(){
+	var fileNames = [], i, n;
+	for(i = 0, n = this.files.length; i < n; ++i){
+		fileNames.push(this.localFileHeaders[this.files[i]].filename);
 	}
+	return fileNames;
+};
+
+p.getFileAsArrayBuffer = function(filename){
+	var i, n;
+	for(i = 0, n = this.localFileHeaders.length; i < n; ++i){
+		if(filename === this.localFileHeaders[i].filename) {
+			offset = this.centralDirHeaders[i].headerpos + this.localFileHeaders[i].headersize;
+			len = this.localFileHeaders[i].compsize;
+			if(this.centralDirHeaders[i].comptype === 0) {
+				return new Uint8Array(new Uint8Array(this.buffer, offset, len)).buffer;
+			}
+			return jz.algorithms.inflate(new Uint8Array(this.buffer, offset, len));
+		}
+	}
+	return null;
+};
+
+p.getFileAsText = function(filename, encoding, callback){
+	var fr = new FileReader();
+	if(encoding.constructor === Function) {
+		callback = encoding;
+		encoding = 'UTF-8';
+	}
+	fr.onload = function(e){
+		callback.call(fr, e.target.result, e);
+	};
+	fr.readAsText(this.getFileAsBlob(filename), encoding);
+};
+
+p.getFileAsBinaryString = function(filename, callback){
+	var fr = new FileReader();
+	fr.onload = function(e){
+		callback.call(fr, e.target.result, e);
+	};
+	fr.readAsBinaryString(this.getFileAsBlob(filename));
+};
+
+p.getFileAsDataURL = function(filename, callback){
+	var fr = new FileReader();
+	fr.onload = function(e){
+		callback.call(fr, e.target.result, e);
+	};
+	fr.readAsDataURL(this.getFileAsBlob(filename));
+};
+
+p.getFileAsBlob = function(filename, contentType){
+	var bb = new BlobBuilder();
+	contentType = contentType || mimetypes.guess(filename);
+	bb.append(this.getFileAsArrayBuffer(filename));
+	return bb.getBlob(contentType);
 };
 
 //for worker
-if(window.FileReaderSync){
-	(function(){
-		this.getFileAsTextSync = function(filename, encoding){
-			encoding = encoding || 'UTF-8';
-			return new FileReaderSync().readAsText(this.getFileAsBlob(filename), encoidng);
-		};
-		this.getFileAsBinaryStringSync = function(filename){
-			return new FileReaderSync().readAsBinarySting(this.getFileAsBlob(filename));
-		};
-		this.getFileAsDataURLSync = function(filename){
-			return new FileReaderSync().readAsDataURL(this.getFileAsBlob(filename));
-		};
-	}).call(jz.zip.LazyLoader.prototype);
+if(jz.env.isWorker){
+	p.getFileAsTextSync = function(filename, encoding){
+		encoding = encoding || 'UTF-8';
+		return new FileReaderSync().readAsText(this.getFileAsBlob(filename), encoidng);
+	};
+
+	p.getFileAsBinaryStringSync = function(filename){
+		return new FileReaderSync().readAsBinarySting(this.getFileAsBlob(filename));
+	};
+
+	p.getFileAsDataURLSync = function(filename){
+		return new FileReaderSync().readAsDataURL(this.getFileAsBlob(filename));
+	};
 }
 
 /**
@@ -239,4 +242,4 @@ jz.zip.unpack = function(buffer){
 //alias
 jz.zip.decompress = jz.zip.unpack;
 
-})(this, jz);
+})(jz);
