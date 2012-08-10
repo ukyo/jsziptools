@@ -8,4 +8,10 @@
  */
 
 var jz = jz || {};
+
+jz.utils = jz.utils || {};
+jz.algorithms = jz.algorithms || {};
+jz.zlib = jz.zlib || {};
+jz.gz = jz.gz || {};
+jz.zip = jz.zip || {};
 jz.BlobBuilder = this.MozBlobBuilder || this.WebKitBlobBuilder || this.MSBlobBuilder || this.BlobBuilder;
