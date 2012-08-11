@@ -6,10 +6,6 @@
  * utils of jsziptools.
  */
 
-jz.utils = jz.utils || {};
-
-(function(window, jz){
-
 /**
  * convert from Array, ArrayBuffer or String to Uint8Array.
  * 
@@ -85,12 +81,12 @@ jz.utils.load = function(urls, complete){
 	var results = [];
 	
 	urls.forEach(function(url, i){
-		var xhr = new XMLHttpRequest;
+		var xhr = new XMLHttpRequest();
 		xhr.open('GET', url);
 		xhr.responseType = 'arraybuffer';
 		xhr.onloadend = function(){
 			var s = xhr.status;
-			if(s == 200 || s == 206 || s == 0) {
+			if(s === 200 || s === 206 || s === 0) {
 				results[i] = xhr.response;
 			} else {
 				throw "Load Error: " + s;
@@ -123,5 +119,3 @@ jz.utils.concatByteArrays = function(byteArrays){
 	}
 	return ret;
 };
-
-})(this, jz);
