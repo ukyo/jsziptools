@@ -3,10 +3,6 @@
  * http://tools.ietf.org/rfc/rfc1950.txt
  */
 
-jz.zlib = jz.zlib || {};
-
-(function(window, jz){
-
 /**
  * Compress to a zlib format buffer.
  * 
@@ -80,5 +76,3 @@ jz.zlib.decompress = function(bytes, check){
 	
 	return ret;
 };
-
-})(this, jz);
