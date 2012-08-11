@@ -1,3 +1,11 @@
+/* require:
+jsziptools.js
+adler32.js
+deflate.js
+utils.js
+*/
+
+
 /**
  * Compress to a zlib format buffer.
  * 
