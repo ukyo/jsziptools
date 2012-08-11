@@ -1,10 +1,7 @@
-/**
- * Copyright (c) 2012 - Syu Kato <ukyo.web@gmail.com>
- * 
- * License: MIT
- * 
- * utils of jsziptools.
- */
+/* require:
+jsziptools.js
+*/
+
 
 /**
  * convert from Array, ArrayBuffer or String to Uint8Array.
