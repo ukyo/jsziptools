@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+
+<html>
+    <head>
+        <title>read filenames of a zip file</title>
+        <script type="text/javascript" src="../lib/ffDataView/build/dataview.min.js"></script>
+        <script type="text/javascript" src="../build/jsziptools.min.js"></script>
+        <script type="text/javascript">
+            window.onload = function(){
+                function cancel(e) {
+                    e.preventDefault();
+                }
+
+                function on (obj, name, callback) {
+                    obj.addEventListener(name, callback, false);
+                }
+
+                on(window, 'dragenter', cancel);
+                on(window, 'dragover', cancel);
+                on(window, 'drop', function(e) {
+                    cancel(e);
+                    var file = e.dataTransfer.files[0];
+                    var fr = new FileReader();
+                    
+                    fr.onloadend = function() {
+                        var loader = jz.zip.unpack(fr.result);
+                        var filenames = loader.getFileNames();
+                        var filenamesView = document.getElementById('filenames-view');
+
+                        filenamesView.innerHTML = filenames.map(function(filename){ return '<li>' + filename; }).join('\n');
+                    };
+
+                    fr.readAsArrayBuffer(file);
+                });
+            };
+        </script>
+    </head>
+    <body>
+        <h1>Read filenames of a zip file.</h1>
+        <p>drag &amp; drop a zip file this window.</p>
+        <ul id="filenames-view"></ul>
+    </body>
+</html>
