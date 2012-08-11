@@ -2,24 +2,24 @@
 
 <html>
 <head>
-	<title>example</title>
-	<script type="text/javascript" src="../lib/ffDataView/build/dataview.min.js"></script>
-	<script type="text/javascript" src="../build/jsziptools.min.js"></script>
-	<script>
-	window.onload = function(){
-		var b, loader, fr = new FileReader(), $ = function(a){return document.getElementById(a)};
-		$("start").addEventListener("click", function(){
-			b = jz.zip.pack({
-				files: [{name:"foo.txt", str:$("zip").value}],
-				level: 6
-			});
-			
-			loader = jz.zip.unpack(b);
-			console.log(loader);
-			loader.getFileAsText(loader.getFileNames()[0], function(text){
-				$("unzip").value = text;
-			});
-		});
+    <title>example</title>
+    <script type="text/javascript" src="../lib/ffDataView/build/dataview.min.js"></script>
+    <script type="text/javascript" src="../build/jsziptools.min.js"></script>
+    <script>
+    window.onload = function(){
+        var b, loader, fr = new FileReader(), $ = function(a){return document.getElementById(a)};
+        $("start").addEventListener("click", function(){
+            b = jz.zip.pack({
+                files: [{name:"foo.txt", str:$("zip").value}],
+                level: 6
+            });
+            
+            loader = jz.zip.unpack(b);
+            console.log(loader);
+            loader.getFileAsText(loader.getFileNames()[0], function(text){
+                $("unzip").value = text;
+            });
+        });
   };
   </script>
 </head>
