@@ -7,10 +7,6 @@
  * http://tools.ietf.org/rfc/rfc1952.txt
  */
 
-jz.gz = jz.gz || {};
-
-(function(window, jz){
-
 /**
  * Compress to a gzip format buffer.
  * 
@@ -136,5 +132,3 @@ jz.gz.decompress = function(bytes, check){
 	
 	return ret;
 };
-
-})(this, jz);
