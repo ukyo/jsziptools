@@ -1,5 +1,3 @@
-jz.algorithms = jz.algorithms || {};
-
 (function(jz){
 
 /*
