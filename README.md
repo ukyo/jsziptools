@@ -2,9 +2,11 @@
 
 It's a utility of zlib, gzip and zip format binary data.
 
+[API Reference](http://ukyo.github.com/jsziptools/docs/build/html/index.html)
+
 ## required
 
-required ffDataview(http://github.com/ukyo/ffDataView).
+required [ffDataview](http://github.com/ukyo/ffDataView).
 
 ## example
 
