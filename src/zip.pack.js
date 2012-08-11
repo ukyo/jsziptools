@@ -1,3 +1,10 @@
+/* require:
+jsziptools.js
+utils.js
+deflate.js
+crc32.js
+*/
+
 (function(jz){
 
 /**
