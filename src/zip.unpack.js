@@ -1,3 +1,11 @@
+/* require
+jsziptools.js
+utils.js
+inflate.js
+crc32.js
+*/
+
+
 (function(jz){
 
 var BlobBuilder = jz.BlobBuilder;
