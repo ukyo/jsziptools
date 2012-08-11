@@ -1,3 +1,8 @@
+/* require:
+jsziptools.js
+utils.js
+*/
+
 (function(jz){
 
 function deflate(input, level) {
