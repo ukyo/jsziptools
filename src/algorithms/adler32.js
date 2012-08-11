@@ -1,3 +1,9 @@
+/* require:
+jsziptools.js
+utils.js
+*/
+
+
 /**
  * Calc adler32 checksum.
  */
