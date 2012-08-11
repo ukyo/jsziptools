@@ -1,9 +1,4 @@
-jz.zip = jz.zip || {};
-jz.zip.LOCAL_FILE_SIGNATURE = 0x04034B50;
-jz.zip.CENTRAL_DIR_SIGNATURE = 0x02014B50;
-jz.zip.END_SIGNATURE = 0x06054B50;
-
-(function(window, jz){
+(function(jz){
 
 /**
  * @param {number} i index of a File.
@@ -267,4 +262,4 @@ jz.zip.pack = function(params){
 //alias
 jz.zip.compress = jz.zip.pack;
 
-})(this, jz);
+})(jz);
