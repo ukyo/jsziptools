@@ -1,3 +1,9 @@
+/* require:
+jsziptools.js
+utils.js
+*/
+
+
 (function(jz){
 
 /*
