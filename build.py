@@ -32,7 +32,7 @@ def main(conf=None):
               (COMPILER_PATH, ' '.join(os.path.abspath(file) for file in JS_FILES), tmp_path))
     if not os.path.isdir(BUILD_PATH):
         os.mkdir(BUILD_PATH)
-    f = open(BUILD_PATH + OUTPUT_NAME, "w")
+    f = open(BUILD_PATH + '/' + OUTPUT_NAME, "w")
     f.write("// %s %s\n" % (REPOSITORY_NAME, REPOSITORY_URL))
     f.write(open(tmp_path, "r").read())
     f.close()
@@ -40,9 +40,10 @@ def main(conf=None):
 
 if __name__ == "__main__":
     arglen = len(sys.argv)
-    if arglen == 1:
-        main(__import__(sys.argv[1]))
-    elif arglen == 0:
+    if arglen == 2:
+        print sys.argv
+        main(__import__(sys.argv[1][: -3]))
+    elif arglen == 1:
         main()
     else:
         print 'invalid'
