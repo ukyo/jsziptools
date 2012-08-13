@@ -1,5 +1,4 @@
 #conf file sample.
-#This sample makes to jz.zip.unpack
 
 #COMPILER_PATH = ""
 REPOSITORY_NAME = "jsziptools"
