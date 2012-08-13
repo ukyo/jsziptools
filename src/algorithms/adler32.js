@@ -29,5 +29,5 @@ jz.algorithms.adler32 = function(bytes){
         b %= MOD_ADLER;
     }
     
-    return new Uint32Array([(b << 16) | a])[0];
+    return (b << 16) | a]) >>> 0;
 };
