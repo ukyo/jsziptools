@@ -80,9 +80,9 @@ zip:
     });
 ```
 
-```javascript
 unzip:
 
+```javascript
     //if arg is string, load with xhr.
     var loader = jz.zip.unpack("foo.zip");
     //get file pathes.
