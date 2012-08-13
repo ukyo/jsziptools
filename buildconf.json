@@ -1,0 +1,11 @@
+{
+    "compiler": "./compiler.jar",
+    "output": "./build/jsziptools.unzip.min.js",
+    "files": [
+        "src/jsziptools.js",
+        "src/utils.js",
+        "src/algorithms/crc32.js",
+        "src/algorithms/inflate.js",
+        "src/zip.unpack.js"
+    ]
+}
