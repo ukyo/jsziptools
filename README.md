@@ -4,6 +4,10 @@ It's a utility of zlib, gzip and zip format binary data.
 
 [API Reference](http://ukyo.github.com/jsziptools/docs/build/html/index.html)
 
+## suported browser
+
+chrome, firefox, IE10.
+
 ## required
 
 required [ffDataview](http://github.com/ukyo/ffDataView).
@@ -147,5 +151,3 @@ Usage:
 ```
 $ ./build.py -c buildconf.json
 ```
-
-support chrome, firefox, IE10.
