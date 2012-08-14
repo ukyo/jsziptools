@@ -20,6 +20,7 @@ parser.add_argument('-C',
 parser.add_argument('-m',
                     metavar='MODULES',
                     dest='module',
+                    nargs='*',
                     help='Set module names you want to module.',
                     default=['zlib', 'gz', 'zip'])
 
@@ -172,6 +173,7 @@ def main():
     else:
         compiler = option.compiler
         output = option.output
+        option.module = [option.module] if type(option.module) == str else option.module
         files = select_modules(option.module)
 
     command = "java -jar %s --js %s --js_output_file %s" % (compiler, ' '.join(os.path.abspath(file) for file in files), tmp_file)
