@@ -94,23 +94,58 @@ unzip:
 
 ## custom build
 
-If you want to customize to build, you can write a conf file. Write it in Python.
+You can use `build.py` to build jsziptools.
 
-example:
+```
+$ #see help
+$ ./build.py -h
+usage: build.py [-h] [-C COMPILER_PATH] [-m MODULES] [-o OUTPUT_PATH]
+                [-c CONF_FILE_PATH]
 
-```python
-REPOSITORY_NAME = "jsziptools"
-REPOSITORY_URL = "http://github.com/ukyo/jsziptools"
-OUTPUT_NAME = "jsziptools.unzip.min.js"
-BUILD_PATH = "build"
+optional arguments:
+  -h, --help         show this help message and exit
+  -C COMPILER_PATH   Set a Closure Compiler path.
+  -m MODULES         Set module names you want to module.
+  -o OUTPUT_PATH     Set a output file path.
+  -c CONF_FILE_PATH  Set a configuration file path.
+$ #select modules
+$ ./build.py -m gz.decompress zlib.decompress -o build/gz_zlib_decomp.min.js
+```
 
-JS_FILES = (
-    "src/jsziptools.js",
-    "src/utils.js",
-    "src/algorithms/crc32.js",
-    "src/algorithms/inflate.js",
-    "src/zip.unpack.js",
-)
+module list:
+
+* `gz.compress`
+* `gz.decompress`
+* `gz` (`gz.compress`and`gz.decompess`)
+* `zlib.compress`
+* `zlib.decompress`
+* `zlib` (`zlib.compress`and`zlib.decompress`)
+* `zip.pack`
+* `zip.unpack`
+* `zip` (`zip.pack`and`zip.unpack`)
+
+You also can write a configuration file that is written in json.
+
+Example of a configuration file:
+
+```json
+{
+    "compiler": "./compiler.jar",
+    "output": "./build/jsziptools.unzip.min.js",
+    "files": [
+        "src/jsziptools.js",
+        "src/utils.js",
+        "src/algorithms/crc32.js",
+        "src/algorithms/inflate.js",
+        "src/zip.unpack.js"
+    ]
+}
+```
+
+Usage:
+
+```
+$ ./build.py -c buildconf.json
 ```
 
 support chrome, firefox, IE10.
