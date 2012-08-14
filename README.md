@@ -4,6 +4,10 @@ It's a utility of zlib, gzip and zip format binary data.
 
 [API Reference](http://ukyo.github.com/jsziptools/docs/build/html/index.html)
 
+## suported browser
+
+chrome, firefox, IE10.
+
 ## required
 
 required [ffDataview](http://github.com/ukyo/ffDataView).
@@ -59,23 +63,23 @@ zip:
       files: files,
       level: 5,
       complete: function(buffer){
-        //do anything.
+        //...
       }
     })
     
     //set compress level each files.
     var files = [
-      {name: "foo", childern: [ //folder
-        {name: "hello.txt", str: "Hello World!", level: 0}, //string
-        {name: "bar.js", buffer: buffer, level: 9}, //ArrayBuffer
-        {name: "hoge.mp3", url: "audiodata/hoge.mp3", level: 3} //xhr
-      ]}
+      {name: "mimetype", str: "application/epub+zip", level: 0}, //string
+      {name: "META-INF", dir: [ //folder
+        {name: "container.xml", buffer: buffer, level: 0}, //ArrayBuffer
+      ]},
+      {name: "foo.xhtml", url: "foo.xhtml", level: 9} //xhr
     ];
     
     jz.zip.pack({
       files: files,
       complete: function(buffer){
-        //do anything.
+        //...
       }
     });
 ```
@@ -147,5 +151,3 @@ Usage:
 ```
 $ ./build.py -c buildconf.json
 ```
-
-support chrome, firefox, IE10.
