@@ -12,7 +12,7 @@ chrome, firefox, IE10.
 
 required [ffDataview](http://github.com/ukyo/ffDataView).
 
-## example
+## examples
 
 ### zlib
 
