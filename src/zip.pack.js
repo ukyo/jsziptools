@@ -167,12 +167,12 @@ jz.zip.pack = function(params){
         archives = [],
         centralDirs = [],
         date = new Date(),
-        stack = [],
-        stackIndex = 0,
+        arr = [],
+        index = 0,
         files, level, complete, error, async;
     
     files = params.files;
-    level = params.level != null ? params.level : 6;
+    level = params.level !== void(0) ? params.level : 6;
     async = typeof params.complete === 'function';
     complete = typeof params.complete === 'function' ? params.complete : function(){};
     
@@ -187,16 +187,16 @@ jz.zip.pack = function(params){
                 return function(response){
                     obj.buffer = response;
                     delete obj.url;
-                    stack[i] = "load!";
+                    arr[i] = "load!";
                 };
-            })(stackIndex));
-            stack[stackIndex] = 0;
-            stackIndex++;
+            })(index));
+            arr[index] = 0;
+            index++;
         }
     }
     
     function wait(){
-        if(stack.indexOf(0) === -1 || stack.length === 0) {
+        if(arr.indexOf(0) === -1 || stack.length === 0) {
             complete(pack());
         } else {
             setTimeout(wait, 5);
@@ -216,7 +216,7 @@ jz.zip.pack = function(params){
             buffer = jz.utils.loadSync(obj.url);
             name = path + (obj.name || obj.url.split('/').pop());
         } else if(obj.str){
-            buffer = jz.utils.stringToArrayBuffer(obj.str);
+            buffer = jz.utils.stringToBytes(obj.str);
             name = path + obj.name;
         } else if(obj.buffer){
             buffer = obj.buffer;
@@ -227,7 +227,7 @@ jz.zip.pack = function(params){
         compressedBuffer = buffer;
 
         //if you don't set compression level to this file, set level of the whole file.
-        _level = obj.level != null ? obj.level : level;
+        _level = obj.level !== void(0) ? obj.level : level;
         
         if(_level > 0 && typeof dir === 'undefined') {
             compressedBuffer = jz.algorithms.deflate(buffer, _level);
