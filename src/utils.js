@@ -6,22 +6,28 @@ jsziptools.js
 /**
  * convert from Array, ArrayBuffer or String to Uint8Array.
  * 
- * @param {ArrayBuffer|Uint8Array|Array|string} buffer
+ * @param {ArrayBuffer|Uint8Array|Int8Array|Uint8ClampedArray|Array|string} buffer
  * @return {Uint8Array}
  */
 jz.utils.toBytes = function(buffer){
-    if(typeof buffer === 'string') buffer = jz.utils.stringToArrayBuffer(buffer);
-    return (buffer.constructor === ArrayBuffer || Array.isArray(buffer)) ? new Uint8Array(buffer) : buffer; 
+    switch(buffer.constructor){
+        case String: return jz.utils.stringToBytes(buffer);
+        case Array:
+        case ArrayBuffer: return new Uint8Array(buffer);
+        case Uint8Array: return buffer;
+        case Int8Array:
+        case Uint8ClampedArray: return new Uint8Array(buffer.buffer);
+    }
 };
 
 
 /**
- * Convert a UTF-8 string to a ArrayBuffer.
- * 
+ * Convert from String to Uint8Array.
+ *
  * @param {string} str
- * @return {ArrayBuffer}
+ * @return {Uint8Array}
  */
-jz.utils.stringToArrayBuffer = function(str){
+jz.utils.stringToBytes = !jz.env.isWorker ? function(str){
     var n = str.length,
         idx = -1,
         utf8 = [],
@@ -47,9 +53,10 @@ jz.utils.stringToArrayBuffer = function(str){
                 utf8[++idx] = 0x80 | ((c >>> (6 * j)) & 0x3F);
         }
     }
-    return new Uint8Array(utf8).buffer;
+    return new Uint8Array(utf8);
+} : function(str){
+    return new Uint8Array(new FileReaderSync().readAsArrayBuffer(new Blob([str])));
 };
-
 
 /**
  * Load buffer with Ajax.
@@ -99,7 +106,7 @@ jz.utils.load = function(urls, complete){
 };
 
 /**
- * @param {...(Uint8Array|int8Array)} byteArrays
+ * @param {...(Uint8Array|int8Array|Uint8ClampedArray)} byteArrays
  * @return {Uint8Array}
  */
 jz.utils.concatByteArrays = function(byteArrays){
