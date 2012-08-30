@@ -8,10 +8,6 @@ It's a utility of zlib, gzip and zip format binary data.
 
 chrome, firefox, IE10.
 
-## required
-
-required [ffDataview](http://github.com/ukyo/ffDataView).
-
 ## examples
 
 ### zlib
@@ -45,34 +41,35 @@ zip:
 
 ```javascript
     var files = [
-      {name: "foo", childern: [ //folder
-        {name: "hello.txt", str: "Hello World!"}, //string
+      {name: "foo", dir: [ //folder
+        {name: "hello.txt", buffer: "Hello World!"}, //string
         {name: "bar.js", buffer: buffer}, //ArrayBuffer
         {name: "hoge.mp3", url: "audiodata/hoge.mp3"} //xhr
       ]}
     ];
     
-    //sync
-    var buffer = jz.zip.pack({
-      files: files,
-      level: 4 //compress level
-    });
-    
     //async(recommend!)
     jz.zip.pack({
       files: files,
-      level: 5,
+      level: 5, //compress level
       complete: function(buffer){
         //...
       }
-    })
+    });
+
+    //sync(not support xhr.)
+    var buffer = jz.zip.pack({
+      files: [{name: "a.txt", "aaa"}],
+      level: 4
+    });
     
     //set compress level each files.
     var files = [
-      {name: "mimetype", str: "application/epub+zip", level: 0}, //string
+      {name: "mimetype", buffer: "application/epub+zip", level: 0}, //string
       {name: "META-INF", dir: [ //folder
         {name: "container.xml", buffer: buffer, level: 0}, //ArrayBuffer
       ]},
+      {name: "package.opf", url: "package.opf", level: 6},
       {name: "foo.xhtml", url: "foo.xhtml", level: 9} //xhr
     ];
     
@@ -109,7 +106,7 @@ usage: build.py [-h] [-C COMPILER_PATH] [-m MODULES] [-o OUTPUT_PATH]
 optional arguments:
   -h, --help         show this help message and exit
   -C COMPILER_PATH   Set a Closure Compiler path.
-  -m MODULES         Set module names you want to module.
+  -m MODULES         Set module names you want to use.
   -o OUTPUT_PATH     Set a output file path.
   -c CONF_FILE_PATH  Set a configuration file path.
 $ #select modules
@@ -137,6 +134,7 @@ Example of a configuration file:
     "compiler": "./compiler.jar",
     "output": "./build/jsziptools.unzip.min.js",
     "files": [
+        "lib/DataViewUtils/build/dataview.utils.min.js",
         "src/jsziptools.js",
         "src/utils.js",
         "src/algorithms/crc32.js",

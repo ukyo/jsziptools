@@ -21,7 +21,7 @@ parser.add_argument('-m',
                     metavar='MODULES',
                     dest='module',
                     nargs='*',
-                    help='Set module names you want to module.',
+                    help='Set module names you want to use.',
                     default=['zlib', 'gz', 'zip'])
 
 parser.add_argument('-o',
@@ -37,6 +37,7 @@ parser.add_argument('-c',
 
 
 ALL_FILES = (
+    "lib/DataViewUtils/build/dataview.utils.min.js",
     "src/jsziptools.js",
     "src/utils.js",
     "src/algorithms/adler32.js",
@@ -52,8 +53,9 @@ ALL_FILES = (
 )
 
 selected_modules = {
-    "src/jsziptools.js": False,
-    "src/utils.js": False,
+    "lib/DataViewUtils/build/dataview.utils.min.js": True,
+    "src/jsziptools.js": True,
+    "src/utils.js": True,
     "src/algorithms/adler32.js": False,
     "src/algorithms/crc32.js": False,
     "src/algorithms/deflate.js": False,
@@ -69,8 +71,6 @@ selected_modules = {
 require = {}
 
 require['gz'] = [
-    "src/jsziptools.js",
-    "src/utils.js",
     "src/algorithms/crc32.js",
     "src/algorithms/deflate.js",
     "src/algorithms/inflate.js",
@@ -79,24 +79,18 @@ require['gz'] = [
 ]
 
 require['gz.compress'] = [
-    "src/jsziptools.js",
-    "src/utils.js",
     "src/algorithms/crc32.js",
     "src/algorithms/deflate.js",
     "src/gz.compress.js",
 ]
 
 require['gz.decompress'] = [
-    "src/jsziptools.js",
-    "src/utils.js",
     "src/algorithms/crc32.js",
     "src/algorithms/inflate.js",
     "src/gz.decompress.js"
 ]
 
 require['zlib'] = [
-    "src/jsziptools.js",
-    "src/utils.js",
     "src/algorithms/adler32.js",
     "src/algorithms/deflate.js",
     "src/algorithms/inflate.js",
@@ -105,24 +99,18 @@ require['zlib'] = [
 ]
 
 require['zlib.compress'] = [
-    "src/jsziptools.js",
-    "src/utils.js",
     "src/algorithms/adler32.js",
     "src/algorithms/deflate.js",
     "src/zlib.compress.js"
 ]
 
 require['zlib.decompress'] = [
-    "src/jsziptools.js",
-    "src/utils.js",
     "src/algorithms/adler32.js",
     "src/algorithms/inflate.js",
     "src/zlib.decompress.js"
 ]
 
 require['zip'] = [
-    "src/jsziptools.js",
-    "src/utils.js",
     "src/algorithms/crc32.js",
     "src/algorithms/deflate.js",
     "src/algorithms/inflate.js",
@@ -131,16 +119,12 @@ require['zip'] = [
 ]
 
 require['zip.pack'] = [
-    "src/jsziptools.js",
-    "src/utils.js",
     "src/algorithms/crc32.js",
     "src/algorithms/deflate.js",
     "src/zip.pack.js"
 ]
 
 require['zip.unpack'] = [
-    "src/jsziptools.js",
-    "src/utils.js",
     "src/algorithms/crc32.js",
     "src/algorithms/inflate.js",
     "src/zip.unpack.js"
