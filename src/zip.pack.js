@@ -244,7 +244,7 @@ jz.zip.pack = function(params){
         
         if(dir){
             dir.forEach(function(item){
-                _pack(item, name, level);
+                _pack(item, name, _level);
             });
         }
     }
