@@ -204,7 +204,7 @@ jz.zip.pack = function(params){
     }
     
     function _pack(obj, path, level){
-        var name, buffer, compressedBuffer, hb, isDir, isDeflate, _level,
+        var name, buffer, compressedBuffer, hb, isDir, isDeflate,
             dir = obj.children || obj.dir || obj.folder;
         
         if(typeof obj === 'undefined') return;
@@ -223,10 +223,10 @@ jz.zip.pack = function(params){
         compressedBuffer = buffer;
 
         //if you don't set compression level to this file, set level of the whole file.
-        _level = obj.level !== void(0) ? obj.level : level;
+        level = obj.level !== void(0) ? obj.level : level;
         
-        if(_level > 0 && typeof dir === 'undefined') {
-            compressedBuffer = jz.algorithms.deflate(buffer, _level);
+        if(level > 0 && typeof dir === 'undefined') {
+            compressedBuffer = jz.algorithms.deflate(buffer, level);
             isDeflate = true;
         }
         
@@ -240,7 +240,7 @@ jz.zip.pack = function(params){
         
         if(dir){
             dir.forEach(function(item){
-                _pack(item, name, _level);
+                _pack(item, name, level);
             });
         }
     }
