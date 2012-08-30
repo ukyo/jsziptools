@@ -151,7 +151,7 @@ function getFileTime(date){
  * 
  * //async(recommend!):
  * jz.zip.pack({
- *  files: [{name: 'a.txt', buffer: bytes.buffer}, {name: 'b.txt', url: 'b.txt'}, {name: 'c.txt', str: 'hello!'}],
+ *  files: [{name: 'a.txt', buffer: bytes.buffer}, {name: 'b.txt', url: 'b.txt'}, {name: 'c.txt', buffer: 'hello!'}],
  *  complete: function(data){console.log(data)}
  * });
  * 
@@ -169,7 +169,7 @@ jz.zip.pack = function(params){
         date = new Date(),
         arr = [],
         index = 0,
-        files, level, complete, error, async;
+        files, level, complete, async;
     
     files = params.files;
     level = params.level !== void(0) ? params.level : 6;
@@ -186,7 +186,7 @@ jz.zip.pack = function(params){
             jz.utils.load(obj.url, (function(i){
                 return function(response){
                     obj.buffer = response;
-                    delete obj.url;
+                    obj.url = null;
                     arr[i] = "load!";
                 };
             })(index));
@@ -196,7 +196,7 @@ jz.zip.pack = function(params){
     }
     
     function wait(){
-        if(arr.indexOf(0) === -1 || stack.length === 0) {
+        if(arr.indexOf(0) === -1 || arr.length === 0) {
             complete(pack());
         } else {
             setTimeout(wait, 5);
@@ -212,17 +212,13 @@ jz.zip.pack = function(params){
             name = path + obj.name + (obj.name.substr(-1) === '/' ? '' : '/');
             buffer = new ArrayBuffer(0);
             isDir = true;
-        } else if(obj.url){
-            buffer = jz.utils.loadSync(obj.url);
-            name = path + (obj.name || obj.url.split('/').pop());
-        } else if(obj.str){
-            buffer = jz.utils.stringToBytes(obj.str);
+        } else if(obj.buffer || obj.str){
+            buffer = jz.utils.toBytes(obj.buffer || obj.str);
             name = path + obj.name;
-        } else if(obj.buffer){
-            buffer = obj.buffer;
-            name = path + obj.name;
+        } else if(obj.url) {
+            throw new Error('Sync call does not support to read buffer with XMLHttpRequest.');
         } else {
-            error('This type is not supported.');
+            throw new Error('This type is not supported.');
         }
         compressedBuffer = buffer;
 
@@ -260,7 +256,7 @@ jz.zip.pack = function(params){
     
     if(async){
         files.forEach(loadFiles);
-        setTimeout(wait, 5);
+        wait();
     } else {
         return pack();
     }
