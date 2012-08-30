@@ -1,7 +1,7 @@
 /**
  * Copyright (c) 2012 - Syu Kato <ukyo.web@gmail.com>
  * 
- * jsziptools 2.0.4
+ * jsziptools 2.1.0
  * 
  * License: MIT
  * https://github.com/ukyo/jsziptools/LICENSE
