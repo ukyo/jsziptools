@@ -115,17 +115,13 @@ jz.zip.LazyLoader = function(buffer, files, folders, localFileHeaders, centralDi
 var p = jz.zip.LazyLoader.prototype;
 
 p.getFileNames = function(){
-    var fileNames = [], i, n;
-    for(i = 0, n = this.files.length; i < n; ++i){
-        fileNames.push(this.localFileHeaders[this.files[i]].filename);
-    }
-    return fileNames;
+    return this.files.map(function(file){return file.filename;});
 };
 
 p._getFileIndex = function(filename){
-    for(var i = 0, n = this.localFileHeaders.length; i < n; ++i){
+    for(var i = 0, n = this.localFileHeaders.length; i < n; ++i)
         if(filename === this.localFileHeaders[i].filename) return i;
-    }
+
     throw new Error('File is not found.');
 };
 
