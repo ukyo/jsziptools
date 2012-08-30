@@ -187,18 +187,15 @@ if(jz.env.isWorker){
  * @function
  */
 jz.zip.unpack = function(buffer){
-    var view, signature, header, i, n,
+    var signature, header, endCentDirHeader, i, n,
         localFileHeaders = [],
         centralDirHeaders = [],
-        endCentDirHeader,
         files = [],
         folders = [],
-        offset;
-    
-    view = new DataView(buffer);
+        offset = buffer.byteLength - 4,
+        view = new DataView(buffer);
 
     //read a end central dir header.
-    offset = buffer.byteLength - 4;
     while(true){
         if(view.getUint32(offset, true) === jz.zip.END_SIGNATURE) {
             endCentDirHeader = getEndCentDirHeader(buffer, offset);
@@ -226,13 +223,9 @@ jz.zip.unpack = function(buffer){
         localFileHeaders.push(header);
     }
     
-    for(i = 0; i < n; ++i){
-        if(localFileHeaders[i].filename.split('/').pop()) {
-            files.push(i);
-        } else {
-            folders.push(i);
-        }
-    }
+    localFileHeaders.forEach(function(header, i){
+        (header.filename.split('/').pop() ? files : folders).push(i);
+    });
     
     return new jz.zip.LazyLoader(buffer, files, folders, localFileHeaders, centralDirHeaders);
 };
