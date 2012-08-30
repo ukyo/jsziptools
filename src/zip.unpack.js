@@ -135,32 +135,30 @@ p.getFileAsArrayBuffer = function(filename){
     return jz.algorithms.inflate(new Uint8Array(this.buffer, offset, len));
 };
 
+p._getFileAs = function(type, filename, callback){
+    var fr = new FileReader(),
+        args = [this.getFileAsBlob(filename)].concat(Array.prototype.slice.call(arguments, 3));
+
+    fr.onload = function(e){
+        callback.call(fr, e.target.result, e);
+    };
+    fr['readAs' + type].apply(fr, args);
+};
+
 p.getFileAsText = function(filename, encoding, callback){
-    var fr = new FileReader();
     if(encoding.constructor === Function) {
         callback = encoding;
         encoding = 'UTF-8';
     }
-    fr.onload = function(e){
-        callback.call(fr, e.target.result, e);
-    };
-    fr.readAsText(this.getFileAsBlob(filename), encoding);
+    this._getFileAs('Text', filename, callback, encoding);
 };
 
 p.getFileAsBinaryString = function(filename, callback){
-    var fr = new FileReader();
-    fr.onload = function(e){
-        callback.call(fr, e.target.result, e);
-    };
-    fr.readAsBinaryString(this.getFileAsBlob(filename));
+    this._getFileAs('BinaryString', filename, callback);
 };
 
 p.getFileAsDataURL = function(filename, callback){
-    var fr = new FileReader();
-    fr.onload = function(e){
-        callback.call(fr, e.target.result, e);
-    };
-    fr.readAsDataURL(this.getFileAsBlob(filename));
+    this._getFileAs('DataURL', filename, callback);
 };
 
 p.getFileAsBlob = function(filename, contentType){
@@ -170,8 +168,7 @@ p.getFileAsBlob = function(filename, contentType){
 //for worker
 if(jz.env.isWorker){
     p.getFileAsTextSync = function(filename, encoding){
-        encoding = encoding || 'UTF-8';
-        return new FileReaderSync().readAsText(this.getFileAsBlob(filename), encoidng);
+        return new FileReaderSync().readAsText(this.getFileAsBlob(filename), encoidng || 'UTF-8');
     };
 
     p.getFileAsBinaryStringSync = function(filename){
