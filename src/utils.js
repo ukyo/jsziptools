@@ -59,22 +59,6 @@ jz.utils.stringToBytes = !jz.env.isWorker ? function(str){
 };
 
 /**
- * Load buffer with Ajax.
- * 
- * @param {string} url
- * @return {ArrayBuffer}
- */
-jz.utils.loadSync = function(url){
-    var xhr = new XMLHttpRequest();
-    xhr.open('GET', url, false);
-    //304対策
-    xhr.setRequestHeader('If-Modified-Since', '01 Jan 1970 00:00:00 GMT');
-    xhr.responseType = 'arraybuffer';
-    xhr.send();
-    return xhr.response;
-};
-
-/**
  * Load buffer with Ajax(async).
  * @param {Array.<string>|string} urls
  * @param {Function} complete
