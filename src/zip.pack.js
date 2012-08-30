@@ -164,8 +164,8 @@ function getFileTime(date){
 jz.zip.pack = function(params){
     var n = 0,
         offset = 0,
-        achiveArr = [],
-        centralDirArr = [],
+        archives = [],
+        centralDirs = [],
         date = new Date(),
         stack = [],
         stackIndex = 0,
@@ -203,7 +203,7 @@ jz.zip.pack = function(params){
         }
     }
     
-    function _pack(obj, path){
+    function _pack(obj, path, level){
         var name, buffer, compressedBuffer, hb, isDir, isDeflate, _level,
             dir = obj.children || obj.dir || obj.folder;
         
@@ -235,27 +235,27 @@ jz.zip.pack = function(params){
         }
         
         hb = new HeaderBuilder(buffer, compressedBuffer, name, date, offset, isDir, isDeflate);
-        achiveArr.push(hb.getLocalFileHeader());
-        achiveArr.push(new Uint8Array(compressedBuffer));
-        centralDirArr.push(hb.getCentralDirHeader());
+        archives.push(hb.getLocalFileHeader());
+        archives.push(new Uint8Array(compressedBuffer));
+        centralDirs.push(hb.getCentralDirHeader());
         
         offset += hb.getAchiveLength();
         n++;
         
         if(dir){
             dir.forEach(function(item){
-                _pack(item, name);
+                _pack(item, name, level);
             });
         }
     }
 
     function pack(){
         files.forEach(function(item){
-            _pack(item, '');
+            _pack(item, '', level);
         });
-        achiveArr = achiveArr.concat(centralDirArr);
-        achiveArr.push(getEndCentDirHeader(n, jz.utils.concatByteArrays(centralDirArr).length, offset));
-        return jz.utils.concatByteArrays(achiveArr).buffer;
+        archives = archives.concat(centralDirs);
+        archives.push(getEndCentDirHeader(n, jz.utils.concatByteArrays(centralDirs).length, offset));
+        return jz.utils.concatByteArrays(archives).buffer;
     }
     
     if(async){
