@@ -103,7 +103,7 @@ function getEndCentDirHeader(buffer, offset){
 /**
  * @constructor
  */
-jz.zip.LazyLoader = function(buffer, files, folders, localFileHeaders, centralDirHeaders){
+jz.zip.ZipArchiveReader = function(buffer, files, folders, localFileHeaders, centralDirHeaders){
     this.buffer = buffer;
     this.files = files;
     this.folders = folders;
@@ -111,7 +111,7 @@ jz.zip.LazyLoader = function(buffer, files, folders, localFileHeaders, centralDi
     this.centralDirHeaders = centralDirHeaders;
 };
 
-var p = jz.zip.LazyLoader.prototype;
+var p = jz.zip.ZipArchiveReader.prototype;
 
 p.getFileNames = function(){
     return this.files.map(function(file){return file.filename;});
@@ -181,7 +181,7 @@ if(jz.env.isWorker){
 /**
  * unpack a zip file.
  * @param {ArrayBuffer} buffer
- * @return {jz.zip.LazyLoader}
+ * @return {jz.zip.ZipArchiveReader}
  * @function
  */
 jz.zip.unpack = function(buffer){
@@ -225,7 +225,7 @@ jz.zip.unpack = function(buffer){
         (header.filename.split('/').pop() ? files : folders).push(i);
     });
     
-    return new jz.zip.LazyLoader(buffer, files, folders, localFileHeaders, centralDirHeaders);
+    return new jz.zip.ZipArchiveReader(buffer, files, folders, localFileHeaders, centralDirHeaders);
 };
 
 //alias
