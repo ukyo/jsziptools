@@ -30,30 +30,36 @@ jz.utils.toBytes = function(buffer){
 jz.utils.stringToBytes = !jz.env.isWorker ? function(str){
     var n = str.length,
         idx = -1,
-        utf8 = [],
-        i, j, c;
+        byteLength = 512,
+        bytes = new Uint8Array(byteLength),
+        i, j, c, _bytes;
     
     //http://user1.matsumoto.ne.jp/~goma/js/utf.js
     for(i = 0; i < n; ++i){
         c = str.charCodeAt(i);
         if(c <= 0x7F){
-            utf8[++idx] = c;
+            bytes[++idx] = c;
         } else if(c <= 0x7FF){
-            utf8[++idx] = 0xC0 | (c >>> 6);
-            utf8[++idx] = 0x80 | (c & 0x3F);
+            bytes[++idx] = 0xC0 | (c >>> 6);
+            bytes[++idx] = 0x80 | (c & 0x3F);
         } else if(c <= 0xFFFF){
-            utf8[++idx] = 0xE0 | (c >>> 12);
-            utf8[++idx] = 0x80 | ((c >>> 6) & 0x3F);
-            utf8[++idx] = 0x80 | (c & 0x3F);
+            bytes[++idx] = 0xE0 | (c >>> 12);
+            bytes[++idx] = 0x80 | ((c >>> 6) & 0x3F);
+            bytes[++idx] = 0x80 | (c & 0x3F);
         } else {
-            j = 4;
-            while(c >> (6 * j)) ++j;
-            utf8[++idx] = ((0xFF00 >>> j) & 0xFF) | (c >>> (6 * --j));
-            while(j--)
-                utf8[++idx] = 0x80 | ((c >>> (6 * j)) & 0x3F);
+            bytes[++idx] = 0xF0 | (c >>> 18);
+            bytes[++idx] = 0x80 | ((c >>> 12) & 0x3F);
+            bytes[++idx] = 0x80 | ((c >>> 6) & 0x3F);
+            bytes[++idx] = 0x80 | (c & 0x3F);
+        }
+        if(byteLength - idx <= 4){
+            _bytes = bytes;
+            byteLength *= 2;
+            bytes = new Uint8Array(byteLength);
+            bytes.set(_bytes);
         }
     }
-    return new Uint8Array(utf8);
+    return bytes.subarray(0, ++idx);
 } : function(str){
     return new Uint8Array(new FileReaderSync().readAsArrayBuffer(new Blob([str])));
 };

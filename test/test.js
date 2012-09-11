@@ -1,10 +1,32 @@
-test('test utility functions', function(){
+test('test jz.utils.toBytes', function(){
     equal(jz.utils.toBytes(new ArrayBuffer(10)).constructor, Uint8Array, 'arraybuffer to uint8array');
     equal(jz.utils.toBytes(new Uint8Array(10)).constructor, Uint8Array, 'uint8array to uint8array');
-    
-    //char codes of 'util'
-    var bytes = new Uint8Array([117, 116, 105, 108]);
-    same(jz.utils.stringToBytes('util'), bytes, 'string to arraybuffer');
+});
+
+asyncTest('test jz.utils.stringToBytes', function(){
+    jz.utils.load('kokoro_utf8.txt', function(kokoro){
+        var original = new Uint8Array(kokoro),
+            fr = new FileReader();
+
+        fr.onloadend = function(){
+            var result = jz.utils.stringToBytes(fr.result),
+                i, n, isCorrect = true;
+
+            for(i = 0, n = result.length; i < n; ++i) {
+                if(result[i] !== original[i]) {
+                    isCorrect = False;
+                    break;
+                }
+            }
+
+            equal(result.length, original.length, 'check byte length');
+            start();
+            ok(isCorrect, 'check all bytes');
+            start();
+        };
+
+        fr.readAsText(new Blob([original]));
+    });
 });
 
 test('test jz.algorithms.deflate, jz.algorithms.inflate', function(){
