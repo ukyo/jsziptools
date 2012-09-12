@@ -27,12 +27,12 @@ jz.utils.toBytes = function(buffer){
  * @param {string} str
  * @return {Uint8Array}
  */
-jz.utils.stringToBytes = !jz.env.isWorker ? function(str){
+jz.utils.stringToBytes = function(str){
     var n = str.length,
         idx = -1,
         byteLength = 512,
         bytes = new Uint8Array(byteLength),
-        i, j, c, _bytes;
+        i, c, _bytes;
     
     //http://user1.matsumoto.ne.jp/~goma/js/utf.js
     for(i = 0; i < n; ++i){
@@ -60,8 +60,6 @@ jz.utils.stringToBytes = !jz.env.isWorker ? function(str){
         }
     }
     return bytes.subarray(0, ++idx);
-} : function(str){
-    return new Uint8Array(new FileReaderSync().readAsArrayBuffer(new Blob([str])));
 };
 
 /**
