@@ -222,7 +222,7 @@ jz.zip.unpack = function(buffer){
     }
     
     localFileHeaders.forEach(function(header, i){
-        (header.filename.split('/').pop() ? files : folders).push(i);
+        (header.filename.split('/').pop() ? files : folders).push(header);
     });
     
     return new jz.zip.ZipArchiveReader(buffer, files, folders, localFileHeaders, centralDirHeaders);
