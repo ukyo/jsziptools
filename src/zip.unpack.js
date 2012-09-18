@@ -42,8 +42,76 @@ var mimetypes = (function(){
 })();
 
 
-function getLocalFileHeader(buffer, offset){
+function getEndCentDirHeader(buffer, offset){
     var view = new DataView(buffer, offset);
+    return {
+        signature: view.getUint32(0, true),
+        disknum: view.getUint16(4, true),
+        startdisknum: view.getUint16(6, true),
+        diskdirentry: view.getUint16(8, true),
+        direntry: view.getUint16(10, true),
+        dirsize: view.getUint32(12, true),
+        startpos: view.getUint32(16, true),
+        commentlen: view.getUint16(20, true)
+    };
+}
+
+/**
+ * @constructor
+ */
+jz.zip.ZipArchiveReader = function(buffer){
+    var signature, header, endCentDirHeader, i, n,
+        localFileHeaders = [],
+        centralDirHeaders = [],
+        files = [],
+        folders = [],
+        offset = buffer.byteLength - 4,
+        view = new DataView(buffer);
+
+    this.buffer = buffer;
+
+    //read a end central dir header.
+    while(true){
+        if(view.getUint32(offset, true) === jz.zip.END_SIGNATURE) {
+            endCentDirHeader = this._getEndCentDirHeader(offset);
+            break;
+        }
+        offset--;
+        if(offset === 0) throw new Error('invalid zip file');
+    }
+
+    //read central dir headers.
+    offset = endCentDirHeader.startpos;
+    for(i = 0, n = endCentDirHeader.direntry; i < n; ++i) {
+        header = this._getCentralDirHeader(offset);
+        centralDirHeaders.push(header);
+        offset += header.allsize;
+    }
+
+    //read local file headers.
+    for(i = 0; i < n; ++i) {
+        offset = centralDirHeaders[i].headerpos;
+        header = this._getLocalFileHeader(offset);
+        header.crc32 = centralDirHeaders[i].crc32;
+        header.compsize = centralDirHeaders[i].compsize;
+        header.uncompsize = centralDirHeaders[i].uncompsize;
+        localFileHeaders.push(header);
+    }
+    
+    localFileHeaders.forEach(function(header, i){
+        (header.filename.split('/').pop() ? files : folders).push(header);
+    });
+
+    this.files = files;
+    this.folders = folders;
+    this.localFileHeaders = localFileHeaders;
+    this.centralDirHeaders = centralDirHeaders;
+};
+
+var p = jz.zip.ZipArchiveReader.prototype;
+
+p._getLocalFileHeader = function(offset){
+    var view = new DataView(this.buffer, offset);
     return {
         signature: view.getUint32(0, true),
         needver: view.getUint16(4, true),
@@ -60,10 +128,10 @@ function getLocalFileHeader(buffer, offset){
         headersize: 30 + view.getUint16(26, true) + view.getUint16(28, true),
         allsize: 30 + view.getUint32(18, true) + view.getUint16(26, true) + view.getUint16(28, true)
     };
-}
+};
 
-function getCentralDirHeader(buffer, offset){
-    var view = new DataView(buffer, offset);
+p._getCentralDirHeader = function(offset){
+    var view = new DataView(this.buffer, offset);
     return {
         signature: view.getUint32(0, true),
         madever: view.getUint16(4, true),
@@ -84,10 +152,10 @@ function getCentralDirHeader(buffer, offset){
         headerpos: view.getUint32(42, true),
         allsize: 46 + view.getUint16(28, true) + view.getUint16(30, true) + view.getUint16(32, true)
     };
-}
+};
 
-function getEndCentDirHeader(buffer, offset){
-    var view = new DataView(buffer, offset);
+p._getEndCentDirHeader = function(offset){
+    var view = new DataView(this.buffer, offset);
     return {
         signature: view.getUint32(0, true),
         disknum: view.getUint16(4, true),
@@ -98,20 +166,7 @@ function getEndCentDirHeader(buffer, offset){
         startpos: view.getUint32(16, true),
         commentlen: view.getUint16(20, true)
     };
-}
-
-/**
- * @constructor
- */
-jz.zip.ZipArchiveReader = function(buffer, files, folders, localFileHeaders, centralDirHeaders){
-    this.buffer = buffer;
-    this.files = files;
-    this.folders = folders;
-    this.localFileHeaders = localFileHeaders;
-    this.centralDirHeaders = centralDirHeaders;
 };
-
-var p = jz.zip.ZipArchiveReader.prototype;
 
 p.getFileNames = function(){
     return this.files.map(function(file){return file.filename;});
@@ -185,47 +240,7 @@ if(jz.env.isWorker){
  * @function
  */
 jz.zip.unpack = function(buffer){
-    var signature, header, endCentDirHeader, i, n,
-        localFileHeaders = [],
-        centralDirHeaders = [],
-        files = [],
-        folders = [],
-        offset = buffer.byteLength - 4,
-        view = new DataView(buffer);
-
-    //read a end central dir header.
-    while(true){
-        if(view.getUint32(offset, true) === jz.zip.END_SIGNATURE) {
-            endCentDirHeader = getEndCentDirHeader(buffer, offset);
-            break;
-        }
-        offset--;
-        if(offset === 0) throw new Error('invalid zip file');
-    }
-
-    //read central dir headers.
-    offset = endCentDirHeader.startpos;
-    for(i = 0, n = endCentDirHeader.direntry; i < n; ++i) {
-        header = getCentralDirHeader(buffer, offset);
-        centralDirHeaders.push(header);
-        offset += header.allsize;
-    }
-
-    //read local file headers.
-    for(i = 0; i < n; ++i) {
-        offset = centralDirHeaders[i].headerpos;
-        header = getLocalFileHeader(buffer, offset);
-        header.crc32 = centralDirHeaders[i].crc32;
-        header.compsize = centralDirHeaders[i].compsize;
-        header.uncompsize = centralDirHeaders[i].uncompsize;
-        localFileHeaders.push(header);
-    }
-    
-    localFileHeaders.forEach(function(header, i){
-        (header.filename.split('/').pop() ? files : folders).push(header);
-    });
-    
-    return new jz.zip.ZipArchiveReader(buffer, files, folders, localFileHeaders, centralDirHeaders);
+    return new jz.zip.ZipArchiveReader(buffer);
 };
 
 //alias
