@@ -63,6 +63,46 @@ jz.utils.stringToBytes = function(str){
 };
 
 /**
+ * Convert from Uint8Array to String.
+ * @param {Uint8Array} bytes
+ * @param {number} bufferSize
+ * @return {string}
+ */
+jz.utils.bytesToString = function(bytes, bufferSize){
+    bufferSize = bufferSize || 8192
+
+    var buffer = new Uint32Array(bufferSize),
+        n = bytes.length,
+        i = 0,
+        result = '',
+        j, head;
+
+    while(i < n) {
+        for(j = 0; j < bufferSize && i < n; ++i, ++j) {
+            head = bytes[i];
+            if((head >>> 7) === 0) {
+                buffer[j] = head;
+            } else if((head >>> 5) === 0x05) {
+                buffer[j] = ((head & 0x1F) << 6) | (bytes[++i] & 0x3F);
+            } else if((head >>> 4) === 0x0E) {
+                buffer[j] = 
+                    ((head & 0x0F) << 12) |
+                    ((bytes[++i] & 0x3F) << 6) |
+                    (bytes[++i] & 0x3F);
+            } else {
+                buffer[j] =
+                    ((head & 0x07) << 20) |
+                    ((bytes[++i] & 0x3F) << 12) |
+                    ((bytes[++i] & 0x3F) << 6) |
+                    (bytes[++i] & 0x3F);
+            }
+        }
+        result += String.fromCharCode.apply(void 0, buffer.subarray(0, j));
+    }
+    return result;
+};
+
+/**
  * Load buffer with Ajax(async).
  * @param {Array.<string>|string} urls
  * @param {Function} complete

@@ -3,7 +3,7 @@ test('test jz.utils.toBytes', function(){
     equal(jz.utils.toBytes(new Uint8Array(10)).constructor, Uint8Array, 'uint8array to uint8array');
 });
 
-asyncTest('test jz.utils.stringToBytes', function(){
+asyncTest('test jz.utils.stringToBytes, jz.utils.bytesToString', function(){
     jz.utils.load('kokoro_utf8.txt', function(kokoro){
         var original = new Uint8Array(kokoro),
             fr = new FileReader();
@@ -19,9 +19,11 @@ asyncTest('test jz.utils.stringToBytes', function(){
                 }
             }
 
-            equal(result.length, original.length, 'check byte length');
+            equal(result.length, original.length, 'stringToBytes: check byte length');
             start();
-            ok(isCorrect, 'check all bytes');
+            ok(isCorrect, 'stringToBytes: check all bytes');
+            start();
+            equal(jz.utils.bytesToString(original), fr.result, 'bytesToString: check all chars');
             start();
         };
 
