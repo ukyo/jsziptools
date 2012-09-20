@@ -42,20 +42,6 @@ var mimetypes = (function(){
 })();
 
 
-function getEndCentDirHeader(buffer, offset){
-    var view = new DataView(buffer, offset);
-    return {
-        signature: view.getUint32(0, true),
-        disknum: view.getUint16(4, true),
-        startdisknum: view.getUint16(6, true),
-        diskdirentry: view.getUint16(8, true),
-        direntry: view.getUint16(10, true),
-        dirsize: view.getUint32(12, true),
-        startpos: view.getUint32(16, true),
-        commentlen: view.getUint16(20, true)
-    };
-}
-
 /**
  * @constructor
  */
