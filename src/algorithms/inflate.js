@@ -49,7 +49,7 @@ var DecodeStream = (function() {
   constructor.prototype = {
     ensureBuffer: function decodestream_ensureBuffer(requested) {
       var buffer = this.buffer;
-      var current = buffer ? buffer.byteLength : 0;
+      var current = buffer.byteLength;
       if (requested < current)
         return buffer;
       var size = 512;
@@ -430,7 +430,7 @@ var FlateStream = (function() {
     }
 
     var buffer = this.buffer;
-    var limit = buffer ? buffer.length : 0;
+    var limit = buffer.length;
     var pos = this.bufferLength;
     while (true) {
       var code1 = this.getCode(litCodeTable);
