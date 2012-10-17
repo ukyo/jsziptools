@@ -15,7 +15,7 @@ crc32.js
  */
 function getEndCentDirHeader(i, centralDirHeaderSize, offset){
     var view = new DataView(new ArrayBuffer(22));
-    view.setUint32(0, jz.zip.END_SIGNATURE, true);
+    view.setUint32(0, jz.zip.END_SIGNATURE, true); 
     view.setUint16(4, 0, true);
     view.setUint16(6, 0, true);
     view.setUint16(8, i, true);
@@ -40,7 +40,7 @@ function getEndCentDirHeader(i, centralDirHeaderSize, offset){
 function HeaderBuilder(buffer, compressedBuffer, filename, date, offset, isDir, isDeflate){
     this.buffer = buffer;
     this.compressedBuffer = compressedBuffer;
-    this.filename = filename;
+    this.filename = jz.utils.toBytes(filename);
     this.date = date;
     this.offset = offset;
     this.dirFlag = isDir ? 0x10 : 0;
@@ -58,17 +58,18 @@ HeaderBuilder.prototype = {
     _getCommonHeader: function(){
         var view = new DataView(new ArrayBuffer(26)),
             compsize = this.compressedBuffer.byteLength,
-            uncompsize = this.buffer.byteLength;
-        view.setUint16(0, 10, true);
-        view.setUint16(2, 0, true);
-        view.setUint16(4, this.deflateFlag, true);
-        view.setUint16(6, getFileTime(this.date), true);
-        view.setUint16(8, getFileDate(this.date), true);
-        view.setUint32(10, jz.algorithms.crc32(this.buffer), true);
-        view.setUint32(14, compsize, true);
-        view.setUint32(18, uncompsize, true);
-        view.setUint16(22, this.filename.length, true);
-        view.setUint16(24, 0, true);
+            uncompsize = this.buffer.byteLength,
+            utf8Flag = 0x0800;
+        view.setUint16(0, 10, true); // version needed to extract
+        view.setUint16(2, utf8Flag, true); // general purpose bit flag
+        view.setUint16(4, this.deflateFlag, true); // compression method
+        view.setUint16(6, getFileTime(this.date), true); // last mod file time
+        view.setUint16(8, getFileDate(this.date), true); // last mod file date
+        view.setUint32(10, jz.algorithms.crc32(this.buffer), true); // crc-32
+        view.setUint32(14, compsize, true); // compressed size
+        view.setUint32(18, uncompsize, true); // uncompressed size
+        view.setUint16(22, this.filename.length, true); // file name length
+        view.setUint16(24, 0, true); // extra field length
         return new Uint8Array(view.buffer);
     },
     
@@ -84,7 +85,7 @@ HeaderBuilder.prototype = {
         
         view.setUint32(offset, jz.zip.LOCAL_FILE_SIGNATURE, true); offset += 4;
         arr.set(this._commonHeader, offset); offset += this._commonHeader.length;
-        view.setString(offset, this.filename);
+        arr.set(this.filename, offset);
         return this._cache.lf = new Uint8Array(view.buffer);
     },
     
@@ -98,15 +99,15 @@ HeaderBuilder.prototype = {
             arr = new Uint8Array(view.buffer),
             offset = 0;
         
-        view.setUint32(0, jz.zip.CENTRAL_DIR_SIGNATURE, true); offset += 4;
-        view.setUint16(offset, 0x14, true); offset += 2;
+        view.setUint32(0, jz.zip.CENTRAL_DIR_SIGNATURE, true); offset += 4; // central file header signature
+        view.setUint16(offset, 0x14, true); offset += 2; // version made by
         arr.set(this._commonHeader, offset); offset += this._commonHeader.length;
-        view.setUint16(offset, 0, true); offset += 2;
-        view.setUint16(offset, 0, true); offset += 2;
-        view.setUint16(offset, 0, true); offset += 2;
-        view.setUint32(offset, this.dirFlag, true); offset += 4;
-        view.setUint32(offset, this.offset, true); offset += 4;
-        view.setString(offset, this.filename);
+        view.setUint16(offset, 0, true); offset += 2; // file comment length
+        view.setUint16(offset, 0, true); offset += 2; // disk number start
+        view.setUint16(offset, 0, true); offset += 2; // internal file attributes
+        view.setUint32(offset, this.dirFlag, true); offset += 4; // external file attributes
+        view.setUint32(offset, this.offset, true); offset += 4; // relative offset of local header
+        arr.set(this.filename, offset); // file name
         return this._cache.cd = new Uint8Array(view.buffer);
     },
     
@@ -142,24 +143,28 @@ function getFileTime(date){
 
 
 /**
- * Pack to a zip format file.
+ * Generate a zip file buffer from a js object.
  * 
  * @param {Object} params
- * @return {ArrayBuffer}
+ * @return {jz.utils.Callbacks}
  * 
  * @example
  * 
- * //async(recommend!):
  * jz.zip.pack({
- *  files: [{name: 'a.txt', buffer: bytes.buffer}, {name: 'b.txt', url: 'b.txt'}, {name: 'c.txt', buffer: 'hello!'}],
- *  complete: function(data){console.log(data)}
+ *     files: [{name: 'a.txt', buffer: bytes.buffer}, {name: 'b.txt', url: 'b.txt'}, {name: 'c.txt', buffer: 'hello!'}],
+ *     complete: function(data){console.log(data)},
+ *     error: function(err) { }
  * });
  * 
- * //sync:
- * var data = jz.zip.pack({
- *  files: files,
- *  level: 7
- * });
+ * // or
+ * 
+ * jz.zip.pack({
+ *     files: files,
+ *     level: 6,
+ * })
+ * .done(function(zipbuff) { })
+ * .fail(function(err) { });
+ * 
  */
 jz.zip.pack = function(params){
     var n = 0,
@@ -169,12 +174,13 @@ jz.zip.pack = function(params){
         date = new Date(),
         arr = [],
         index = 0,
+        wait = jz.utils.wait,
         files, level, complete, async;
     
     files = params.files;
     level = params.level !== void(0) ? params.level : 6;
-    async = typeof params.complete === 'function';
-    complete = typeof params.complete === 'function' ? params.complete : function(){};
+    complete = typeof params.complete === 'function' ? params.complete : jz.utils.noop;
+    error = typeof params.error === 'function' ? params.error : jz.utils.noop;
     
     //load files with ajax(async).
     function loadFiles(obj){
@@ -183,25 +189,23 @@ jz.zip.pack = function(params){
         if(dir) {
             dir.forEach(loadFiles);
         } else if(obj.url) {
-            jz.utils.load(obj.url, (function(i){
+            jz.utils.load(obj.url)
+            .done((function(i) {
                 return function(response){
                     obj.buffer = response;
                     obj.url = null;
-                    arr[i] = "load!";
+                    arr[i] = wait.RESOLVE;
                 };
-            })(index));
-            arr[index] = 0;
+            })(index))
+            .fail(function(err) {
+                arr[i] = wait.REJECT;
+                throw err;
+            });
+            arr[index] = wait.PROCESSING;
             index++;
         }
     }
-    
-    function wait(){
-        if(arr.indexOf(0) === -1 || arr.length === 0) {
-            complete(pack());
-        } else {
-            setTimeout(wait, 5);
-        }
-    }
+
     
     function _pack(obj, path, level){
         var name, buffer, compressedBuffer, hb, isDir, isDeflate,
@@ -254,12 +258,23 @@ jz.zip.pack = function(params){
         return jz.utils.concatByteArrays(archives).buffer;
     }
     
-    if(async){
-        files.forEach(loadFiles);
-        wait();
-    } else {
-        return pack();
-    }
+    var callbacks = new jz.utils.Callbacks;
+    
+    setTimeout(function() {
+        try {
+            files.forEach(loadFiles);
+            wait(arr).done(function() {
+                var result = pack();
+                callbacks.doneCallback(result);
+                complete(result);
+            });
+        } catch(err) {
+            callbacks.failCallback(err);
+            error(err);
+        }
+    }, 1);
+    
+    return callbacks;
 };
 
 //alias

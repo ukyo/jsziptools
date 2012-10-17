@@ -45,18 +45,20 @@ var mimetypes = (function(){
 /**
  * @constructor
  */
-jz.zip.ZipArchiveReader = function(buffer){
+jz.zip.ZipArchiveReader = function(bytes){
+    bytes = jz.utils.toBytes(bytes);
+
     var signature, header, endCentDirHeader, i, n,
         localFileHeaders = [],
         centralDirHeaders = [],
         files = [],
         folders = [],
-        offset = buffer.byteLength - 4,
-        view = new DataView(buffer);
+        offset = bytes.byteLength - 4,
+        view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
 
-    this.buffer = buffer;
+    this.buffer = bytes.buffer;
 
-    //read a end central dir header.
+    //read the end central dir header.
     while(true){
         if(view.getUint32(offset, true) === jz.zip.END_SIGNATURE) {
             endCentDirHeader = this._getEndCentDirHeader(offset);
@@ -85,7 +87,8 @@ jz.zip.ZipArchiveReader = function(buffer){
     }
     
     localFileHeaders.forEach(function(header, i){
-        (header.filename.split('/').pop() ? files : folders).push(header);
+        // Is the last char '/'.
+        (header.filename[header.filename.length - 1] !== 47 ? files : folders).push(header);
     });
 
     this.files = files;
@@ -97,8 +100,11 @@ jz.zip.ZipArchiveReader = function(buffer){
 var p = jz.zip.ZipArchiveReader.prototype;
 
 p._getLocalFileHeader = function(offset){
-    var view = new DataView(this.buffer, offset);
-    return {
+    var view = new DataView(this.buffer, offset),
+        bytes = new Uint8Array(this.buffer, offset),
+        ret;
+
+    ret = {
         signature: view.getUint32(0, true),
         needver: view.getUint16(4, true),
         option: view.getUint16(6, true),
@@ -110,10 +116,12 @@ p._getLocalFileHeader = function(offset){
         uncompsize: view.getUint32(22, true),
         fnamelen: view.getUint16(26, true),
         extralen: view.getUint16(28, true),
-        filename: view.getString(30, view.getUint16(26, true)),
         headersize: 30 + view.getUint16(26, true) + view.getUint16(28, true),
         allsize: 30 + view.getUint32(18, true) + view.getUint16(26, true) + view.getUint16(28, true)
     };
+    ret.filename = bytes.subarray(30, 30 + view.getUint16(26, true));
+
+    return ret;
 };
 
 p._getCentralDirHeader = function(offset){
@@ -185,7 +193,7 @@ p._getFileAs = function(type, filename, callback){
 };
 
 p.getFileAsText = function(filename, encoding, callback){
-    if(encoding.constructor === Function) {
+    if(typeof encoding === 'function') {
         callback = encoding;
         encoding = 'UTF-8';
     }
@@ -221,12 +229,86 @@ if(jz.env.isWorker){
 
 /**
  * unpack a zip file.
- * @param {ArrayBuffer} buffer
- * @return {jz.zip.ZipArchiveReader}
- * @function
+ * @param {Object|Uint8Array|Int8Array|Uint8ClampedArray|Array|ArrayBuffer|string} params
+ *
+ * @example
+ * jz.zip.unpack({
+ *     buffer: buffer, // zip buffer
+ *     encoding: 'UTF-8', // encoding of filenames
+ *     complete: function(reader) { // jz.zip.ZipArchiveReader
+ *         // ...
+ *     },
+ *     error: function(err) {}
+ * });
+ *
+ * // or
+ *
+ * jz.zip.unpack({
+ *     buffer: buffer, // zip buffer
+ *     encoding: 'UTF-8' // encoding of filenames
+ * })
+ * .done(function(reader){ })
+ * .fail(function(err){ });
+ *
+ * // or (auto encoding detect.)
+ *
+ * jz.zip.unpack(buffer)
+ * .done(function(reader){ })
+ * .fail(function(err){ });
+ *
  */
-jz.zip.unpack = function(buffer){
-    return new jz.zip.ZipArchiveReader(buffer);
+jz.zip.unpack = function(params){
+    switch(params.constructor) {
+    case Uint8Array:
+    case Int8Array:
+    case Uint8ClampedArray:
+    case Array:
+    case String:
+    case ArrayBuffer:
+        params = {buffer: jz.utils.toBytes(params)};
+        break;
+    }
+
+    var callbacks = new jz.utils.Callbacks,
+        wait = jz.utils.wait,
+        waitArr = [],
+        reader,
+        concatedFilenameBytes;
+
+    setTimeout(function() {
+        try {
+            //init zip reader.
+            reader = new jz.zip.ZipArchiveReader(params.buffer);
+
+            //detect encoding. cp932 or utf-8.
+            if(params.encoding == null) {
+                concatedFilenameBytes = jz.utils.concatByteArrays(reader.localFileHeaders.map(function(header) {
+                    return header.filename;
+                }));
+                params.encoding = jz.utils.detectEncoding(concatedFilenameBytes);
+            }
+
+            //all filenames is convert from bytes to string.
+            reader.localFileHeaders.forEach(function(header, i) {
+                waitArr[i] = wait.PROCESSING;
+                jz.utils.bytesToString(header.filename, params.encoding, function(str) {
+                    header.filename = str;
+                    waitArr[i] = wait.RESOLVE;
+                });
+            });
+
+            wait(waitArr).done(function() {
+                callbacks.doneCallback(reader);
+                if(typeof params.complete === 'function') params.complete(reader);
+            });
+            
+        } catch(err) {
+            callbacks.failCallback(err);
+            if(typeof params.error === 'function') params.error(err);
+        }
+    }, 1);
+
+    return callbacks;
 };
 
 //alias
