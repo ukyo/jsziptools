@@ -20,20 +20,26 @@ jz.gz.compress = function(bytes, level, metadata){
         flg = 0,
         headerLength = 10,
         offset = 0,
+        fname,
+        fcomment,
         now = Date.now();
+
     metadata = metadata || {};
+    if(matadata.fname) fname = jz.utils.toBytes(metadata.fname);
+    if(metadata.fcomment) fcomment = jz.utils.toBytes(metadata.fcomment);
+
     bytes = jz.utils.toBytes(bytes);
     
     deflatedBytes = new Uint8Array(jz.algorithms.deflate(bytes, level));
     
     //calc metadata length
-    if(metadata.fname){
-        headerLength += metadata.fname.length + 1;
+    if(fname){
+        headerLength += fname.length + 1;
         flg |= 0x8;
     }
     
-    if(metadata.fcomment){
-        headerLength += metadata.fcomment.length + 1;
+    if(fcomment){
+        headerLength += fcomment.length + 1;
         flg |= 0x10;
     }
     
@@ -52,15 +58,15 @@ jz.gz.compress = function(bytes, level, metadata){
     ret[offset++] = 4;
     ret[offset++] = 0xFF;
     
-    if(metadata.fname){
-        view.setString(offset, metadata.fname);
-        offset += metadata.fname.length;
+    if(fname){
+        ret.set(fname, offset);
+        offset += fname.length;
         ret[offset++] = 0;
     }
     
-    if(metadata.fcomment){
-        view.setString(offset, metadata.fcomment);
-        offset += metadata.fcomment.length;
+    if(fcomment){
+        ret.set(fcomment, offset);
+        offset += fcomment.length;
         ret[offset++] = 0;
     }
     

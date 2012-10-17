@@ -37,7 +37,6 @@ parser.add_argument('-c',
 
 
 ALL_FILES = (
-    "lib/DataViewUtils/build/dataview.utils.min.js",
     "src/jsziptools.js",
     "src/utils.js",
     "src/algorithms/adler32.js",
@@ -53,7 +52,6 @@ ALL_FILES = (
 )
 
 selected_modules = {
-    "lib/DataViewUtils/build/dataview.utils.min.js": True,
     "src/jsziptools.js": True,
     "src/utils.js": True,
     "src/algorithms/adler32.js": False,
