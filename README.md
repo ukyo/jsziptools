@@ -95,7 +95,7 @@ unzip:
         // get file pathes.
         reader.getFileNames();
         // file is read lazy.
-        reader.getFileAsText(loader.getFileNames[0], function(result){
+        reader.getFileAsText(reader.getFileNames[0], function(result){
           alert(result);
         });
       },
