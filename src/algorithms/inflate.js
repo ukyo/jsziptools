@@ -72,8 +72,17 @@ var DecodeStream = (function() {
       var pos = this.pos;
 
       if (length) {
-        this.ensureBuffer(pos + length);
-        var end = pos + length;
+        var requested = pos + length;
+        var buffer = this.buffer;
+        var current = buffer.byteLength;
+        if (requested >= current) {
+          var size = 512;
+          while (size < requested)
+            size <<= 1;
+          var buffer2 = new Uint8Array(size);
+          buffer2.set(buffer);
+          this.buffer = buffer2;
+        }
 
         while (!this.eof && this.bufferLength < end)
           this.readBlock();
@@ -372,7 +381,17 @@ var FlateStream = (function() {
       this.codeSize = 0;
 
       var bufferLength = this.bufferLength;
-      var buffer = this.ensureBuffer(bufferLength + blockLen);
+      var current = buffer.byteLength;
+      var requested = bufferLength + blockLen;
+
+      if (requested >= current) {
+        var size = 512;
+        while (size < requested)
+          size <<= 1;
+        var buffer2 = new Uint8Array(size);
+        buffer2.set(buffer);
+        this.buffer = buffer = buffer2;
+      }
       var end = bufferLength + blockLen;
       this.bufferLength = end;
       for (var n = bufferLength; n < end; ++n) {
@@ -436,7 +455,17 @@ var FlateStream = (function() {
       var code1 = this.getCode(litCodeTable);
       if (code1 < 256) {
         if (pos + 1 >= limit) {
-          buffer = this.ensureBuffer(pos + 1);
+          var current = buffer.byteLength;
+          var requested = pos + 1;
+
+          if (requested >= current) {
+            var size = 512;
+            while (size < requested)
+              size <<= 1;
+            var buffer2 = new Uint8Array(size);
+            buffer2.set(buffer);
+            this.buffer = buffer = buffer2;
+          }
           limit = buffer.length;
         }
         buffer[pos++] = code1;
@@ -459,7 +488,17 @@ var FlateStream = (function() {
         code2 = this.getBits(code2);
       var dist = (code1 & 0xffff) + code2;
       if (pos + len >= limit) {
-        buffer = this.ensureBuffer(pos + len);
+        var current = buffer.byteLength;
+        var requested = pos + len;
+
+        if (requested >= current) {
+          var size = 512;
+          while (size < requested)
+            size <<= 1;
+          var buffer2 = new Uint8Array(size);
+          buffer2.set(buffer);
+          this.buffer = buffer = buffer2;
+        }
         limit = buffer.length;
       }
       for (var k = 0; k < len; ++k, ++pos)
