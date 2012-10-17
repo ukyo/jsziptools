@@ -23,8 +23,11 @@ asyncTest('test jz.utils.stringToBytes, jz.utils.bytesToString', function(){
             start();
             ok(isCorrect, 'stringToBytes: check all bytes');
             start();
-            equal(jz.utils.bytesToString(original), fr.result, 'bytesToString: check all chars');
-            start();
+
+            jz.utils.bytesToString(original, 'UTF-8', function(str) {
+                equal(str, fr.result, 'bytesToString: check all chars');    
+                start();
+            });
         };
 
         fr.readAsText(new Blob([original]));
@@ -78,62 +81,23 @@ asyncTest('test jz.zip.unpack', function(){
     var aPath = 'zipsample/a.txt';
     var bPath = 'zipsample/folder/b.txt';
     jz.utils.load(['zipsample.zip', aPath, bPath], function(zipsample, a, b ){
-        var unpacked = jz.zip.unpack(zipsample);
-        var aView = new DataView(a);
-        var bView = new DataView(b);
-        var aStr = aView.getString(0, a.byteLength);
-        var bStr = bView.getString(0, b.byteLength);
-        var corrects = [aStr, bStr];
-    
-        [aPath, bPath].forEach(function(v, i){
-            unpacked.getFileAsText(v, function(text){
-                equal(text.replace("\r\n", "\n"), corrects[i].replace("\r\n", "\n"), 'test unpack');
-                start();
-            });
-        });
-    });
-});
+        jz.zip.unpack(zipsample)
+        .done(function(reader) {
+            var aView = new DataView(a);
+            var bView = new DataView(b);
+            var aStr = aView.getString(0, a.byteLength);
+            var bStr = bView.getString(0, b.byteLength);
+            var corrects = [aStr, bStr];
 
-asyncTest('test jz.zip.pack(sync)', function(){
-    var aPath = 'zipsample/a.txt';
-    var bPath = 'zipsample/folder/b.txt';
-    jz.utils.load(['zipsample.zip', aPath, bPath], function(zipsample, a, b){
-        var unpacked = jz.zip.unpack(zipsample);
-        var aView = new DataView(a);
-        var bView = new DataView(b);
-        var aStr = aView.getString(0, a.byteLength);
-        var bStr = bView.getString(0, b.byteLength);
-        var corrects = [aStr, bStr];
-    
-        var files = [
-            {name: 'zipsample', children: [
-                {name: 'a.txt', buffer: a},
-                {name: 'folder', children: [
-                    {name: 'b.txt', buffer: b}
-                ]}
-            ]}
-        ];
-        
-        var packed = jz.zip.pack({
-            files: files,
-            level: 6
-        });
-        
-        var fr = new FileReader();
-        
-        fr.onload = function(e){
-            var unpacked = jz.zip.unpack(e.target.result);
             [aPath, bPath].forEach(function(v, i){
-                unpacked.getFileAsText(v, function(text){
-                    equal(text.replace("\r\n", "\n"), corrects[i].replace("\r\n", "\n"), 'test pack');
+                reader.getFileAsText(v, function(text){
+                    equal(text.replace("\r\n", "\n"), corrects[i].replace("\r\n", "\n"), 'test unpack');
                     start();
                 });
             });
-        };
-        
-        fr.readAsArrayBuffer(new Blob([packed]));
-    });
+        });
     
+    });
 });
 
 asyncTest('test jz.zip.pack(async)', function(){
@@ -159,21 +123,17 @@ asyncTest('test jz.zip.pack(async)', function(){
         jz.zip.pack({
             files: files,
             level: 6,
-            complete: function(packed){
-                var fr = new FileReader();
-        
-                fr.onload = function(e){
-                    var unpacked = jz.zip.unpack(e.target.result);
-                    [aPath, bPath].forEach(function(v, i){
-                        unpacked.getFileAsText(v, function(text){
-                            equal(text.replace("\r\n", "\n"), corrects[i].replace("\r\n", "\n"), 'test pack');
-                            start();
-                        });
+        })
+        .done(function(packed) {
+            jz.zip.unpack(packed)
+            .done(function(reader) {
+                [aPath, bPath].forEach(function(v, i){
+                    reader.getFileAsText(v, function(text){
+                        equal(text.replace("\r\n", "\n"), corrects[i].replace("\r\n", "\n"), 'test pack');
+                        start();
                     });
-                };
-                
-                fr.readAsArrayBuffer(new Blob([packed]));
-            }
+                });
+            });
         });
     });
 });
