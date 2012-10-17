@@ -28,11 +28,9 @@ compress and download:
 
 ```javascript
     var text = 'aaaaaabbbbbbbbbbbccccccccc';
-    var gzbuff = jz.gz.compress(jz.utils.stringToArrayBuffer(text));
+    var gzbuff = jz.gz.compress(jz.utils.toBytes(text));
     var URL = window.URL || window.webkitURL;
-    var bb = new jz.BlobBuilder();
-    bb.append(gzbuff);
-    location.href = URL.createObjectURL(bb.getBlob());
+    location.href = URL.createObjectURL(new Blob([new Uint8Array(gzbuff)]));
 ```
 
 ### zip
@@ -41,28 +39,34 @@ zip:
 
 ```javascript
     var files = [
-      {name: "foo", dir: [ //folder
-        {name: "hello.txt", buffer: "Hello World!"}, //string
-        {name: "bar.js", buffer: buffer}, //ArrayBuffer
-        {name: "hoge.mp3", url: "audiodata/hoge.mp3"} //xhr
+      {name: "foo", dir: [ // folder
+        {name: "hello.txt", buffer: "Hello World!"}, // string
+        {name: "bar.js", buffer: buffer}, // ArrayBuffer
+        {name: "hoge.mp3", url: "audiodata/hoge.mp3"} // xhr
       ]}
     ];
     
-    //async(recommend!)
     jz.zip.pack({
       files: files,
-      level: 5, //compress level
-      complete: function(buffer){
+      level: 5, // compress level
+      complete: function(buffer){ // buffer is ArrayBuffer
+        //...
+      },
+      error: function(err){
         //...
       }
     });
 
-    //sync(not support xhr.)
-    var buffer = jz.zip.pack({
-      files: [{name: "a.txt", "aaa"}],
-      level: 4
-    });
+    // or
+
+    jz.zip.pack({
+      files: files,
+      level: 5
+    })
+    .done(function(buffer){})
+    .fail(function(err){});
     
+
     //set compress level each files.
     var files = [
       {name: "mimetype", buffer: "application/epub+zip", level: 0}, //string
@@ -84,18 +88,39 @@ zip:
 unzip:
 
 ```javascript
-    var loader = jz.zip.unpack(buffer);
-    //get file pathes.
-    loader.getFileNames();
-    //file is read lazy.
-    loader.getFileAsText(loader.getFileNames[0], function(result){
-      alert(result);
+    jz.zip.unpack({
+      buffer: buffer,
+      encoding: 'cp932', //encoding of filenames.
+      complete: function(reader) {
+        // get file pathes.
+        reader.getFileNames();
+        // file is read lazy.
+        reader.getFileAsText(loader.getFileNames[0], function(result){
+          alert(result);
+        });
+      },
+      error: function(err) {}
     });
+
+    // or
+
+    jz.zip.unpack({
+      buffer: buffer,
+      encoding: 'cp932'
+    })
+    .done(function(reader){})
+    .fail(function(err){});
+
+    // you can skip to set the encoding.
+
+    jz.zip.unpack(buffer)
+    .done(function(reader){})
+    .fail(function(err){});
 ```
 
 ## custom build
 
-You can use `build.py` to build jsziptools.
+You can use the `build.py` to build jsziptools.
 
 ```
 $ #see help
