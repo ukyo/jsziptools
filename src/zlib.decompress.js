@@ -18,7 +18,7 @@ jz.zlib.decompress = function(bytes, check){
         flevel, dictid, checksum, ret,
         offset = 0;
     bytes = jz.utils.toBytes(bytes);
-    view = DataView.create(bytes);
+    view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
     
     //read zlib header
     b = bytes[offset++];

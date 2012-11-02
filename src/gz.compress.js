@@ -25,7 +25,7 @@ jz.gz.compress = function(bytes, level, metadata){
         now = Date.now();
 
     metadata = metadata || {};
-    if(matadata.fname) fname = jz.utils.toBytes(metadata.fname);
+    if(metadata.fname) fname = jz.utils.toBytes(metadata.fname);
     if(metadata.fcomment) fcomment = jz.utils.toBytes(metadata.fcomment);
 
     bytes = jz.utils.toBytes(bytes);

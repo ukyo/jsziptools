@@ -83,16 +83,28 @@ asyncTest('test jz.zip.unpack', function(){
     jz.utils.load(['zipsample.zip', aPath, bPath], function(zipsample, a, b ){
         jz.zip.unpack(zipsample)
         .done(function(reader) {
-            var aView = new DataView(a);
-            var bView = new DataView(b);
-            var aStr = aView.getString(0, a.byteLength);
-            var bStr = bView.getString(0, b.byteLength);
-            var corrects = [aStr, bStr];
+            var wait = jz.utils.wait;
+            var waitArr = [wait.PROCESSING, wait.PROCESSING];
+            
+            var corrects = [];
+            
+            jz.utils.bytesToString(new Uint8Array(a), 'UTF-8', function(str) {
+                corrects[0] = str;
+                waitArr[0] = wait.RESOLVE;
+            });
 
-            [aPath, bPath].forEach(function(v, i){
-                reader.getFileAsText(v, function(text){
-                    equal(text.replace("\r\n", "\n"), corrects[i].replace("\r\n", "\n"), 'test unpack');
-                    start();
+            jz.utils.bytesToString(new Uint8Array(b), 'UTF-8', function(str) {
+                corrects[1] = str;
+                waitArr[1] = wait.RESOLVE;
+            });
+
+            wait(waitArr)
+            .done(function() {
+                [aPath, bPath].forEach(function(v, i){
+                    reader.getFileAsText(v, function(text){
+                        equal(text.replace("\r\n", "\n"), corrects[i].replace("\r\n", "\n"), 'test unpack');
+                        start();
+                    });
                 });
             });
         });
@@ -105,32 +117,45 @@ asyncTest('test jz.zip.pack(async)', function(){
     var bPath = 'zipsample/folder/b.txt';
     jz.utils.load(['zipsample.zip', aPath, bPath], function(zipsample, a, b){
         var unpacked = jz.zip.unpack(zipsample);
-        var aView = new DataView(a);
-        var bView = new DataView(b);
-        var aStr = aView.getString(0, a.byteLength);
-        var bStr = bView.getString(0, b.byteLength);
-        var corrects = [aStr, bStr];
-
-        var files = [
-            {name: 'zipsample', children: [
-                {name: 'a.txt', url: aPath},
-                {name: 'folder', children: [
-                    {name: 'b.txt', url: bPath}
-                ]}
-            ]}
-        ];
         
-        jz.zip.pack({
-            files: files,
-            level: 6,
-        })
-        .done(function(packed) {
-            jz.zip.unpack(packed)
-            .done(function(reader) {
-                [aPath, bPath].forEach(function(v, i){
-                    reader.getFileAsText(v, function(text){
-                        equal(text.replace("\r\n", "\n"), corrects[i].replace("\r\n", "\n"), 'test pack');
-                        start();
+        var wait = jz.utils.wait;
+        var waitArr = [wait.PROCESSING, wait.PROCESSING];
+        
+        var corrects = [];
+        
+        jz.utils.bytesToString(new Uint8Array(a), 'UTF-8', function(str) {
+            corrects[0] = str;
+            waitArr[0] = wait.RESOLVE;
+        });
+
+        jz.utils.bytesToString(new Uint8Array(b), 'UTF-8', function(str) {
+            corrects[1] = str;
+            waitArr[1] = wait.RESOLVE;
+        });
+
+        wait(waitArr)
+        .done(function() {
+            var files = [
+                {name: 'zipsample', children: [
+                    {name: 'a.txt', url: aPath},
+                    {name: 'folder', children: [
+                        {name: 'b.txt', url: bPath}
+                    ]}
+                ]}
+            ];
+            
+            jz.zip.pack({
+                files: files,
+                level: 6,
+            })
+            .done(function(packed) {
+                jz.zip.unpack(packed)
+                .done(function(reader) {
+                    [aPath, bPath].forEach(function(v, i){
+                        reader.getFileAsText(v, function(text){
+                            equal(text.replace("\r\n", "\n"), corrects[i].replace("\r\n", "\n"), 'test pack');
+                            start();
+                        });
                     });
                 });
             });

@@ -16,7 +16,7 @@ inflate.js
 jz.gz.decompress = function(bytes, check){
     var ret = {}, flg, offset = 10, checksum, view;
     bytes = jz.utils.toBytes(bytes);
-    view = new DataView(bytes.buffer, bytes.byteOffset);
+    view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
     
     if(bytes[0] !== 0x1F || bytes[1] !== 0x8B) throw 'Error: invalid gzip file.';
     if(bytes[2] !== 0x8) throw 'Error: not deflate.';
