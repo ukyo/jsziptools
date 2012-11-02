@@ -43,7 +43,7 @@ var DecodeStream = (function() {
     this.pos = 0;
     this.bufferLength = 0;
     this.eof = false;
-    this.buffer = new Uint8Array(1);
+    this.buffer = new Uint8Array(512);
   }
 
   constructor.prototype = {
