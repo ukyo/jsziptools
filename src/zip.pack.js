@@ -190,17 +190,19 @@ jz.zip.pack = function(params){
             dir.forEach(loadFiles);
         } else if(obj.url) {
             jz.utils.load(obj.url)
-            .done((function(i) {
+            .done(function(i) {
                 return function(response){
                     obj.buffer = response;
                     obj.url = null;
                     arr[i] = wait.RESOLVE;
                 };
-            })(index))
-            .fail(function(err) {
-                arr[i] = wait.REJECT;
-                throw err;
-            });
+            }(index))
+            .fail(function(i) {
+                return function(err) {
+                    arr[i] = wait.REJECT;
+                    throw err;
+                }
+            }(index));
             arr[index] = wait.PROCESSING;
             index++;
         }
@@ -229,7 +231,7 @@ jz.zip.pack = function(params){
         //if you don't set compression level to this file, set level of the whole file.
         level = obj.level !== void(0) ? obj.level : level;
         
-        if(level > 0 && typeof dir === 'undefined') {
+        if(level > 0 && dir === void 0) {
             compressedBuffer = jz.algorithms.deflate(buffer, level);
             isDeflate = true;
         }
