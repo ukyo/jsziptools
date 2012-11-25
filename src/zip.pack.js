@@ -8,18 +8,18 @@ crc32.js
 (function(jz){
 
 /**
- * @param {number} i index of a File.
+ * @param {number} n number of Files and folders.
  * @param {number} centralDirHeaderSize
  * @param {number} offset A start position of a File.
  * @return {Uint8Array}
  */
-function getEndCentDirHeader(i, centralDirHeaderSize, offset){
+function getEndCentDirHeader(n, centralDirHeaderSize, offset){
     var view = new DataView(new ArrayBuffer(22));
     view.setUint32(0, jz.zip.END_SIGNATURE, true); 
     view.setUint16(4, 0, true);
     view.setUint16(6, 0, true);
-    view.setUint16(8, i, true);
-    view.setUint16(10, i, true);
+    view.setUint16(8, n, true);
+    view.setUint16(10, n, true);
     view.setUint32(12, centralDirHeaderSize, true);
     view.setUint32(16, offset, true);
     view.setUint16(20, 0, true);
