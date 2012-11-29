@@ -8,6 +8,7 @@ REPOSITORY_NAME = "jsziptools"
 REPOSITORY_URL = "http://github.com/ukyo/jsziptools"
 CLOSURE_COMPILER_PATH = os.environ['CLOSURE_COMPILER_PATH']
 OUTPUT_PATH = 'build/jsziptools.min.js'
+JQUERY_WRAP = ''
 
 parser = argparse.ArgumentParser()
 
@@ -34,6 +35,12 @@ parser.add_argument('-c',
                     metavar='CONF_FILE_PATH',
                     dest='conf',
                     help='Set a configuration file path.')
+
+parser.add_argument('-j',
+                    metavar='JQUERY_WRAP',
+                    dest='jquery',
+                    help='Add to the jQuery namespace.',
+                    default=JQUERY_WRAP)
 
 
 ALL_FILES = (
@@ -152,13 +159,18 @@ def main():
         compiler = conf['compiler'] if 'compiler' in conf else CLOSURE_COMPILER_PATH
         output = conf['output'] if 'output' in conf else OUTPUT_PATH
         files = conf['files']
+        jquery = conf['jquery'] if 'jquery' in conf else JQUERY_WRAP
     else:
         compiler = option.compiler
         output = option.output
         option.module = [option.module] if type(option.module) == str else option.module
         files = select_modules(option.module)
+        jquery = option.jquery
 
-    command = "java -jar %s --js %s --js_output_file %s" % (compiler, ' '.join(os.path.abspath(file) for file in files), tmp_file)
+    if jquery:
+        command = "java -jar %s --js %s --js_output_file %s --output_wrapper %s" % (compiler, ' '.join(os.path.abspath(file) for file in files), tmp_file, '";(function($){%output%$.extend({'+jquery+':jz})})(jQuery);"')
+    else:
+        command = "java -jar %s --js %s --js_output_file %s" % (compiler, ' '.join(os.path.abspath(file) for file in files), tmp_file)
     os.system(command)
 
     directory = '/'.join(os.path.abspath(output).split('/')[:-1])
