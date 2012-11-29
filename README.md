@@ -175,5 +175,7 @@ Example of a configuration file:
 Usage:
 
 ```
+$ ./build.py -c buildconf.json
+$ #add to jquery
 $ ./build.py -c jquery.buildconf.json
 ```
