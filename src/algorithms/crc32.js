@@ -8,10 +8,10 @@ utils.js
  * Calc crc32 checksum.
  */
 
-jz.algorithms.crc32 = (function(){
+algorithms.crc32 = (function(){
     var table = (function(){
         var poly = 0xEDB88320,
-            table = new Uint32Array(new ArrayBuffer(1024)),
+            table = new Uint32Array(256),
             u, i, j;
         
         for(i = 0; i < 256; ++i){
@@ -25,9 +25,11 @@ jz.algorithms.crc32 = (function(){
     })();
     
     return function(bytes){
-        var result = 0xFFFFFFFF, bytes = jz.utils.toBytes(bytes), i, n, t = table;
+        var result = 0xFFFFFFFF, bytes = utils.toBytes(bytes), i, n, t = table;
         for(i = 0, n = bytes.length; i < n; ++i)
             result = (result >>> 8) ^ t[bytes[i] ^ (result & 0xFF)];
         return (~result) >>> 0;
     };
 })();
+
+expose('jz.algorithms.crc32', algorithms.crc32);

@@ -8,8 +8,8 @@ utils.js
  * Calc adler32 checksum.
  */
 
-jz.algorithms.adler32 = function(bytes){
-    var bytes = jz.utils.toBytes(bytes),
+algorithms.adler32 = function(bytes){
+    var bytes = utils.toBytes(bytes),
         a = 1,
         b = 0,
         i = 0,
@@ -31,3 +31,5 @@ jz.algorithms.adler32 = function(bytes){
     
     return ((b << 16) | a) >>> 0;
 };
+
+expose('jz.algorithms.adler32', algorithms.adler32);

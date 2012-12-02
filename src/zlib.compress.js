@@ -13,11 +13,11 @@ utils.js
  * @param {integer} level compress level.
  * @return {ArrayBuffer} zlib format buffer.
  */
-jz.zlib.compress = function(bytes, level){
+zlib.compress = function(bytes, level){
     var ret, buffer, i, end, checksum, data, view;
     
     //compress to deflate stream
-    data = jz.utils.toBytes(jz.algorithms.deflate(bytes, level));
+    data = utils.toBytes(algorithms.deflate(bytes, level));
     
     ret = new Uint8Array(data.length + 6);
     view = new DataView(ret.buffer);
@@ -30,8 +30,10 @@ jz.zlib.compress = function(bytes, level){
     ret.set(data, 2);
     
     //write adler32 checksum
-    checksum = jz.algorithms.adler32(bytes);
+    checksum = algorithms.adler32(bytes);
     view.setUint32(ret.length - 4, checksum);
     
     return ret.buffer;
 };
+
+expose('jz.zlib.compress', zlib.compress);

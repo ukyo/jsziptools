@@ -2,7 +2,10 @@
 jsziptools.js
 */
 
-jz.utils.noop = function() {};
+utils.noop = function() {};
+
+expose('jz.utils.noop', utils.noop);
+
 
 /**
  * convert from Array, ArrayBuffer or String to Uint8Array.
@@ -10,9 +13,9 @@ jz.utils.noop = function() {};
  * @param {ArrayBuffer|Uint8Array|Int8Array|Uint8ClampedArray|Array|string} buffer
  * @return {Uint8Array}
  */
-jz.utils.toBytes = function(buffer){
+utils.toBytes = function(buffer){
     switch(buffer.constructor){
-        case String: return jz.utils.stringToBytes(buffer);
+        case String: return utils.stringToBytes(buffer);
         case Array:
         case ArrayBuffer: return new Uint8Array(buffer);
         case Uint8Array: return buffer;
@@ -21,6 +24,8 @@ jz.utils.toBytes = function(buffer){
     }
 };
 
+expose('jz.utils.toBytes', utils.toBytes);
+
 
 /**
  * Convert from String to Uint8Array.
@@ -28,7 +33,7 @@ jz.utils.toBytes = function(buffer){
  * @param {string} str
  * @return {Uint8Array}
  */
-jz.utils.stringToBytes = function(str){
+utils.stringToBytes = function(str){
     var n = str.length,
         idx = -1,
         byteLength = 32,
@@ -62,13 +67,16 @@ jz.utils.stringToBytes = function(str){
     return bytes.subarray(0, ++idx);
 };
 
+expose('jz.utils.stringToBytes', utils.stringToBytes);
+
+
 /**
  * Convert from Uint8Array to String.
  * @param {Uint8Array} bytes
  * @param {string} encoding
  * @param {Function} callback
  */
-jz.utils.bytesToString = function(bytes, encoding, callback) {
+utils.bytesToString = function(bytes, encoding, callback) {
     var fr = new FileReader();
     fr.onloadend = function() {
         callback.call(fr, fr.result);
@@ -76,24 +84,32 @@ jz.utils.bytesToString = function(bytes, encoding, callback) {
     fr.readAsText(new Blob([bytes]), encoding);
 };
 
-if(jz.env.isWorker) {
+expose('jz.utils.bytesToString', utils.bytesToString);
+
+
+utils.bytesToStringSync = null;
+
+if(env.isWorker) {
     /**
      * Convert from Uint8Array to String.
      * @param {Uint8Array} bytes
      * @param {string} encoding
      * @return {string}
      */
-    jz.utils.bytesToStringSync = function(bytes, encoding) {
+    utils.bytesToStringSync = function(bytes, encoding) {
         return new FileReaderSync().readAsText(new Blob([bytes]), encoding);
     };
 }
+
+expose('jz.utils.bytesToStringSync', utils.bytesToStringSync);
+
 
 /**
  * @param {Uint8Array} bytes
  * @return {string} encoding
  */
-jz.utils.detectEncoding = function(bytes) {
-    bytes = jz.utils.toBytes(bytes);
+utils.detectEncoding = function(bytes) {
+    bytes = utils.toBytes(bytes);
 
     for(var i = 0, n = bytes.length; i < n; ++i) {
         if(bytes[i] < 0x80) {
@@ -112,33 +128,36 @@ jz.utils.detectEncoding = function(bytes) {
     return 'UTF-8';
 };
 
+expose('jz.utils.detectEncoding', utils.detectEncoding);
+
+
 /**
  * Load buffer with Ajax(async).
  * @param {Array.<string>|string} urls
  * @param {Function} complete
  * @param {Function} error
- * @return {jz.utils.Callbacks}
+ * @return {utils.Callbacks}
  * 
  * @example
  *
- * jz.utils.load(['a.zip', 'b.zip'], function(a, b){ }, function(err) { });
+ * utils.load(['a.zip', 'b.zip'], function(a, b){ }, function(err) { });
  * 
  * // or
  * 
- * jz.utils.load(['a.zip', 'b.zip'])
+ * utils.load(['a.zip', 'b.zip'])
  * .done(function(a, b){ })
  * .fail(function(err){ });
  * 
  */
-jz.utils.load = function(urls, complete, error){
+utils.load = function(urls, complete, error){
     urls = Array.isArray(urls) ? urls : [urls];
-    complete = complete || jz.utils.noop;
-    error = error || jz.utils.noop;
+    complete = complete || utils.noop;
+    error = error || utils.noop;
 
     var results = [],
         waitArr = [],
-        wait = jz.utils.wait,
-        callbacks = new jz.utils.Callbacks;
+        wait = utils.wait,
+        callbacks = new utils.Callbacks;
     
 
     setTimeout(function() {
@@ -175,11 +194,14 @@ jz.utils.load = function(urls, complete, error){
     return callbacks;
 };
 
+expose('jz.utils.load', utils.load);
+
+
 /**
  * @param {...(Uint8Array|int8Array|Uint8ClampedArray)} byteArrays
  * @return {Uint8Array}
  */
-jz.utils.concatByteArrays = function(byteArrays){
+utils.concatByteArrays = function(byteArrays){
     var byteArrays = Array.isArray(byteArrays) ? byteArrays : Array.prototype.slice.call(arguments, 0),
         size = 0,
         offset = 0,
@@ -194,9 +216,12 @@ jz.utils.concatByteArrays = function(byteArrays){
     return ret;
 };
 
-jz.utils.wait = function(arr) {
-    var wait = jz.utils.wait,
-        callbacks = new jz.utils.Callbacks;
+expose('jz.utils.concatByteArrays', utils.concatByteArrays);
+
+
+utils.wait = function(arr) {
+    var wait = utils.wait,
+        callbacks = new utils.Callbacks;
 
     function _wait() {
         if(arr.indexOf(wait.REJECT) !== -1) return callbacks.failCallback();
@@ -208,22 +233,29 @@ jz.utils.wait = function(arr) {
     return callbacks;
 };
 
-jz.utils.wait.PROCESSING = 0;
-jz.utils.wait.RESOLVE = 1;
-jz.utils.wait.REJECT = 2;
+utils.wait.PROCESSING = 0;
+utils.wait.RESOLVE = 1;
+utils.wait.REJECT = 2;
 
-jz.utils.Callbacks = function() {
-    this.doneCallback = jz.utils.noop;
-    this.failCallback = jz.utils.noop;
+expose('jz.utils.wait', utils.wait);
+expose('jz.utils.wait.PROCESSING', utils.wait.PROCESSING);
+expose('jz.utils.wait.RESOLVE', utils.wait.RESOLVE);
+expose('jz.utils.wait.REJECT', utils.wait.REJECT);
+
+
+utils.Callbacks = function() {
+    this.doneCallback = utils.noop;
+    this.failCallback = utils.noop;
 };
 
-jz.utils.Callbacks.prototype.done = function(callback) {
+utils.Callbacks.prototype.done = function(callback) {
     this.doneCallback = callback;
     return this;
 };
 
-jz.utils.Callbacks.prototype.fail = function(callback) {
+utils.Callbacks.prototype.fail = function(callback) {
     this.failCallback = callback;
     return this;
 };
 
+exposeClass('jz.utils.Callbacks', utils.Callbacks);

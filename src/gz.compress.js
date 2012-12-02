@@ -15,7 +15,7 @@ deflate.js
  * fname(file name) and fcomment (file comment).
  * @return {ArrayBuffer}
  */
-jz.gz.compress = function(bytes, level, metadata){
+gz.compress = function(bytes, level, metadata){
     var deflatedBytes, ret, i, end, view, checksum, isize,
         flg = 0,
         headerLength = 10,
@@ -25,12 +25,12 @@ jz.gz.compress = function(bytes, level, metadata){
         now = Date.now();
 
     metadata = metadata || {};
-    if(metadata.fname) fname = jz.utils.toBytes(metadata.fname);
-    if(metadata.fcomment) fcomment = jz.utils.toBytes(metadata.fcomment);
+    if(metadata.fname) fname = utils.toBytes(metadata.fname);
+    if(metadata.fcomment) fcomment = utils.toBytes(metadata.fcomment);
 
-    bytes = jz.utils.toBytes(bytes);
+    bytes = utils.toBytes(bytes);
     
-    deflatedBytes = new Uint8Array(jz.algorithms.deflate(bytes, level));
+    deflatedBytes = new Uint8Array(algorithms.deflate(bytes, level));
     
     //calc metadata length
     if(fname){
@@ -71,7 +71,7 @@ jz.gz.compress = function(bytes, level, metadata){
     }
     
     //write crc32 checksum
-    view.setUint32(ret.length - 8, jz.algorithms.crc32(bytes), true);
+    view.setUint32(ret.length - 8, algorithms.crc32(bytes), true);
     
     //write isize
     view.setUint32(ret.length - 4, bytes.length, true);
@@ -81,3 +81,5 @@ jz.gz.compress = function(bytes, level, metadata){
     
     return ret.buffer;
 };
+
+expose('jz.gz.compress', gz.compress);
