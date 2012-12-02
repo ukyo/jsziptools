@@ -13,9 +13,9 @@ inflate.js
  * @param {boolean} check If check crc32 checksum, set true.
  * @return {ArrayBuffer}
  */
-jz.gz.decompress = function(bytes, check){
+gz.decompress = function(bytes, check){
     var ret = {}, flg, offset = 10, checksum, view;
-    bytes = jz.utils.toBytes(bytes);
+    bytes = utils.toBytes(bytes);
     view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
     
     if(bytes[0] !== 0x1F || bytes[1] !== 0x8B) throw 'Error: invalid gzip file.';
@@ -49,14 +49,16 @@ jz.gz.decompress = function(bytes, check){
         offset += 2;
     }
     
-    ret = jz.algorithms.inflate(bytes.subarray(offset, bytes.length - 8));
+    ret = algorithms.inflate(bytes.subarray(offset, bytes.length - 8));
     
     if(check) {
         checksum = view.getUint32(bytes.length - 8, true);
-        if(checksum !== jz.algorithms.crc32(ret)) {
+        if(checksum !== algorithms.crc32(ret)) {
             throw 'Error: deffer from checksum.';
         }
     }
     
     return ret;
 };
+
+expose('jz.gz.decompress', gz.decompress);

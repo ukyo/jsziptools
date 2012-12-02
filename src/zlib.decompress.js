@@ -13,11 +13,11 @@ utils.js
  * @param {boolean} check if check adler32 checksum, set true.
  * @return {ArrayBuffer} buffer.
  */
-jz.zlib.decompress = function(bytes, check){
+zlib.decompress = function(bytes, check){
     var b, cm, cinfo, fcheck, fdict, view,
         flevel, dictid, checksum, ret,
         offset = 0;
-    bytes = jz.utils.toBytes(bytes);
+    bytes = utils.toBytes(bytes);
     view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
     
     //read zlib header
@@ -36,15 +36,17 @@ jz.zlib.decompress = function(bytes, check){
     }
     
     //decompress from deflate stream
-    ret = jz.algorithms.inflate(bytes.subarray(offset, bytes.length - 4));
+    ret = algorithms.inflate(bytes.subarray(offset, bytes.length - 4));
     
     //check adler32
     if(check){
         //read adler32 checksum
         checksum = view.getUint32(bytes.length - 4, false);
-        checksum2 = jz.algorithms.adler32(ret);
+        checksum2 = algorithms.adler32(ret);
         if(checksum !== checksum2) throw 'Error: differ from checksum';
     }
     
     return ret;
 };
+
+expose('jz.zlib.decompress', zlib.decompress);

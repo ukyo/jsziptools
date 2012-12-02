@@ -3,8 +3,6 @@ jsziptools.js
 utils.js
 */
 
-(function(jz){
-
 function deflate(input, level) {
     var Module = {
         'input': input
@@ -19,8 +17,8 @@ return new Uint8Array(Module.ret()).buffer;
  * @param {number} level
  * @return {ArrayBuffer}
  */
-jz.algorithms.deflate = function(bytes, level){
-    return deflate(jz.utils.toBytes(bytes), level);
+algorithms.deflate = function(bytes, level){
+    return deflate(utils.toBytes(bytes), level);
 };
 
-})(jz);
+expose('jz.algorithms.deflate', algorithms.deflate);

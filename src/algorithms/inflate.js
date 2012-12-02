@@ -4,518 +4,968 @@ utils.js
 */
 
 
-(function(jz){
-
-/*
- * Extracted from pdf.js
- * https://github.com/andreasgal/pdf.js
+/**
+ * Extracted from https://github.com/imaya/zlib.js
+ * 
+ * The MIT License
  *
- * Copyright (c) 2011 Mozilla Foundation
+ * Copyright (c) 2012 imaya
  *
- * Contributors: Andreas Gal <gal@mozilla.com>
- *               Chris G Jones <cjones@mozilla.com>
- *               Shaon Barman <shaon.barman@gmail.com>
- *               Vivien Nicolas <21@vingtetun.org>
- *               Justin D'Arcangelo <justindarc@gmail.com>
- *               Yury Delendik
- *
- * Permission is hereby granted, free of charge, to any person obtaining a
- * copy of this software and associated documentation files (the "Software"),
- * to deal in the Software without restriction, including without limitation
- * the rights to use, copy, modify, merge, publish, distribute, sublicense,
- * and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
  *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
- * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
- * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
- * DEALINGS IN THE SOFTWARE.
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
  */
 
-var DecodeStream = (function() {
-  function constructor() {
-    this.pos = 0;
-    this.bufferLength = 0;
-    this.eof = false;
-    this.buffer = new Uint8Array(512);
+var Zlib = {};
+var USE_TYPEDARRAY = true;
+
+
+var buildHuffmanTable = function(lengths) {
+  /** @type {number} length list size. */
+  var listSize = lengths.length;
+  /** @type {number} max code length for table size. */
+  var maxCodeLength = 0;
+  /** @type {number} min code length for table size. */
+  var minCodeLength = Number.POSITIVE_INFINITY;
+  /** @type {number} table size. */
+  var size;
+  /** @type {!(Array|Uint8Array)} huffman code table. */
+  var table;
+  /** @type {number} bit length. */
+  var bitLength;
+  /** @type {number} huffman code. */
+  var code;
+  /**
+   * サイズが 2^maxlength 個のテーブルを埋めるためのスキップ長.
+   * @type {number} skip length for table filling.
+   */
+  var skip;
+  /** @type {number} reversed code. */
+  var reversed;
+  /** @type {number} reverse temp. */
+  var rtemp;
+  /** @type {number} loop counter. */
+  var i;
+  /** @type {number} loop limit. */
+  var il;
+  /** @type {number} loop counter. */
+  var j;
+  /** @type {number} loop limit. */
+  var jl;
+
+  // Math.max は遅いので最長の値は for-loop で取得する
+  for (i = 0, il = listSize; i < il; ++i) {
+    if (lengths[i] > maxCodeLength) {
+      maxCodeLength = lengths[i];
+    }
+    if (lengths[i] < minCodeLength) {
+      minCodeLength = lengths[i];
+    }
   }
 
-  constructor.prototype = {
-    ensureBuffer: function decodestream_ensureBuffer(requested) {
-      var buffer = this.buffer;
-      var current = buffer.byteLength;
-      if (requested < current)
-        return buffer;
-      var size = 512;
-      while (size < requested)
-        size <<= 1;
-      var buffer2 = new Uint8Array(size);
-      buffer2.set(buffer);
-      return this.buffer = buffer2;
-    },
-    getByte: function decodestream_getByte() {
-      var pos = this.pos;
-      while (this.bufferLength <= pos) {
-        if (this.eof)
-          return null;
-        this.readBlock();
-      }
-      return this.buffer[this.pos++];
-    },
-    getBytes: function decodestream_getBytes(length) {
-      var pos = this.pos;
+  size = 1 << maxCodeLength;
+  table = new (USE_TYPEDARRAY ? Uint32Array : Array)(size);
 
-      if (length) {
-        var requested = pos + length;
-        var buffer = this.buffer;
-        var current = buffer.byteLength;
-        if (requested >= current) {
-          var size = 512;
-          while (size < requested)
-            size <<= 1;
-          var buffer2 = new Uint8Array(size);
-          buffer2.set(buffer);
-          this.buffer = buffer2;
+  // ビット長の短い順からハフマン符号を割り当てる
+  for (bitLength = 1, code = 0, skip = 2; bitLength <= maxCodeLength;) {
+    for (i = 0; i < listSize; ++i) {
+      if (lengths[i] === bitLength) {
+        // ビットオーダーが逆になるためビット長分並びを反転する
+        for (reversed = 0, rtemp = code, j = 0; j < bitLength; ++j) {
+          reversed = (reversed << 1) | (rtemp & 1);
+          rtemp >>= 1;
         }
 
-        while (!this.eof && this.bufferLength < end)
-          this.readBlock();
+        // 最大ビット長をもとにテーブルを作るため、
+        // 最大ビット長以外では 0 / 1 どちらでも良い箇所ができる
+        // そのどちらでも良い場所は同じ値で埋めることで
+        // 本来のビット長以上のビット数取得しても問題が起こらないようにする
+        for (j = reversed; j < size; j += skip) {
+          table[j] = (bitLength << 16) | i;
+        }
 
-        var bufEnd = this.bufferLength;
-        if (end > bufEnd)
-          end = bufEnd;
-      } else {
-        while (!this.eof)
-          this.readBlock();
-
-        var end = this.bufferLength;
+        ++code;
       }
-
-      this.pos = end;
-      return this.buffer.subarray(pos, end);
-    },
-    lookChar: function decodestream_lookChar() {
-      var pos = this.pos;
-      while (this.bufferLength <= pos) {
-        if (this.eof)
-          return null;
-        this.readBlock();
-      }
-      return String.fromCharCode(this.buffer[this.pos]);
-    },
-    getChar: function decodestream_getChar() {
-      var pos = this.pos;
-      while (this.bufferLength <= pos) {
-        if (this.eof)
-          return null;
-        this.readBlock();
-      }
-      return String.fromCharCode(this.buffer[this.pos++]);
-    },
-    makeSubStream: function decodestream_makeSubstream(start, length, dict) {
-      var end = start + length;
-      while (this.bufferLength <= end && !this.eof)
-        this.readBlock();
-      return new Stream(this.buffer, start, length, dict);
-    },
-    skip: function decodestream_skip(n) {
-      if (!n)
-        n = 1;
-      this.pos += n;
-    },
-    reset: function decodestream_reset() {
-      this.pos = 0;
     }
-  };
 
-  return constructor;
-})();
-
-var FlateStream = (function() {
-  var codeLenCodeMap = new Uint32Array([
-    16, 17, 18, 0, 8, 7, 9, 6, 10, 5, 11, 4, 12, 3, 13, 2, 14, 1, 15
-  ]);
-
-  var lengthDecode = new Uint32Array([
-    0x00003, 0x00004, 0x00005, 0x00006, 0x00007, 0x00008, 0x00009, 0x0000a,
-    0x1000b, 0x1000d, 0x1000f, 0x10011, 0x20013, 0x20017, 0x2001b, 0x2001f,
-    0x30023, 0x3002b, 0x30033, 0x3003b, 0x40043, 0x40053, 0x40063, 0x40073,
-    0x50083, 0x500a3, 0x500c3, 0x500e3, 0x00102, 0x00102, 0x00102
-  ]);
-
-  var distDecode = new Uint32Array([
-    0x00001, 0x00002, 0x00003, 0x00004, 0x10005, 0x10007, 0x20009, 0x2000d,
-    0x30011, 0x30019, 0x40021, 0x40031, 0x50041, 0x50061, 0x60081, 0x600c1,
-    0x70101, 0x70181, 0x80201, 0x80301, 0x90401, 0x90601, 0xa0801, 0xa0c01,
-    0xb1001, 0xb1801, 0xc2001, 0xc3001, 0xd4001, 0xd6001
-  ]);
-
-  var fixedLitCodeTab = [new Uint32Array([
-    0x70100, 0x80050, 0x80010, 0x80118, 0x70110, 0x80070, 0x80030, 0x900c0,
-    0x70108, 0x80060, 0x80020, 0x900a0, 0x80000, 0x80080, 0x80040, 0x900e0,
-    0x70104, 0x80058, 0x80018, 0x90090, 0x70114, 0x80078, 0x80038, 0x900d0,
-    0x7010c, 0x80068, 0x80028, 0x900b0, 0x80008, 0x80088, 0x80048, 0x900f0,
-    0x70102, 0x80054, 0x80014, 0x8011c, 0x70112, 0x80074, 0x80034, 0x900c8,
-    0x7010a, 0x80064, 0x80024, 0x900a8, 0x80004, 0x80084, 0x80044, 0x900e8,
-    0x70106, 0x8005c, 0x8001c, 0x90098, 0x70116, 0x8007c, 0x8003c, 0x900d8,
-    0x7010e, 0x8006c, 0x8002c, 0x900b8, 0x8000c, 0x8008c, 0x8004c, 0x900f8,
-    0x70101, 0x80052, 0x80012, 0x8011a, 0x70111, 0x80072, 0x80032, 0x900c4,
-    0x70109, 0x80062, 0x80022, 0x900a4, 0x80002, 0x80082, 0x80042, 0x900e4,
-    0x70105, 0x8005a, 0x8001a, 0x90094, 0x70115, 0x8007a, 0x8003a, 0x900d4,
-    0x7010d, 0x8006a, 0x8002a, 0x900b4, 0x8000a, 0x8008a, 0x8004a, 0x900f4,
-    0x70103, 0x80056, 0x80016, 0x8011e, 0x70113, 0x80076, 0x80036, 0x900cc,
-    0x7010b, 0x80066, 0x80026, 0x900ac, 0x80006, 0x80086, 0x80046, 0x900ec,
-    0x70107, 0x8005e, 0x8001e, 0x9009c, 0x70117, 0x8007e, 0x8003e, 0x900dc,
-    0x7010f, 0x8006e, 0x8002e, 0x900bc, 0x8000e, 0x8008e, 0x8004e, 0x900fc,
-    0x70100, 0x80051, 0x80011, 0x80119, 0x70110, 0x80071, 0x80031, 0x900c2,
-    0x70108, 0x80061, 0x80021, 0x900a2, 0x80001, 0x80081, 0x80041, 0x900e2,
-    0x70104, 0x80059, 0x80019, 0x90092, 0x70114, 0x80079, 0x80039, 0x900d2,
-    0x7010c, 0x80069, 0x80029, 0x900b2, 0x80009, 0x80089, 0x80049, 0x900f2,
-    0x70102, 0x80055, 0x80015, 0x8011d, 0x70112, 0x80075, 0x80035, 0x900ca,
-    0x7010a, 0x80065, 0x80025, 0x900aa, 0x80005, 0x80085, 0x80045, 0x900ea,
-    0x70106, 0x8005d, 0x8001d, 0x9009a, 0x70116, 0x8007d, 0x8003d, 0x900da,
-    0x7010e, 0x8006d, 0x8002d, 0x900ba, 0x8000d, 0x8008d, 0x8004d, 0x900fa,
-    0x70101, 0x80053, 0x80013, 0x8011b, 0x70111, 0x80073, 0x80033, 0x900c6,
-    0x70109, 0x80063, 0x80023, 0x900a6, 0x80003, 0x80083, 0x80043, 0x900e6,
-    0x70105, 0x8005b, 0x8001b, 0x90096, 0x70115, 0x8007b, 0x8003b, 0x900d6,
-    0x7010d, 0x8006b, 0x8002b, 0x900b6, 0x8000b, 0x8008b, 0x8004b, 0x900f6,
-    0x70103, 0x80057, 0x80017, 0x8011f, 0x70113, 0x80077, 0x80037, 0x900ce,
-    0x7010b, 0x80067, 0x80027, 0x900ae, 0x80007, 0x80087, 0x80047, 0x900ee,
-    0x70107, 0x8005f, 0x8001f, 0x9009e, 0x70117, 0x8007f, 0x8003f, 0x900de,
-    0x7010f, 0x8006f, 0x8002f, 0x900be, 0x8000f, 0x8008f, 0x8004f, 0x900fe,
-    0x70100, 0x80050, 0x80010, 0x80118, 0x70110, 0x80070, 0x80030, 0x900c1,
-    0x70108, 0x80060, 0x80020, 0x900a1, 0x80000, 0x80080, 0x80040, 0x900e1,
-    0x70104, 0x80058, 0x80018, 0x90091, 0x70114, 0x80078, 0x80038, 0x900d1,
-    0x7010c, 0x80068, 0x80028, 0x900b1, 0x80008, 0x80088, 0x80048, 0x900f1,
-    0x70102, 0x80054, 0x80014, 0x8011c, 0x70112, 0x80074, 0x80034, 0x900c9,
-    0x7010a, 0x80064, 0x80024, 0x900a9, 0x80004, 0x80084, 0x80044, 0x900e9,
-    0x70106, 0x8005c, 0x8001c, 0x90099, 0x70116, 0x8007c, 0x8003c, 0x900d9,
-    0x7010e, 0x8006c, 0x8002c, 0x900b9, 0x8000c, 0x8008c, 0x8004c, 0x900f9,
-    0x70101, 0x80052, 0x80012, 0x8011a, 0x70111, 0x80072, 0x80032, 0x900c5,
-    0x70109, 0x80062, 0x80022, 0x900a5, 0x80002, 0x80082, 0x80042, 0x900e5,
-    0x70105, 0x8005a, 0x8001a, 0x90095, 0x70115, 0x8007a, 0x8003a, 0x900d5,
-    0x7010d, 0x8006a, 0x8002a, 0x900b5, 0x8000a, 0x8008a, 0x8004a, 0x900f5,
-    0x70103, 0x80056, 0x80016, 0x8011e, 0x70113, 0x80076, 0x80036, 0x900cd,
-    0x7010b, 0x80066, 0x80026, 0x900ad, 0x80006, 0x80086, 0x80046, 0x900ed,
-    0x70107, 0x8005e, 0x8001e, 0x9009d, 0x70117, 0x8007e, 0x8003e, 0x900dd,
-    0x7010f, 0x8006e, 0x8002e, 0x900bd, 0x8000e, 0x8008e, 0x8004e, 0x900fd,
-    0x70100, 0x80051, 0x80011, 0x80119, 0x70110, 0x80071, 0x80031, 0x900c3,
-    0x70108, 0x80061, 0x80021, 0x900a3, 0x80001, 0x80081, 0x80041, 0x900e3,
-    0x70104, 0x80059, 0x80019, 0x90093, 0x70114, 0x80079, 0x80039, 0x900d3,
-    0x7010c, 0x80069, 0x80029, 0x900b3, 0x80009, 0x80089, 0x80049, 0x900f3,
-    0x70102, 0x80055, 0x80015, 0x8011d, 0x70112, 0x80075, 0x80035, 0x900cb,
-    0x7010a, 0x80065, 0x80025, 0x900ab, 0x80005, 0x80085, 0x80045, 0x900eb,
-    0x70106, 0x8005d, 0x8001d, 0x9009b, 0x70116, 0x8007d, 0x8003d, 0x900db,
-    0x7010e, 0x8006d, 0x8002d, 0x900bb, 0x8000d, 0x8008d, 0x8004d, 0x900fb,
-    0x70101, 0x80053, 0x80013, 0x8011b, 0x70111, 0x80073, 0x80033, 0x900c7,
-    0x70109, 0x80063, 0x80023, 0x900a7, 0x80003, 0x80083, 0x80043, 0x900e7,
-    0x70105, 0x8005b, 0x8001b, 0x90097, 0x70115, 0x8007b, 0x8003b, 0x900d7,
-    0x7010d, 0x8006b, 0x8002b, 0x900b7, 0x8000b, 0x8008b, 0x8004b, 0x900f7,
-    0x70103, 0x80057, 0x80017, 0x8011f, 0x70113, 0x80077, 0x80037, 0x900cf,
-    0x7010b, 0x80067, 0x80027, 0x900af, 0x80007, 0x80087, 0x80047, 0x900ef,
-    0x70107, 0x8005f, 0x8001f, 0x9009f, 0x70117, 0x8007f, 0x8003f, 0x900df,
-    0x7010f, 0x8006f, 0x8002f, 0x900bf, 0x8000f, 0x8008f, 0x8004f, 0x900ff
-  ]), 9];
-
-  var fixedDistCodeTab = [new Uint32Array([
-    0x50000, 0x50010, 0x50008, 0x50018, 0x50004, 0x50014, 0x5000c, 0x5001c,
-    0x50002, 0x50012, 0x5000a, 0x5001a, 0x50006, 0x50016, 0x5000e, 0x00000,
-    0x50001, 0x50011, 0x50009, 0x50019, 0x50005, 0x50015, 0x5000d, 0x5001d,
-    0x50003, 0x50013, 0x5000b, 0x5001b, 0x50007, 0x50017, 0x5000f, 0x00000
-  ]), 5];
-
-  function error(e) {
-      throw new Error(e)
+    // 次のビット長へ
+    ++bitLength;
+    code <<= 1;
+    skip <<= 1;
   }
 
-  function constructor(bytes) {
-    //var bytes = stream.getBytes();
-    var bytesPos = 0;
+  return [table, maxCodeLength, minCodeLength];
+};
 
-    // var cmf = bytes[bytesPos++];
-    // var flg = bytes[bytesPos++];
-    // if (cmf == -1 || flg == -1)
-      // error('Invalid header in flate stream');
-    // if ((cmf & 0x0f) != 0x08)
-      // error('Unknown compression method in flate stream');
-    // if ((((cmf << 8) + flg) % 31) != 0)
-      // error('Bad FCHECK in flate stream');
-    // if (flg & 0x20)
-      // error('FDICT bit set in flate stream');
+/** @define {boolean} export symbols. */
+var ZLIB_RAW_INFLATE_EXPORT = false;
 
-    this.bytes = bytes;
-    this.bytesPos = bytesPos;
+/** @define {number} buffer block size. */
+var ZLIB_RAW_INFLATE_BUFFER_SIZE = 0x8000; // [ 0x8000 >= ZLIB_BUFFER_BLOCK_SIZE ]
 
-    this.codeSize = 0;
-    this.codeBuf = 0;
+/**
+ * @constructor
+ * @param {!(Uint8Array|Array.<number>)} input input buffer.
+ * @param {Object} opt_params option parameter.
+ *
+ * opt_params は以下のプロパティを指定する事ができます。
+ *   - index: input buffer の deflate コンテナの開始位置.
+ *   - blockSize: バッファのブロックサイズ.
+ *   - bufferType: Zlib.RawInflate.BufferType の値によってバッファの管理方法を指定する.
+ *   - resize: 確保したバッファが実際の大きさより大きかった場合に切り詰める.
+ */
+Zlib.RawInflate = function(input, opt_params) {
+  /** @type {!(Array.<number>|Uint8Array)} inflated buffer */
+  this.buffer;
+  /** @type {!Array.<(Array.<number>|Uint8Array)>} */
+  this.blocks = [];
+  /** @type {number} block size. */
+  this.bufferSize = ZLIB_RAW_INFLATE_BUFFER_SIZE;
+  /** @type {!number} total output buffer pointer. */
+  this.totalpos = 0;
+  /** @type {!number} input buffer pointer. */
+  this.ip = 0;
+  /** @type {!number} bit stream reader buffer. */
+  this.bitsbuf = 0;
+  /** @type {!number} bit stream reader buffer size. */
+  this.bitsbuflen = 0;
+  /** @type {!(Array.<number>|Uint8Array)} input buffer. */
+  this.input = USE_TYPEDARRAY ? new Uint8Array(input) : input;
+  /** @type {!(Uint8Array|Array.<number>)} output buffer. */
+  this.output;
+  /** @type {!number} output buffer pointer. */
+  this.op;
+  /** @type {boolean} is final block flag. */
+  this.bfinal = false;
+  /** @type {Zlib.RawInflate.BufferType} buffer management. */
+  this.bufferType = Zlib.RawInflate.BufferType.ADAPTIVE;
+  /** @type {boolean} resize flag for memory size optimization. */
+  this.resize = false;
 
-    DecodeStream.call(this);
+  // option parameters
+  if (opt_params || !(opt_params = {})) {
+    if (opt_params['index']) {
+      this.ip = opt_params['index'];
+    }
+    if (opt_params['bufferSize']) {
+      this.bufferSize = opt_params['bufferSize'];
+    }
+    if (opt_params['bufferType']) {
+      this.bufferType = opt_params['bufferType'];
+    }
+    if (opt_params['resize']) {
+      this.resize = opt_params['resize'];
+    }
   }
 
-  constructor.prototype = Object.create(DecodeStream.prototype);
+  // initialize
+  switch (this.bufferType) {
+    case Zlib.RawInflate.BufferType.BLOCK:
+      this.op = Zlib.RawInflate.MaxBackwardLength;
+      this.output =
+        new (USE_TYPEDARRAY ? Uint8Array : Array)(
+          Zlib.RawInflate.MaxBackwardLength +
+          this.bufferSize +
+          Zlib.RawInflate.MaxCopyLength
+        );
+      break;
+    case Zlib.RawInflate.BufferType.ADAPTIVE:
+      this.op = 0;
+      this.output = new (USE_TYPEDARRAY ? Uint8Array : Array)(this.bufferSize);
+      this.expandBuffer = this.expandBufferAdaptive;
+      this.concatBuffer = this.concatBufferDynamic;
+      this.decodeHuffman = this.decodeHuffmanAdaptive;
+      break;
+    default:
+      throw new Error('invalid inflate mode');
+  }
+};
 
-  constructor.prototype.getBits = function(bits) {
-    var codeSize = this.codeSize;
-    var codeBuf = this.codeBuf;
-    var bytes = this.bytes;
-    var bytesPos = this.bytesPos;
+/**
+ * @enum {number}
+ */
+Zlib.RawInflate.BufferType = {
+  BLOCK: 0,
+  ADAPTIVE: 1
+};
 
-    var b;
-    while (codeSize < bits) {
-      if ((b = bytes[bytesPos++]) === void 0)
-        error('Bad encoding in flate stream');
-      codeBuf |= b << codeSize;
-      codeSize += 8;
+/**
+ * decompress.
+ * @return {!(Uint8Array|Array.<number>)} inflated buffer.
+ */
+Zlib.RawInflate.prototype.decompress = function() {
+  while (!this.bfinal) {
+    this.parseBlock();
+  }
+
+  return this.concatBuffer();
+};
+
+/**
+ * @const
+ * @type {number} max backward length for LZ77.
+ */
+Zlib.RawInflate.MaxBackwardLength = 32768;
+
+/**
+ * @const
+ * @type {number} max copy length for LZ77.
+ */
+Zlib.RawInflate.MaxCopyLength = 258;
+
+/**
+ * huffman order
+ * @const
+ * @type {!(Array.<number>|Uint8Array)}
+ */
+Zlib.RawInflate.Order = (function(table) {
+  return USE_TYPEDARRAY ? new Uint16Array(table) : table;
+})([16, 17, 18, 0, 8, 7, 9, 6, 10, 5, 11, 4, 12, 3, 13, 2, 14, 1, 15]);
+
+/**
+ * huffman length code table.
+ * @const
+ * @type {!(Array.<number>|Uint16Array)}
+ */
+Zlib.RawInflate.LengthCodeTable = (function(table) {
+  return USE_TYPEDARRAY ? new Uint16Array(table) : table;
+})([
+  0x0003, 0x0004, 0x0005, 0x0006, 0x0007, 0x0008, 0x0009, 0x000a, 0x000b,
+  0x000d, 0x000f, 0x0011, 0x0013, 0x0017, 0x001b, 0x001f, 0x0023, 0x002b,
+  0x0033, 0x003b, 0x0043, 0x0053, 0x0063, 0x0073, 0x0083, 0x00a3, 0x00c3,
+  0x00e3, 0x0102, 0x0102, 0x0102
+]);
+
+/**
+ * huffman length extra-bits table.
+ * @const
+ * @type {!(Array.<number>|Uint8Array)}
+ */
+Zlib.RawInflate.LengthExtraTable = (function(table) {
+  return USE_TYPEDARRAY ? new Uint8Array(table) : table;
+})([
+  0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5,
+  5, 5, 0, 0, 0
+]);
+
+/**
+ * huffman dist code table.
+ * @const
+ * @type {!(Array.<number>|Uint16Array)}
+ */
+Zlib.RawInflate.DistCodeTable = (function(table) {
+  return USE_TYPEDARRAY ? new Uint16Array(table) : table;
+})([
+  0x0001, 0x0002, 0x0003, 0x0004, 0x0005, 0x0007, 0x0009, 0x000d, 0x0011,
+  0x0019, 0x0021, 0x0031, 0x0041, 0x0061, 0x0081, 0x00c1, 0x0101, 0x0181,
+  0x0201, 0x0301, 0x0401, 0x0601, 0x0801, 0x0c01, 0x1001, 0x1801, 0x2001,
+  0x3001, 0x4001, 0x6001
+]);
+
+/**
+ * huffman dist extra-bits table.
+ * @const
+ * @type {!(Array.<number>|Uint8Array)}
+ */
+Zlib.RawInflate.DistExtraTable = (function(table) {
+  return USE_TYPEDARRAY ? new Uint8Array(table) : table;
+})([
+  0, 0, 0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9, 10, 10, 11,
+  11, 12, 12, 13, 13
+]);
+
+/**
+ * fixed huffman length code table
+ * @const
+ * @type {!Array}
+ */
+Zlib.RawInflate.FixedLiteralLengthTable = (function(table) {
+  return table;
+})((function() {
+  var lengths = new (USE_TYPEDARRAY ? Uint8Array : Array)(288);
+  var i, il;
+
+  for (i = 0, il = lengths.length; i < il; ++i) {
+    lengths[i] =
+      (i <= 143) ? 8 :
+      (i <= 255) ? 9 :
+      (i <= 279) ? 7 :
+      8;
+  }
+
+  return buildHuffmanTable(lengths);
+})());
+
+/**
+ * fixed huffman distance code table
+ * @const
+ * @type {!Array}
+ */
+Zlib.RawInflate.FixedDistanceTable = (function(table) {
+  return table;
+})((function() {
+  var lengths = new (USE_TYPEDARRAY ? Uint8Array : Array)(30);
+  var i, il;
+
+  for (i = 0, il = lengths.length; i < il; ++i) {
+    lengths[i] = 5;
+  }
+
+  return buildHuffmanTable(lengths);
+})());
+
+/**
+ * parse deflated block.
+ */
+Zlib.RawInflate.prototype.parseBlock = function() {
+  /** @type {number} header */
+  var hdr = this.readBits(3);
+
+  // BFINAL
+  if (hdr & 0x1) {
+    this.bfinal = true;
+  }
+
+  // BTYPE
+  hdr >>>= 1;
+  switch (hdr) {
+    // uncompressed
+    case 0:
+      this.parseUncompressedBlock();
+      break;
+    // fixed huffman
+    case 1:
+      this.parseFixedHuffmanBlock();
+      break;
+    // dynamic huffman
+    case 2:
+      this.parseDynamicHuffmanBlock();
+      break;
+    // reserved or other
+    default:
+      throw new Error('unknown BTYPE: ' + hdr);
+  }
+};
+
+/**
+ * read inflate bits
+ * @param {number} length bits length.
+ * @return {number} read bits.
+ */
+Zlib.RawInflate.prototype.readBits = function(length) {
+  var bitsbuf = this.bitsbuf;
+  var bitsbuflen = this.bitsbuflen;
+  var input = this.input;
+  var ip = this.ip;
+
+  /** @type {number} input and output byte. */
+  var octet;
+
+  // not enough buffer
+  while (bitsbuflen < length) {
+    // input byte
+    octet = input[ip++];
+    if (octet === void 0) {
+      throw new Error('input buffer is broken');
     }
-    b = codeBuf & ((1 << bits) - 1);
-    this.codeBuf = codeBuf >> bits;
-    this.codeSize = codeSize -= bits;
-    this.bytesPos = bytesPos;
-    return b;
-  };
 
-  constructor.prototype.getCode = function(table) {
-    var codes = table[0];
-    var maxLen = table[1];
-    var codeSize = this.codeSize;
-    var codeBuf = this.codeBuf;
-    var bytes = this.bytes;
-    var bytesPos = this.bytesPos;
+    // concat octet
+    bitsbuf |= octet << bitsbuflen;
+    bitsbuflen += 8;
+  }
 
-    while (codeSize < maxLen) {
-      var b;
-      if ((b = bytes[bytesPos++]) === void 0)
-        error('Bad encoding in flate stream');
-      codeBuf |= (b << codeSize);
-      codeSize += 8;
+  // output byte
+  octet = bitsbuf & /* MASK */ ((1 << length) - 1);
+  bitsbuf >>>= length;
+  bitsbuflen -= length;
+
+  this.bitsbuf = bitsbuf;
+  this.bitsbuflen = bitsbuflen;
+  this.ip = ip;
+
+  return octet;
+};
+
+/**
+ * read huffman code using table
+ * @param {Array} table huffman code table.
+ * @return {number} huffman code.
+ */
+Zlib.RawInflate.prototype.readCodeByTable = function(table) {
+  var bitsbuf = this.bitsbuf;
+  var bitsbuflen = this.bitsbuflen;
+  var input = this.input;
+  var ip = this.ip;
+
+  /** @type {!(Array.<number>|Uint8Array)} huffman code table */
+  var codeTable = table[0];
+  /** @type {number} */
+  var maxCodeLength = table[1];
+  /** @type {number} input byte */
+  var octet;
+  /** @type {number} code length & code (16bit, 16bit) */
+  var codeWithLength;
+  /** @type {number} code bits length */
+  var codeLength;
+
+  // not enough buffer
+  while (bitsbuflen < maxCodeLength) {
+    octet = input[ip++];
+    if (octet === void 0) {
+      throw new Error('input buffer is broken');
     }
-    var code = codes[codeBuf & ((1 << maxLen) - 1)];
-    var codeLen = code >> 16;
-    var codeVal = code & 0xffff;
-    if (codeSize == 0 || codeSize < codeLen || codeLen == 0)
-      error('Bad encoding in flate stream');
-    this.codeBuf = (codeBuf >> codeLen);
-    this.codeSize = (codeSize - codeLen);
-    this.bytesPos = bytesPos;
-    return codeVal;
-  };
+    bitsbuf |= octet << bitsbuflen;
+    bitsbuflen += 8;
+  }
 
-  constructor.prototype.generateHuffmanTable = function(lengths) {
-    var n = lengths.length;
+  // read max length
+  codeWithLength = codeTable[bitsbuf & ((1 << maxCodeLength) - 1)];
+  codeLength = codeWithLength >>> 16;
 
-    // find max code length
-    var maxLen = 0;
-    for (var i = 0; i < n; ++i) {
-      if (lengths[i] > maxLen)
-        maxLen = lengths[i];
-    }
+  this.bitsbuf = bitsbuf >> codeLength;
+  this.bitsbuflen = bitsbuflen - codeLength;
+  this.ip = ip;
 
-    // build the table
-    var size = 1 << maxLen;
-    var codes = new Uint32Array(size);
-    for (var len = 1, code = 0, skip = 2;
-         len <= maxLen;
-         ++len, code <<= 1, skip <<= 1) {
-      for (var val = 0; val < n; ++val) {
-        if (lengths[val] == len) {
-          // bit-reverse the code
-          var code2 = 0;
-          var t = code;
-          for (var i = 0; i < len; ++i) {
-            code2 = (code2 << 1) | (t & 1);
-            t >>= 1;
-          }
+  return codeWithLength & 0xffff;
+};
 
-          // fill the table entries
-          for (var i = code2; i < size; i += skip)
-            codes[i] = (len << 16) | val;
+/**
+ * parse uncompressed block.
+ */
+Zlib.RawInflate.prototype.parseUncompressedBlock = function() {
+  var input = this.input;
+  var ip = this.ip;
+  var output = this.output;
+  var op = this.op;
 
-          ++code;
-        }
-      }
-    }
+  /** @type {number} input byte. */
+  var octet;
+  /** @type {number} block length */
+  var len;
+  /** @type {number} number for check block length */
+  var nlen;
+  /** @type {number} output buffer length */
+  var olength = output.length;
+  /** @type {number} copy counter */
+  var preCopy;
 
-    return [codes, maxLen];
-  };
+  // skip buffered header bits
+  this.bitsbuf = 0;
+  this.bitsbuflen = 0;
 
-  constructor.prototype.readBlock = function() {
-    function repeat(stream, array, len, offset, what) {
-      var repeat = stream.getBits(len) + offset;
-      while (repeat-- > 0)
-        array[i++] = what;
-    }
+  // len (1st)
+  octet = input[ip++];
+  if (octet === void 0) {
+    throw new Error('invalid uncompressed block header: LEN (first byte)');
+  }
+  len = octet;
 
-    // read block header
-    var hdr = this.getBits(3);
-    if (hdr & 1)
-      this.eof = true;
-    hdr >>= 1;
+  // len (2nd)
+  octet = input[ip++];
+  if (octet === void 0) {
+    throw new Error('invalid uncompressed block header: LEN (second byte)');
+  }
+  len |= octet << 8;
 
-    if (hdr == 0) { // uncompressed block
-      var bytes = this.bytes;
-      var bytesPos = this.bytesPos;
-      var b;
+  // nlen (1st)
+  octet = input[ip++];
+  if (octet === void 0) {
+    throw new Error('invalid uncompressed block header: NLEN (first byte)');
+  }
+  nlen = octet;
 
-      if ((b = bytes[bytesPos++]) === void 0)
-        error('Bad block header in flate stream');
-      var blockLen = b;
-      if ((b = bytes[bytesPos++]) === void 0)
-        error('Bad block header in flate stream');
-      blockLen |= (b << 8);
-      if ((b = bytes[bytesPos++]) === void 0)
-        error('Bad block header in flate stream');
-      var check = b;
-      if ((b = bytes[bytesPos++]) === void 0)
-        error('Bad block header in flate stream');
-      check |= (b << 8);
-      if (check != (~blockLen & 0xffff))
-        error('Bad uncompressed block length in flate stream');
+  // nlen (2nd)
+  octet = input[ip++];
+  if (octet === void 0) {
+    throw new Error('invalid uncompressed block header: NLEN (second byte)');
+  }
+  nlen |= octet << 8;
 
-      this.codeBuf = 0;
-      this.codeSize = 0;
+  // check len & nlen
+  if (len === ~nlen) {
+    throw new Error('invalid uncompressed block header: length verify');
+  }
 
-      var bufferLength = this.bufferLength;
-      var current = buffer.byteLength;
-      var requested = bufferLength + blockLen;
+  // check size
+  if (ip + len > input.length) { throw new Error('input buffer is broken'); }
 
-      if (requested >= current) {
-        var size = 512;
-        while (size < requested)
-          size <<= 1;
-        var buffer2 = new Uint8Array(size);
-        buffer2.set(buffer);
-        this.buffer = buffer = buffer2;
-      }
-      var end = bufferLength + blockLen;
-      this.bufferLength = end;
-      for (var n = bufferLength; n < end; ++n) {
-        if ((b = bytes[bytesPos++]) === void 0) {
-          this.eof = true;
-          break;
-        }
-        buffer[n] = b;
-      }
-      this.bytesPos = bytesPos;
-      return;
-    }
-
-    var litCodeTable;
-    var distCodeTable;
-    if (hdr == 1) { // compressed block, fixed codes
-      litCodeTable = fixedLitCodeTab;
-      distCodeTable = fixedDistCodeTab;
-    } else if (hdr == 2) { // compressed block, dynamic codes
-      var numLitCodes = this.getBits(5) + 257;
-      var numDistCodes = this.getBits(5) + 1;
-      var numCodeLenCodes = this.getBits(4) + 4;
-
-      // build the code lengths code table
-      var codeLenCodeLengths = Array(codeLenCodeMap.length);
-      var i = 0;
-      while (i < numCodeLenCodes)
-        codeLenCodeLengths[codeLenCodeMap[i++]] = this.getBits(3);
-      var codeLenCodeTab = this.generateHuffmanTable(codeLenCodeLengths);
-
-      // build the literal and distance code tables
-      var len = 0;
-      var i = 0;
-      var codes = numLitCodes + numDistCodes;
-      var codeLengths = new Array(codes);
-      while (i < codes) {
-        var code = this.getCode(codeLenCodeTab);
-        if (code == 16) {
-          repeat(this, codeLengths, 2, 3, len);
-        } else if (code == 17) {
-          repeat(this, codeLengths, 3, 3, len = 0);
-        } else if (code == 18) {
-          repeat(this, codeLengths, 7, 11, len = 0);
+  // expand buffer
+  switch (this.bufferType) {
+    case Zlib.RawInflate.BufferType.BLOCK:
+      // pre copy
+      while (op + len > output.length) {
+        preCopy = olength - op;
+        len -= preCopy;
+        if (USE_TYPEDARRAY) {
+          output.set(input.subarray(ip, ip + preCopy), op);
+          op += preCopy;
+          ip += preCopy;
         } else {
-          codeLengths[i++] = len = code;
-        }
-      }
-
-      litCodeTable =
-        this.generateHuffmanTable(codeLengths.slice(0, numLitCodes));
-      distCodeTable =
-        this.generateHuffmanTable(codeLengths.slice(numLitCodes, codes));
-    } else {
-      error('Unknown block type in flate stream');
-    }
-
-    var buffer = this.buffer;
-    var limit = buffer.length;
-    var pos = this.bufferLength;
-    while (true) {
-      var code1 = this.getCode(litCodeTable);
-      if (code1 < 256) {
-        if (pos + 1 >= limit) {
-          var current = buffer.byteLength;
-          var requested = pos + 1;
-
-          if (requested >= current) {
-            var size = 512;
-            while (size < requested)
-              size <<= 1;
-            var buffer2 = new Uint8Array(size);
-            buffer2.set(buffer);
-            this.buffer = buffer = buffer2;
+          while (preCopy--) {
+            output[op++] = input[ip++];
           }
-          limit = buffer.length;
         }
-        buffer[pos++] = code1;
-        continue;
+        this.op = op;
+        output = this.expandBuffer();
+        op = this.op;
       }
-      if (code1 == 256) {
-        this.bufferLength = pos;
-        return;
+      break;
+    case Zlib.RawInflate.BufferType.ADAPTIVE:
+      while (op + len > output.length) {
+        output = this.expandBuffer({fixRatio: 2});
       }
-      code1 -= 257;
-      code1 = lengthDecode[code1];
-      var code2 = code1 >> 16;
-      if (code2 > 0)
-        code2 = this.getBits(code2);
-      var len = (code1 & 0xffff) + code2;
-      code1 = this.getCode(distCodeTable);
-      code1 = distDecode[code1];
-      code2 = code1 >> 16;
-      if (code2 > 0)
-        code2 = this.getBits(code2);
-      var dist = (code1 & 0xffff) + code2;
-      if (pos + len >= limit) {
-        var current = buffer.byteLength;
-        var requested = pos + len;
+      break;
+    default:
+      throw new Error('invalid inflate mode');
+  }
 
-        if (requested >= current) {
-          var size = 512;
-          while (size < requested)
-            size <<= 1;
-          var buffer2 = new Uint8Array(size);
-          buffer2.set(buffer);
-          this.buffer = buffer = buffer2;
-        }
-        limit = buffer.length;
-      }
-      for (var k = 0; k < len; ++k, ++pos)
-        buffer[pos] = buffer[pos - dist];
+  // copy
+  if (USE_TYPEDARRAY) {
+    output.set(input.subarray(ip, ip + len), op);
+    op += len;
+    ip += len;
+  } else {
+    while (len--) {
+      output[op++] = input[ip++];
     }
-  };
+  }
 
-  return constructor;
-})();
+  this.ip = ip;
+  this.op = op;
+  this.output = output;
+};
+
+/**
+ * parse fixed huffman block.
+ */
+Zlib.RawInflate.prototype.parseFixedHuffmanBlock = function() {
+  this.decodeHuffman(
+    Zlib.RawInflate.FixedLiteralLengthTable,
+    Zlib.RawInflate.FixedDistanceTable
+  );
+};
+
+/**
+ * parse dynamic huffman block.
+ */
+Zlib.RawInflate.prototype.parseDynamicHuffmanBlock = function() {
+  /** @type {number} number of literal and length codes. */
+  var hlit = this.readBits(5) + 257;
+  /** @type {number} number of distance codes. */
+  var hdist = this.readBits(5) + 1;
+  /** @type {number} number of code lengths. */
+  var hclen = this.readBits(4) + 4;
+  /** @type {!(Uint8Array|Array.<number>)} code lengths. */
+  var codeLengths =
+    new (USE_TYPEDARRAY ? Uint8Array : Array)(Zlib.RawInflate.Order.length);
+  /** @type {!Array} code lengths table. */
+  var codeLengthsTable;
+  /** @type {!(Uint8Array|Array.<number>)} literal and length code lengths. */
+  var litlenLengths;
+  /** @type {!(Uint8Array|Array.<number>)} distance code lengths. */
+  var distLengths;
+  /** @type {number} loop counter. */
+  var i;
+
+  // decode code lengths
+  for (i = 0; i < hclen; ++i) {
+    codeLengths[Zlib.RawInflate.Order[i]] = this.readBits(3);
+  }
+  codeLengthsTable = buildHuffmanTable(codeLengths);
+
+  /**
+   * decode function
+   * @param {number} num number of lengths.
+   * @param {!Array} table code lengths table.
+   * @param {!(Uint8Array|Array.<number>)} lengths code lengths buffer.
+   * @return {!(Uint8Array|Array.<number>)} code lengths buffer.
+   */
+  function decode(num, table, lengths) {
+    /** @type {number} */
+    var code;
+    /** @type {number} */
+    var prev;
+    /** @type {number} */
+    var repeat;
+    /** @type {number} */
+    var i;
+
+    for (i = 0; i < num;) {
+      code = this.readCodeByTable(table);
+      switch (code) {
+        case 16:
+          repeat = 3 + this.readBits(2);
+          while (repeat--) { lengths[i++] = prev; }
+          break;
+        case 17:
+          repeat = 3 + this.readBits(3);
+          while (repeat--) { lengths[i++] = 0; }
+          prev = 0;
+          break;
+        case 18:
+          repeat = 11 + this.readBits(7);
+          while (repeat--) { lengths[i++] = 0; }
+          prev = 0;
+          break;
+        default:
+          lengths[i++] = code;
+          prev = code;
+          break;
+      }
+    }
+
+    return lengths;
+  }
+
+  // literal and length code
+  litlenLengths = new (USE_TYPEDARRAY ? Uint8Array : Array)(hlit);
+
+  // distance code
+  distLengths = new (USE_TYPEDARRAY ? Uint8Array : Array)(hdist);
+
+  //return;
+  this.decodeHuffman(
+    buildHuffmanTable(decode.call(this, hlit, codeLengthsTable, litlenLengths)),
+    buildHuffmanTable(decode.call(this, hdist, codeLengthsTable, distLengths))
+  );
+};
+
+/**
+ * decode huffman code
+ * @param {!Array} litlen literal and length code table.
+ * @param {!Array} dist distination code table.
+ */
+Zlib.RawInflate.prototype.decodeHuffman = function(litlen, dist) {
+  var output = this.output;
+  var op = this.op;
+
+  this.currentLitlenTable = litlen;
+
+  /** @type {number} output position limit. */
+  var olength = output.length - Zlib.RawInflate.MaxCopyLength;
+  /** @type {number} huffman code. */
+  var code;
+  /** @type {number} table index. */
+  var ti;
+  /** @type {number} huffman code distination. */
+  var codeDist;
+  /** @type {number} huffman code length. */
+  var codeLength;
+
+  while ((code = this.readCodeByTable(litlen)) !== 256) {
+    // literal
+    if (code < 256) {
+      if (op >= olength) {
+        this.op = op;
+        output = this.expandBuffer();
+        op = this.op;
+      }
+      output[op++] = code;
+
+      continue;
+    }
+
+    // length code
+    ti = code - 257;
+    codeLength = Zlib.RawInflate.LengthCodeTable[ti];
+    if (Zlib.RawInflate.LengthExtraTable[ti] > 0) {
+      codeLength += this.readBits(Zlib.RawInflate.LengthExtraTable[ti]);
+    }
+
+    // dist code
+    code = this.readCodeByTable(dist);
+    codeDist = Zlib.RawInflate.DistCodeTable[code];
+    if (Zlib.RawInflate.DistExtraTable[code] > 0) {
+      codeDist += this.readBits(Zlib.RawInflate.DistExtraTable[code]);
+    }
+
+    // lz77 decode
+    if (op >= olength) {
+      this.op = op;
+      output = this.expandBuffer();
+      op = this.op;
+    }
+    while (codeLength--) {
+      output[op] = output[(op++) - codeDist];
+    }
+  }
+
+  while (this.bitsbuflen >= 8) {
+    this.bitsbuflen -= 8;
+    this.ip--;
+  }
+  this.op = op;
+};
+
+/**
+ * decode huffman code (adaptive)
+ * @param {!Array} litlen literal and length code table.
+ * @param {!Array} dist distination code table.
+ */
+Zlib.RawInflate.prototype.decodeHuffmanAdaptive = function(litlen, dist) {
+  var output = this.output;
+  var op = this.op;
+
+  this.currentLitlenTable = litlen;
+
+  /** @type {number} output position limit. */
+  var olength = output.length;
+  /** @type {number} huffman code. */
+  var code;
+  /** @type {number} table index. */
+  var ti;
+  /** @type {number} huffman code distination. */
+  var codeDist;
+  /** @type {number} huffman code length. */
+  var codeLength;
+
+  while ((code = this.readCodeByTable(litlen)) !== 256) {
+    // literal
+    if (code < 256) {
+      if (op >= olength) {
+        output = this.expandBuffer();
+        olength = output.length;
+      }
+      output[op++] = code;
+
+      continue;
+    }
+
+    // length code
+    ti = code - 257;
+    codeLength = Zlib.RawInflate.LengthCodeTable[ti];
+    if (Zlib.RawInflate.LengthExtraTable[ti] > 0) {
+      codeLength += this.readBits(Zlib.RawInflate.LengthExtraTable[ti]);
+    }
+
+    // dist code
+    code = this.readCodeByTable(dist);
+    codeDist = Zlib.RawInflate.DistCodeTable[code];
+    if (Zlib.RawInflate.DistExtraTable[code] > 0) {
+      codeDist += this.readBits(Zlib.RawInflate.DistExtraTable[code]);
+    }
+
+    // lz77 decode
+    if (op + codeLength > olength) {
+      output = this.expandBuffer();
+      olength = output.length;
+    }
+    while (codeLength--) {
+      output[op] = output[(op++) - codeDist];
+    }
+  }
+
+  while (this.bitsbuflen >= 8) {
+    this.bitsbuflen -= 8;
+    this.ip--;
+  }
+  this.op = op;
+};
+
+/**
+ * expand output buffer.
+ * @param {Object=} opt_param option parameters.
+ * @return {!(Array.<number>|Uint8Array)} output buffer.
+ */
+Zlib.RawInflate.prototype.expandBuffer = function(opt_param) {
+  /** @type {!(Array.<number>|Uint8Array)} store buffer. */
+  var buffer =
+    new (USE_TYPEDARRAY ? Uint8Array : Array)(
+        this.op - Zlib.RawInflate.MaxBackwardLength
+    );
+  /** @type {number} backward base point */
+  var backward = this.op - Zlib.RawInflate.MaxBackwardLength;
+  /** @type {number} copy index. */
+  var i;
+  /** @type {number} copy limit */
+  var il;
+
+  var output = this.output;
+
+  // copy to output buffer
+  if (USE_TYPEDARRAY) {
+    buffer.set(output.subarray(Zlib.RawInflate.MaxBackwardLength, buffer.length));
+  } else {
+    for (i = 0, il = buffer.length; i < il; ++i) {
+      buffer[i] = output[i + Zlib.RawInflate.MaxBackwardLength];
+    }
+  }
+
+  this.blocks.push(buffer);
+  this.totalpos += buffer.length;
+
+  // copy to backward buffer
+  if (USE_TYPEDARRAY) {
+    output.set(
+      output.subarray(backward, backward + Zlib.RawInflate.MaxBackwardLength)
+    );
+  } else {
+    for (i = 0; i < Zlib.RawInflate.MaxBackwardLength; ++i) {
+      output[i] = output[backward + i];
+    }
+  }
+
+  this.op = Zlib.RawInflate.MaxBackwardLength;
+
+  return output;
+};
+
+/**
+ * expand output buffer. (adaptive)
+ * @param {Object=} opt_param option parameters.
+ * @return {!(Array.<number>|Uint8Array)} output buffer pointer.
+ */
+Zlib.RawInflate.prototype.expandBufferAdaptive = function(opt_param) {
+  /** @type {!(Array.<number>|Uint8Array)} store buffer. */
+  var buffer;
+  /** @type {number} expantion ratio. */
+  var ratio = (this.input.length / this.ip + 1) | 0;
+  /** @type {number} maximum number of huffman code. */
+  var maxHuffCode;
+  /** @type {number} new output buffer size. */
+  var newSize;
+  /** @type {number} max inflate size. */
+  var maxInflateSize;
+
+  var input = this.input;
+  var output = this.output;
+
+  if (opt_param) {
+    if (typeof opt_param.fixRatio === 'number') {
+      ratio = opt_param.fixRatio;
+    }
+    if (typeof opt_param.addRatio === 'number') {
+      ratio += opt_param.addRatio;
+    }
+  }
+
+  // calculate new buffer size
+  if (ratio < 2) {
+    maxHuffCode =
+      (input.length - this.ip) / this.currentLitlenTable[2];
+    maxInflateSize = (maxHuffCode / 2 * 258) | 0;
+    newSize = maxInflateSize < output.length ?
+      output.length + maxInflateSize :
+      output.length << 1;
+  } else {
+    newSize = output.length * ratio;
+  }
+
+  // buffer expantion
+  if (USE_TYPEDARRAY) {
+    buffer = new Uint8Array(newSize);
+    buffer.set(output);
+  } else {
+    buffer = output;
+  }
+
+  this.output = buffer;
+
+  return this.output;
+};
+
+/**
+ * concat output buffer.
+ * @return {!(Array.<number>|Uint8Array)} output buffer.
+ */
+Zlib.RawInflate.prototype.concatBuffer = function() {
+  /** @type {number} buffer pointer. */
+  var pos = 0;
+  /** @type {number} buffer pointer. */
+  var limit = this.totalpos + (this.op - Zlib.RawInflate.MaxBackwardLength);
+  /** @type {!(Array.<number>|Uint8Array)} output block array. */
+  var output = this.output;
+  /** @type {!Array} blocks array. */
+  var blocks = this.blocks;
+  /** @type {!(Array.<number>|Uint8Array)} output block array. */
+  var block;
+  /** @type {!(Array.<number>|Uint8Array)} output buffer. */
+  var buffer = new (USE_TYPEDARRAY ? Uint8Array : Array)(limit);
+  /** @type {number} loop counter. */
+  var i;
+  /** @type {number} loop limiter. */
+  var il;
+  /** @type {number} loop counter. */
+  var j;
+  /** @type {number} loop limiter. */
+  var jl;
+
+  // single buffer
+  if (blocks.length === 0) {
+    return USE_TYPEDARRAY ?
+      this.output.subarray(Zlib.RawInflate.MaxBackwardLength, this.op) :
+      this.output.slice(Zlib.RawInflate.MaxBackwardLength, this.op);
+  }
+
+  // copy to buffer
+  for (i = 0, il = blocks.length; i < il; ++i) {
+    block = blocks[i];
+    for (j = 0, jl = block.length; j < jl; ++j) {
+      buffer[pos++] = block[j];
+    }
+  }
+
+  // current buffer
+  for (i = Zlib.RawInflate.MaxBackwardLength, il = this.op; i < il; ++i) {
+    buffer[pos++] = output[i];
+  }
+
+  this.blocks = [];
+  this.buffer = buffer;
+
+  return this.buffer;
+};
+
+/**
+ * concat output buffer. (dynamic)
+ * @return {!(Array.<number>|Uint8Array)} output buffer.
+ */
+Zlib.RawInflate.prototype.concatBufferDynamic = function() {
+  /** @type {Array.<number>|Uint8Array} output buffer. */
+  var buffer;
+  var op = this.op;
+
+  if (USE_TYPEDARRAY) {
+    if (this.resize) {
+      buffer = new Uint8Array(op);
+      buffer.set(this.output.subarray(0, op));
+    } else {
+      buffer = this.output.subarray(0, op);
+    }
+  } else {
+    if (this.output.length > op) {
+      this.output.length = op;
+    }
+    buffer = this.output;
+  }
+
+  this.buffer = buffer;
+
+  return this.buffer;
+};
+
 
 /**
  * @param {ArrayBuffer|Uint8Array|Array|string} bytes
  * @return {ArrayBuffer}
  */
-jz.algorithms.inflate = function(bytes){
-	bytes = jz.utils.toBytes(bytes);
-	return new Uint8Array(new FlateStream(bytes).getBytes()).buffer;
+algorithms.inflate = function(bytes){
+	bytes = utils.toBytes(bytes);
+	return new Zlib.RawInflate(bytes, {resize: true}).decompress().buffer;
 };
 
-})(jz);
+expose('jz.algorithms.inflate', algorithms.inflate);
