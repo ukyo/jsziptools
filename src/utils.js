@@ -258,4 +258,5 @@ utils.Callbacks.prototype.fail = function(callback) {
     return this;
 };
 
-exposeClass('jz.utils.Callbacks', utils.Callbacks);
+exposeProperty('done', utils.Callbacks, utils.Callbacks.prototype.done);
+exposeProperty('fail', utils.Callbacks, utils.Callbacks.prototype.fail);

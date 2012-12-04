@@ -158,7 +158,7 @@ def main():
         option.module = [option.module] if type(option.module) == str else option.module
         files = select_modules(option.module)
 
-    command = "java -jar %s --js %s --js_output_file %s" % (compiler, ' '.join(os.path.abspath(file) for file in files), tmp_file)
+    command = "java -jar %s --compilation_level ADVANCED_OPTIMIZATIONS --js %s --js_output_file %s" % (compiler, ' '.join(os.path.abspath(file) for file in files), tmp_file)
     os.system(command)
 
     directory = '/'.join(os.path.abspath(output).split('/')[:-1])

@@ -229,7 +229,15 @@ if(env.isWorker){
     };
 }
 
-exposeClass('jz.zip.ZipArchiveReader', zip.ZipArchiveReader);
+exposeProperty('getFileNames', zip.ZipArchiveReader, p.getFileNames);
+exposeProperty('getFileAsArrayBuffer', zip.ZipArchiveReader, p.getFileAsArrayBuffer);
+exposeProperty('getFileAsText', zip.ZipArchiveReader, p.getFileAsText);
+exposeProperty('getFileAsBinaryString', zip.ZipArchiveReader, p.getFileAsBinaryString);
+exposeProperty('getFileAsDataURL', zip.ZipArchiveReader, p.getFileAsDataURL);
+exposeProperty('getFileAsBlob', zip.ZipArchiveReader, p.getFileAsBlob);
+exposeProperty('getFileAsTextSync', zip.ZipArchiveReader, p.getFileAsTextSync);
+exposeProperty('getFileAsBinaryStringSync', zip.ZipArchiveReader, p.getFileAsBinaryStringSync);
+exposeProperty('getFileAsDataURLSync', zip.ZipArchiveReader, p.getFileAsDataURLSync);
 
 
 /**
