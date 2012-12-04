@@ -36,20 +36,17 @@ zip.CENTRAL_DIR_SIGNATURE = 0x02014B50;
 zip.END_SIGNATURE = 0x06054B50;
 env.isWorker = typeof importScripts === 'function';
 
-function expose(s, prop) {
-    var paths = s.split('.');
+function expose(namespace, o) {
+    var paths = namespace.split('.');
     var last = paths.pop();
     var object = exports;
     paths.forEach(function(path) {
         object[path] = object[path] || {};
         object = object[path];
     });
-    object[last] = prop;
+    object[last] = o;
 }
 
-function exposeClass(s, cls) {
-  expose(s, cls);
-  Object.keys(cls.prototype).forEach(function(key) {
-    expose(s + key, cls.prototype[key]);
-  });
+function exposeProperty(name, cls, property) {
+    cls.prototype[name] = property;
 }

@@ -965,7 +965,7 @@ Zlib.RawInflate.prototype.concatBufferDynamic = function() {
  */
 algorithms.inflate = function(bytes){
 	bytes = utils.toBytes(bytes);
-	return new Zlib.RawInflate(bytes, {resize: true}).decompress().buffer;
+	return new Uint8Array(new Zlib.RawInflate(bytes).decompress()).buffer;
 };
 
 expose('jz.algorithms.inflate', algorithms.inflate);

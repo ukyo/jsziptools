@@ -167,10 +167,7 @@ def main():
         files = select_modules(option.module)
         jquery = option.jquery
 
-    if jquery:
-        command = "java -jar %s --js %s --js_output_file %s --output_wrapper %s" % (compiler, ' '.join(os.path.abspath(file) for file in files), tmp_file, '";(function($){%output%$.extend({'+jquery+':jz})})(jQuery);"')
-    else:
-        command = "java -jar %s --js %s --js_output_file %s" % (compiler, ' '.join(os.path.abspath(file) for file in files), tmp_file)
+    command = "java -jar %s --compilation_level ADVANCED_OPTIMIZATIONS --js %s --js_output_file %s" % (compiler, ' '.join(os.path.abspath(file) for file in files), tmp_file)
     os.system(command)
 
     directory = '/'.join(os.path.abspath(output).split('/')[:-1])
