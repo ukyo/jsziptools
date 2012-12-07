@@ -14,26 +14,7 @@ utils.js
  * @return {ArrayBuffer} zlib format buffer.
  */
 zlib.compress = function(bytes, level){
-    var ret, buffer, i, end, checksum, data, view;
-    
-    //compress to deflate stream
-    data = utils.toBytes(algorithms.deflate(bytes, level));
-    
-    ret = new Uint8Array(data.length + 6);
-    view = new DataView(ret.buffer);
-    
-    //write zlib header
-    ret[0] = 0x78;
-    ret[1] = 0x01;
-    
-    //write zlib deflate stream
-    ret.set(data, 2);
-    
-    //write adler32 checksum
-    checksum = algorithms.adler32(bytes);
-    view.setUint32(ret.length - 4, checksum);
-    
-    return ret.buffer;
+    return zpipe.deflate(utils.toBytes(bytes), level, true, true).buffer;
 };
 
 expose('jz.zlib.compress', zlib.compress);

@@ -242,7 +242,9 @@ expose('jz.utils.wait.PROCESSING', utils.wait.PROCESSING);
 expose('jz.utils.wait.RESOLVE', utils.wait.RESOLVE);
 expose('jz.utils.wait.REJECT', utils.wait.REJECT);
 
-
+/**
+ * @constructor
+ */
 utils.Callbacks = function() {
     this.doneCallback = utils.noop;
     this.failCallback = utils.noop;
