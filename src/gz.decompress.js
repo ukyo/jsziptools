@@ -54,7 +54,7 @@ gz.decompress = function(bytes, check){
     if(check) {
         checksum = view.getUint32(bytes.length - 8, true);
         if(checksum !== algorithms.crc32(ret)) {
-            throw 'Error: deffer from checksum.';
+            throw new Error('file is broken.');
         }
     }
     

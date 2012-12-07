@@ -43,7 +43,7 @@ var mimetypes = (function(){
 /**
  * @constructor
  */
-zip.ZipArchiveReader = function(bytes){
+function ZipArchiveReader(bytes){
     bytes = utils.toBytes(bytes);
 
     var signature, header, endCentDirHeader, i, n,
@@ -55,6 +55,11 @@ zip.ZipArchiveReader = function(bytes){
         view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
 
     this.buffer = bytes.buffer;
+
+    //check signature
+    if (view.getUint32(0, true) !== zip.LOCAL_FILE_SIGNATURE) {
+        throw new Error('invalid zip file');
+    }
 
     //read the end central dir header.
     while(true){
@@ -95,7 +100,7 @@ zip.ZipArchiveReader = function(bytes){
     this.centralDirHeaders = centralDirHeaders;
 };
 
-var p = zip.ZipArchiveReader.prototype;
+var p = ZipArchiveReader.prototype;
 
 p._getLocalFileHeader = function(offset){
     var view = new DataView(this.buffer, offset),
@@ -229,15 +234,15 @@ if(env.isWorker){
     };
 }
 
-exposeProperty('getFileNames', zip.ZipArchiveReader, p.getFileNames);
-exposeProperty('getFileAsArrayBuffer', zip.ZipArchiveReader, p.getFileAsArrayBuffer);
-exposeProperty('getFileAsText', zip.ZipArchiveReader, p.getFileAsText);
-exposeProperty('getFileAsBinaryString', zip.ZipArchiveReader, p.getFileAsBinaryString);
-exposeProperty('getFileAsDataURL', zip.ZipArchiveReader, p.getFileAsDataURL);
-exposeProperty('getFileAsBlob', zip.ZipArchiveReader, p.getFileAsBlob);
-exposeProperty('getFileAsTextSync', zip.ZipArchiveReader, p.getFileAsTextSync);
-exposeProperty('getFileAsBinaryStringSync', zip.ZipArchiveReader, p.getFileAsBinaryStringSync);
-exposeProperty('getFileAsDataURLSync', zip.ZipArchiveReader, p.getFileAsDataURLSync);
+exposeProperty('getFileNames', ZipArchiveReader, p.getFileNames);
+exposeProperty('getFileAsArrayBuffer', ZipArchiveReader, p.getFileAsArrayBuffer);
+exposeProperty('getFileAsText', ZipArchiveReader, p.getFileAsText);
+exposeProperty('getFileAsBinaryString', ZipArchiveReader, p.getFileAsBinaryString);
+exposeProperty('getFileAsDataURL', ZipArchiveReader, p.getFileAsDataURL);
+exposeProperty('getFileAsBlob', ZipArchiveReader, p.getFileAsBlob);
+exposeProperty('getFileAsTextSync', ZipArchiveReader, p.getFileAsTextSync);
+exposeProperty('getFileAsBinaryStringSync', ZipArchiveReader, p.getFileAsBinaryStringSync);
+exposeProperty('getFileAsDataURLSync', ZipArchiveReader, p.getFileAsDataURLSync);
 
 
 /**
@@ -248,7 +253,7 @@ exposeProperty('getFileAsDataURLSync', zip.ZipArchiveReader, p.getFileAsDataURLS
  * jz.zip.unpack({
  *     buffer: buffer, // zip buffer
  *     encoding: 'UTF-8', // encoding of filenames
- *     complete: function(reader) { // jz.zip.ZipArchiveReader
+ *     complete: function(reader) { // jz.ZipArchiveReader
  *         // ...
  *     },
  *     error: function(err) {}
@@ -291,7 +296,7 @@ zip.unpack = function(params){
     setTimeout(function() {
         try {
             //init zip reader.
-            reader = new zip.ZipArchiveReader(params.buffer);
+            reader = new ZipArchiveReader(params.buffer);
 
             //detect encoding. cp932 or utf-8.
             if(params.encoding == null) {
@@ -325,4 +330,3 @@ zip.unpack = function(params){
 };
 
 expose('jz.zip.unpack', zip.unpack);
-expose('jz.zip.decompress', zip.unpack);
