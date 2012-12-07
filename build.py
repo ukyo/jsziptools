@@ -7,7 +7,7 @@ import json
 REPOSITORY_NAME = "jsziptools"
 REPOSITORY_URL = "http://github.com/ukyo/jsziptools"
 CLOSURE_COMPILER_PATH = os.environ['CLOSURE_COMPILER_PATH']
-OUTPUT_PATH = 'build/jsziptools.min.js'
+OUTPUT_PATH = 'dist/jsziptools.min.js'
 
 parser = argparse.ArgumentParser()
 
@@ -37,6 +37,8 @@ parser.add_argument('-c',
 
 
 ALL_FILES = (
+    "src/zpipe/dist/zpipe.raw.js",
+    "src/zpipe/src/zpipe.funcs.js",
     "src/jsziptools.js",
     "src/utils.js",
     "src/algorithms/adler32.js",
@@ -52,6 +54,8 @@ ALL_FILES = (
 )
 
 selected_modules = {
+    "src/zpipe/dist/zpipe.raw.js": True,
+    "src/zpipe/src/zpipe.funcs.js": True,
     "src/jsziptools.js": True,
     "src/utils.js": True,
     "src/algorithms/adler32.js": False,
@@ -158,7 +162,10 @@ def main():
         option.module = [option.module] if type(option.module) == str else option.module
         files = select_modules(option.module)
 
-    command = "java -jar %s --compilation_level ADVANCED_OPTIMIZATIONS --js %s --js_output_file %s" % (compiler, ' '.join(os.path.abspath(file) for file in files), tmp_file)
+    command = "java -jar %s --compilation_level ADVANCED_OPTIMIZATIONS \
+        --js %s \
+        --js_output_file %s " % (compiler, ' '.join(os.path.abspath(file) for file in files), tmp_file)
+    command += "--output_wrapper \";(function(){%output%}).call({});\""
     os.system(command)
 
     directory = '/'.join(os.path.abspath(output).split('/')[:-1])
