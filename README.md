@@ -138,7 +138,7 @@ $ #select modules
 $ ./build.py -m gz.decompress zlib.decompress -o build/gz_zlib_decomp.min.js
 ```
 
-module list:
+modules:
 
 * `gz.compress`
 * `gz.decompress`
