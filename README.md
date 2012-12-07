@@ -141,7 +141,7 @@ $ #add to jquery
 $ ./build.py -m gz.decompress zlib.decompress -o build/gz_zlib_decomp.min.js -j jz
 ```
 
-module list:
+modules:
 
 * `gz.compress`
 * `gz.decompress`
