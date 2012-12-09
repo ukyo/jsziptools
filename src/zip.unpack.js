@@ -56,9 +56,9 @@ function ZipArchiveReader(bytes){
 
     this.buffer = bytes.buffer;
 
-    //check signature
+    //check local file signature
     if (view.getUint32(0, true) !== zip.LOCAL_FILE_SIGNATURE) {
-        throw new Error('invalid zip file');
+        throw new Error('zip.unpack: invalid zip file');
     }
 
     //read the end central dir header.
@@ -68,7 +68,7 @@ function ZipArchiveReader(bytes){
             break;
         }
         offset--;
-        if(offset === 0) throw new Error('invalid zip file');
+        if(offset === 0) throw new Error('zip.unpack: invalid zip file');
     }
 
     //read central dir headers.
