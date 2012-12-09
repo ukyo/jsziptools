@@ -78,6 +78,7 @@ expose('jz.utils.stringToBytes', utils.stringToBytes);
  */
 utils.bytesToString = function(bytes, encoding, callback) {
     var fr = new FileReader();
+    if (typeof encoding === 'function') callback = encoding;
     fr.onloadend = function() {
         callback.call(fr, fr.result);
     };
@@ -189,7 +190,7 @@ utils.load = function(urls, complete, error){
             callbacks.failCallback(err);
             error(err);
         }
-    }, 1);
+    }, 0);
     
     return callbacks;
 };
@@ -228,7 +229,7 @@ utils.wait = function(arr) {
         if(arr.indexOf(wait.PROCESSING) !== -1) return setTimeout(_wait, 5);
         callbacks.doneCallback();
     }
-    setTimeout(_wait, 1);
+    setTimeout(_wait, 0);
 
     return callbacks;
 };
