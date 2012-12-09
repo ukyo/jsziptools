@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+
+<html>
+    <head>
+        <title>read filenames of a zip file</title>
+        <style type="text/css">
+            html, body, ul {
+                margin: 0;
+                padding: 0;
+            }
+
+            body {
+                padding: 40px;
+                background-color: #fafafa;
+                color: #444;
+            }
+
+            ul {
+                list-style-type: none;
+            }
+
+            li {
+                line-height: 1.5;
+                font-size: 12px;
+                cursor: pointer;
+            }
+
+            #main {
+                width: 740px;
+            }
+
+            li:hover {
+                color: #c55;
+            }
+
+            .view {
+                float: left;
+            }
+
+            #filenames-view {
+                width: 200px;
+                height: 600px;
+                overflow-y: auto;
+            }
+
+
+            #preview {
+                width: 540px;
+            }
+
+            pre, img {
+                width: 100%;
+                overflow: auto;
+            }
+
+        </style>
+        <script src="../dist/jsziptools.min.js"></script>
+        <script>
+            window.onload = function(){
+                function cancel(e) {
+                    e.preventDefault();
+                }
+
+                function on(obj, name, callback) {
+                    obj.addEventListener(name, callback, false);
+                }
+
+                function wrap(tag, text) {
+                    return '<' + tag + '>' + text + '</' + tag + '>';
+                }
+
+                function escape(text) {
+                    return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                }
+
+                function blobURL(blob) {
+                    return (window.URL || window.webkitURL).createObjectURL(blob);
+                }
+
+                function img(url) {
+                    return '<img' + ' src="' + url + '">';
+                }
+
+                function audio(url) {
+                    return '<audio' + ' src="' + url + '" controls>';
+                }
+
+                function video(url) {
+                    return '<video' + ' src="' + url + '">';
+                }
+
+                var filenamesView = document.getElementById('filenames-view');
+                var preview = document.getElementById('preview');
+
+                on(window, 'dragenter', cancel);
+                on(window, 'dragover', cancel);
+                on(window, 'drop', function(e) {
+                    cancel(e);
+
+                    jz.zip.unpack(e.dataTransfer.files[0])
+                    .done(function(reader) {
+                        filenamesView.innerHTML = reader.getFileNames().map(wrap.bind(null, 'li')).join('');
+
+                        function view(li) {
+                            var filename = li.innerHTML;
+                            if (/.*(png|gif|jpg|bmp)$/.test(filename.toLowerCase())) {
+                                reader.getFileAsBlob(filename, function(blob) {
+                                    preview.innerHTML = img(blobURL(blob));
+                                });
+                            } else if (/.*(mp3|ogg|wav|m4a)$/.test(filename.toLowerCase())) {
+                                reader.getFileAsBlob(filename, function(blob) {
+                                    preview.innerHTML = audio(blobURL(blob));
+                                });
+                            } else if (/.*(mp4|webm)$/.test(filename.toLowerCase())) {
+                                reader.getFileAsBlob(filename, function(blob) {
+                                    preview.innerHTML = video(blobURL(blob));
+                                });
+                            } else {
+                                reader.getFileAsText(filename, function(text) {
+                                    preview.innerHTML = wrap('pre', escape(text));
+                                });
+                            }
+                        }
+
+                        function _on(obj) {
+                            on(obj, 'click', view.bind(null, obj));
+                        }
+
+                        [].forEach.call(document.querySelectorAll('li'), _on);
+                    })
+                    .fail(console.log.bind(console));
+                });
+            };
+        </script>
+    </head>
+    <body>
+        <h1>Zip Viewer</h1>
+        <p>drag &amp; drop a zip file.</p>
+        <div id="main">
+            <ul class="view" id="filenames-view"></ul>
+            <div class="view" id="preview"></div>
+        </div>
+    </body>
+</html>

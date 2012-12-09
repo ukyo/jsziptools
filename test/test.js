@@ -77,11 +77,46 @@ asyncTest('test jz.gz.compress, jz.gz.decompress', function(){
     });
 });
 
-asyncTest('test jz.zip.unpack', function(){
+asyncTest('test jz.zip.unpack(ArrayBuffer)', function(){
     var aPath = 'zipsample/a.txt';
     var bPath = 'zipsample/folder/b.txt';
     jz.utils.load(['zipsample.zip', aPath, bPath], function(zipsample, a, b ){
         jz.zip.unpack(zipsample)
+        .done(function(reader) {
+            var wait = jz.utils.wait;
+            var waitArr = [wait.PROCESSING, wait.PROCESSING];
+            
+            var corrects = [];
+            
+            jz.utils.bytesToString(new Uint8Array(a), 'UTF-8', function(str) {
+                corrects[0] = str;
+                waitArr[0] = wait.RESOLVE;
+            });
+
+            jz.utils.bytesToString(new Uint8Array(b), 'UTF-8', function(str) {
+                corrects[1] = str;
+                waitArr[1] = wait.RESOLVE;
+            });
+
+            wait(waitArr)
+            .done(function() {
+                [aPath, bPath].forEach(function(v, i){
+                    reader.getFileAsText(v, function(text){
+                        equal(text.replace("\r\n", "\n"), corrects[i].replace("\r\n", "\n"), 'test unpack');
+                        start();
+                    });
+                });
+            });
+        });
+    
+    });
+});
+
+asyncTest('test jz.zip.unpack(Blob)', function(){
+    var aPath = 'zipsample/a.txt';
+    var bPath = 'zipsample/folder/b.txt';
+    jz.utils.load(['zipsample.zip', aPath, bPath], function(zipsample, a, b ){
+        jz.zip.unpack(new Blob([new Uint8Array(zipsample)]))
         .done(function(reader) {
             var wait = jz.utils.wait;
             var waitArr = [wait.PROCESSING, wait.PROCESSING];
