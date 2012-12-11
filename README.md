@@ -8,6 +8,11 @@ chrome, firefox, IE10.
 
 ## examples
 
+### web examples
+
+* [Deflate text](https://ukyo.github.com/examples/deflate_text.html)
+* [Zip viewer](https://ukyo.github.com/examples/zip_viewer.html)
+
 ### zlib
 
 decompress compressed swf file:
