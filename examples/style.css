@@ -1,0 +1,10 @@
+html, body, ul {
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    padding: 40px;
+    background-color: #fafafa;
+    color: #444;
+}
