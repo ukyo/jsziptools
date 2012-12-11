@@ -4,14 +4,19 @@ jsziptools.js
 
 utils.noop = function() {};
 
-expose('jz.utils.noop', utils.noop);
+utils.toArray = function(obj) {
+    return Array.prototype.slice.call(obj);
+};
 
 
 /**
- * convert from Array, ArrayBuffer or String to Uint8Array.
- * 
+ * convert Array, ArrayBuffer or String to Uint8Array.
  * @param {ArrayBuffer|Uint8Array|Int8Array|Uint8ClampedArray|Array|string} buffer
  * @return {Uint8Array}
+ *
+ * @example
+ * var bytes = jz.utils.toBytes('foo');
+ * var bytes = jz.utils.toBytes([1, 2, 3]);
  */
 utils.toBytes = function(buffer){
     switch(buffer.constructor){
@@ -27,12 +32,6 @@ utils.toBytes = function(buffer){
 expose('jz.utils.toBytes', utils.toBytes);
 
 
-/**
- * Convert from String to Uint8Array.
- *
- * @param {string} str
- * @return {Uint8Array}
- */
 utils.stringToBytes = function(str){
     var n = str.length,
         idx = -1,
@@ -67,22 +66,39 @@ utils.stringToBytes = function(str){
     return bytes.subarray(0, ++idx);
 };
 
-expose('jz.utils.stringToBytes', utils.stringToBytes);
-
 
 /**
- * Convert from Uint8Array to String.
- * @param {Uint8Array} bytes
- * @param {string} encoding
- * @param {Function} callback
+ * Convert Uint8Array to String.
+ * @param {Uint8Array|ArrayBuffer} bytes
+ * @param {string}     encoding Character encoding
+ * @return {jz.utils.Callbacks}
+ *
+ * @example
+ * jz.utils.bytesToString(bytes).done(function(str) {
+ *     console.log(str);
+ * });
+ *
+ * jz.utils.bytesToString(bytes, 'UTF-8').done(function(str) {
+ *     console.log(str);
+ * });
  */
-utils.bytesToString = function(bytes, encoding, callback) {
-    var fr = new FileReader();
-    if (typeof encoding === 'function') callback = encoding;
-    fr.onloadend = function() {
-        callback.call(fr, fr.result);
+utils.bytesToString = function(bytes, encoding) {
+    bytes = utils.toBytes(bytes);
+
+    var fr = new FileReader(),
+        callbacks = new utils.Callbacks;
+    
+    fr.onload = function() {
+        callbacks.doneCallback(fr.result);
     };
-    fr.readAsText(new Blob([bytes]), encoding);
+
+    fr.onerror = function(e) {
+        callbacks.failCallback(e);
+    };
+
+    fr.readAsText(new Blob([bytes]), encoding || 'UTF-8');
+
+    return callbacks;
 };
 
 expose('jz.utils.bytesToString', utils.bytesToString);
@@ -92,22 +108,33 @@ utils.bytesToStringSync = null;
 
 if(env.isWorker) {
     /**
-     * Convert from Uint8Array to String.
-     * @param {Uint8Array} bytes
+     * @param {Uint8Array|Array|ArrayBuffer} bytes
      * @param {string} encoding
      * @return {string}
+     *
+     * @example
+     * var str = jz.utils.bytesToStringSync(bytes);
+     * var str = jz.utils.bytesToStringSync(bytes, 'UTF-8');
      */
     utils.bytesToStringSync = function(bytes, encoding) {
-        return new FileReaderSync().readAsText(new Blob([bytes]), encoding);
+        bytes = utils.toBytes(bytes);
+        return new FileReaderSync().readAsText(new Blob([bytes]), encoding || 'UTF-8');
     };
+
+    expose('jz.utils.bytesToStringSync', utils.bytesToStringSync);
 }
 
-expose('jz.utils.bytesToStringSync', utils.bytesToStringSync);
 
 
 /**
  * @param {Uint8Array} bytes
  * @return {string} encoding
+ *
+ * @example
+ * var encoding = jz.utils.detectEncoding(bytes);
+ * jz.utils.bytesToString(bytes, encoding).done(function(str) {
+ *     console.log(str);
+ * });
  */
 utils.detectEncoding = function(bytes) {
     bytes = utils.toBytes(bytes);
@@ -134,64 +161,51 @@ expose('jz.utils.detectEncoding', utils.detectEncoding);
 
 /**
  * Load buffer with Ajax(async).
- * @param {Array.<string>|string} urls
- * @param {Function} complete
- * @param {Function} error
- * @return {utils.Callbacks}
- * 
- * @example
+ * @param {Array.<string>|...string} urls
+ * @return {jz.utils.Callbacks}
  *
- * utils.load(['a.zip', 'b.zip'], function(a, b){ }, function(err) { });
- * 
- * // or
- * 
+ * @example
  * utils.load(['a.zip', 'b.zip'])
  * .done(function(a, b){ })
  * .fail(function(err){ });
- * 
+ *
+ * utils.load('a.zip', 'b.zip')
+ * .done(function(a, b){ })
+ * .fail(function(err){ });
  */
-utils.load = function(urls, complete, error){
-    urls = Array.isArray(urls) ? urls : [urls];
-    complete = complete || utils.noop;
-    error = error || utils.noop;
+utils.load = function(urls){
+    urls = Array.isArray(urls) ? urls : utils.toArray(arguments);
 
-    var results = [],
-        waitArr = [],
-        wait = utils.wait,
-        callbacks = new utils.Callbacks;
-    
+    var callbacks = new utils.Callbacks;
 
-    setTimeout(function() {
-        try {
-            urls.forEach(function(url, i){
-                var xhr = new XMLHttpRequest();
-                xhr.open('GET', url);
-                xhr.responseType = 'arraybuffer';
-                xhr.onloadend = function(){
-                    var s = xhr.status;
-                    if(s === 200 || s === 206 || s === 0) {
-                        results[i] = xhr.response;
-                        waitArr[i] = wait.RESOLVE;
-                    } else {
-                        waitArr[i] = wait.REJECT;
-                        throw new Error("Load Error: " + s);
-                    }
-                };
-                waitArr[i] = wait.PROCESSING;
-                xhr.send();
-            });
+    utils.parallel(urls.map(function(url, i) {
+        var callbacks = new utils.Callbacks,
+            xhr = new XMLHttpRequest;
 
-            wait(waitArr).done(function() {
-                callbacks.doneCallback.apply(null, results);
-                complete.apply(null, results);
-            });
+        xhr.open('GET', url);
+        xhr.responseType = 'arraybuffer';
+        xhr.onloadend = function(){
+            var s = xhr.status;
+            if(s === 200 || s === 206 || s === 0) {
+                callbacks.doneCallback(xhr.response);
+            } else {
+                callbacks.failCallback(new Error('Load Error: ' + s));
+            }
+        };
+        xhr.onerror = function(e) {
+            callbacks.failCallback(e);
+        };
+        xhr.send();
 
-        } catch(err) {
-            callbacks.failCallback(err);
-            error(err);
-        }
-    }, 0);
-    
+        return callbacks;
+    }))
+    .done(function(results) {
+        callbacks.doneCallback.apply(null, results);
+    })
+    .fail(function(e) {
+        callbacks.failCallback(e);
+    });
+
     return callbacks;
 };
 
@@ -201,9 +215,13 @@ expose('jz.utils.load', utils.load);
 /**
  * @param {...(Uint8Array|int8Array|Uint8ClampedArray)} byteArrays
  * @return {Uint8Array}
+ *
+ * @example
+ * var bytes = jz.utils.concatByteArrays(bytes1, bytes2, bytes3);
+ * var bytes = jz.utils.concatByteArrays([bytes1, bytes2, bytes3]);
  */
 utils.concatByteArrays = function(byteArrays){
-    var byteArrays = Array.isArray(byteArrays) ? byteArrays : Array.prototype.slice.call(arguments, 0),
+    var byteArrays = Array.isArray(byteArrays) ? byteArrays : utils.toArray(arguments),
         size = 0,
         offset = 0,
         i, n, ret;
@@ -220,30 +238,99 @@ utils.concatByteArrays = function(byteArrays){
 expose('jz.utils.concatByteArrays', utils.concatByteArrays);
 
 
-utils.wait = function(arr) {
-    var wait = utils.wait,
-        callbacks = new utils.Callbacks;
+/**
+ * @param  {Array.<jz.utils.Callbacks>|...jz.utils.Callbacks} callbacksArr
+ * @return {jz.utils.Callbacks}
+ */
+utils.parallel = function(callbacksArr) {
+    callbacksArr = Array.isArray(callbacksArr) ? callbacksArr : utils.toArray(arguments);
 
-    function _wait() {
-        if(arr.indexOf(wait.REJECT) !== -1) return callbacks.failCallback();
-        if(arr.indexOf(wait.PROCESSING) !== -1) return setTimeout(_wait, 5);
-        callbacks.doneCallback();
+    var callbacks = new utils.Callbacks,
+        results = [],
+        count = callbacksArr.length,
+        isError = false;
+
+    function doneCallback(i, result) {
+        if (isError) return;
+        count--;
+        results[i] = result;
+        if (!count) callbacks.doneCallback(results);
     }
-    setTimeout(_wait, 0);
+
+    function failCallback(e) {
+        isError = true;
+        callbacks.failCallback(e);
+    }
+
+    callbacksArr.forEach(function(callbacks, i) {
+        callbacks
+        .done(doneCallback.bind(null, i))
+        .fail(failCallback);
+    });
 
     return callbacks;
 };
 
-utils.wait.PROCESSING = 0;
-utils.wait.RESOLVE = 1;
-utils.wait.REJECT = 2;
+expose('jz.utils.parallel', utils.parallel);
 
-expose('jz.utils.wait', utils.wait);
-expose('jz.utils.wait.PROCESSING', utils.wait.PROCESSING);
-expose('jz.utils.wait.RESOLVE', utils.wait.RESOLVE);
-expose('jz.utils.wait.REJECT', utils.wait.REJECT);
 
 /**
+ * @param  {Array.<function>|...function} funcs each function must return jz.utils.Callbacks.
+ * @return {jz.utils.Callbacks}
+ *
+ * @example
+ * jz.utils.waterfall(function(){
+ *     return jz.utils.load('foo.zip', 'bar.txt', 'baz.js');
+ * }, function(foo, bar, baz) {
+ *     this.bar = bar;
+ *     this.baz = baz;
+ *     return jz.zip.unpack(foo);
+ * }, function(reader) {
+ *     var filenames = reader.getFileNames();
+ *     var callbacksArr = filenames.map(function(filename) {
+ *         return reader.getFileAsText(filename);
+ *     }).push(
+ *         jz.utils.bytesToString(this.bar),
+ *         jz.utils.bytesToString(this.baz)
+ *     );
+ *     return jz.utils.parallel(callbacksArr);
+ * })
+ * .done(function(texts) {
+ *     texts.forEach(console.log.bind(console));
+ * })
+ * .fail(function(e) {
+ *     console.log(e);
+ * });
+ */
+utils.waterfall = function(funcs) {
+    var callbacks = new utils.Callbacks, context = {};
+    
+    funcs = Array.isArray(funcs) ? funcs : utils.toArray(arguments);
+
+    function doneCallback() {
+        callbacks.doneCallback.apply(context, arguments);
+    }
+
+    function failCallback(e) {
+        callbacks.failCallback(e);
+    }
+
+    (function next() {
+        funcs
+        .shift()
+        .apply(context, arguments)
+        .done(funcs.length > 0 ? next : doneCallback)
+        .fail(failCallback);
+    })();
+
+    return callbacks;
+}
+
+expose('jz.utils.waterfall', utils.waterfall);
+
+
+/**
+ * Asynchronous function always returns jz.utils.Callbacks
  * @constructor
  */
 utils.Callbacks = function() {
@@ -251,15 +338,24 @@ utils.Callbacks = function() {
     this.failCallback = utils.noop;
 };
 
+/**
+ * @param  {function} callback Done callback
+ * @return {jz.utils.Callbacks} 
+ */
 utils.Callbacks.prototype.done = function(callback) {
     this.doneCallback = callback;
     return this;
 };
 
+/**
+ * @param  {function} callback Fail callback
+ * @return {jz.utils.Callbacks} 
+ */
 utils.Callbacks.prototype.fail = function(callback) {
     this.failCallback = callback;
     return this;
 };
 
+expose('jz.utils.Callbacks', utils.Callbacks);
 exposeProperty('done', utils.Callbacks, utils.Callbacks.prototype.done);
 exposeProperty('fail', utils.Callbacks, utils.Callbacks.prototype.fail);

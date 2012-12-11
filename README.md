@@ -2,8 +2,6 @@
 
 It's a utility of zlib, gzip and zip format binary data.
 
-[API Reference](http://ukyo.github.com/jsziptools/docs/build/html/index.html)
-
 ## suported browser
 
 chrome, firefox, IE10.
@@ -15,7 +13,8 @@ chrome, firefox, IE10.
 decompress compressed swf file:
 
 ```javascript
-jz.utils.load('compressed.swf', function(swf){
+jz.utils.load('compressed.swf')
+.done(function(swf){
   var header = new Uint8Array(swf, 0, 8);
   var decompressedData = jz.zlib.decompress(new Uint8Array(swf, 8));
 });
@@ -48,26 +47,13 @@ var files = [
 
 jz.zip.pack({
   files: files,
-  level: 5, // compress level
-  complete: function(buffer){ // buffer is ArrayBuffer
-    //...
-  },
-  error: function(err){
-    //...
-  }
-});
-
-// or
-
-jz.zip.pack({
-  files: files,
   level: 5
 })
-.done(function(buffer){})
+.done(function(buffer){}) // ArrayBuffer
 .fail(function(err){});
 
 
-//set compress level each files.
+// set compression level to each files.
 var files = [
   {name: "mimetype", buffer: "application/epub+zip", level: 0}, //string
   {name: "META-INF", dir: [ //folder
@@ -77,12 +63,9 @@ var files = [
   {name: "foo.xhtml", url: "foo.xhtml", level: 9} //xhr
 ];
 
-jz.zip.pack({
-  files: files,
-  complete: function(buffer){
-    //...
-  }
-});
+jz.zip.pack(files)
+.done(function(buffer){})
+.fail(function(err){});;
 ```
 
 unzip:
@@ -90,25 +73,16 @@ unzip:
 ```javascript
 jz.zip.unpack({
   buffer: buffer,
-  encoding: 'cp932', //encoding of filenames.
-  complete: function(reader) {
-    // get file pathes.
-    reader.getFileNames();
-    // file is read lazy.
-    reader.getFileAsText(reader.getFileNames[0], function(result){
-      alert(result);
-    });
-  },
-  error: function(err) {}
-});
-
-// or
-
-jz.zip.unpack({
-  buffer: buffer,
   encoding: 'cp932'
 })
-.done(function(reader){})
+.done(function(reader){
+  // get file pathes.
+  reader.getFileNames();
+  // file is read lazy.
+  reader.getFileAsText(reader.getFileNames[0], function(result){
+    alert(result);
+  });
+})
 .fail(function(err){});
 
 // you can skip to set the encoding.
@@ -116,6 +90,77 @@ jz.zip.unpack({
 jz.zip.unpack(buffer)
 .done(function(reader){})
 .fail(function(err){});
+
+// read file
+
+jz.zip.unpack(ev.target.files[0])
+.done(function(reader){})
+.fail(function(err){});
+```
+
+### utilties
+
+#### jz.utils.load
+
+Load files as ArrayBuffer with XHR.
+
+```javascript
+jz.utils.load('a.txt', 'b.txt')
+.done(function(a, b) {
+  //...
+})
+.fail(function(e) {});
+```
+
+#### jz.utils.bytesToString
+
+Convert bytes(Array, ArrayBuffer or Uint8Array) to String
+
+```javascript
+jz.utils.bytesToString(bytes, 'UTF-8')
+.done(function(str) {
+  //...
+});
+```
+
+#### jz.utils.waterfall
+
+Run in order from the top.
+
+```javascript
+jz.utils.waterfall(function() {
+  return jz.utils.load('foo.zip', 'a.txt');
+}, function(foo, a) {
+  this.foo = foo;
+  return jz.utils.bytesToString(a);
+}, function(a) {
+  this.a = a;
+  return jz.zip.unpack(this.foo);
+}, function(reader) {
+  return reader.getFileAsText('b.txt');
+})
+.done(function(b) {
+  console.log(this.a);
+  console.log(b);
+})
+.fail(function(e) {});
+```
+
+#### jz.utils.parallel
+
+Run in parallel.
+
+```javascript
+jz.utils.parallel(
+  jz.utils.load('a.txt'),
+  jz.utils.bytesToString(bytes),
+  jz.zip.pack(files),
+  jz.zip.unpack(zip)
+)
+.done(function(results) {
+  Array.isArray(results);
+})
+.fail(function(e) {});
 ```
 
 ## custom build
@@ -159,8 +204,6 @@ Example of a configuration file:
     "compiler": "./compiler.jar",
     "output": "./build/jsziptools.unzip.min.js",
     "files": [
-        "src/jsziptools.js",
-        "src/utils.js",
         "src/algorithms/crc32.js",
         "src/algorithms/inflate.js",
         "src/zip.unpack.js"
