@@ -1,6 +1,6 @@
 {
     "name": "jsziptools",
-    "version": "2.2.1",
+    "version": "2.3.0",
     "main": "./build/jsziptools.min.js",
     "dependencies": {}
 }

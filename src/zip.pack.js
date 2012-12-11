@@ -7,7 +7,7 @@ crc32.js
 
 
 /**
- * @param {number} n number of Files and folders.
+ * @param {number} n Number of Files and folders.
  * @param {number} centralDirHeaderSize
  * @param {number} offset A start position of a File.
  * @return {Uint8Array}
@@ -28,12 +28,12 @@ function getEndCentDirHeader(n, centralDirHeaderSize, offset){
 /**
  * @constructor
  * 
- * @param {ArrayBuffer} buffer
- * @param {ArrayBuffer} compressedBuffer
- * @param {string} filename
- * @param {Date} date
- * @param {boolean|number} isDir
- * @param {boolean|number} isDeflate
+ * @param {ArrayBuffer}     buffer
+ * @param {ArrayBuffer}     compressedBuffer
+ * @param {string}          filename
+ * @param {Date}            date
+ * @param {boolean|number}  isDir
+ * @param {boolean|number}  isDeflate
  */
 function HeaderBuilder(buffer, compressedBuffer, filename, date, offset, isDir, isDeflate){
     this.buffer = buffer;
@@ -146,22 +146,29 @@ function getFileTime(date){
  * @return {jz.utils.Callbacks}
  * 
  * @example
- * 
- * jz.zip.pack({
- *     files: [{name: 'a.txt', buffer: bytes.buffer}, {name: 'b.txt', url: 'b.txt'}, {name: 'c.txt', buffer: 'hello!'}],
- *     complete: function(data){console.log(data)},
- *     error: function(err) { }
- * });
- * 
- * // or
+ * var files = [
+ *     {name: 'foo.txt', str: 'foo'}, // String
+ *     {name: 'bar.mp3', buffer: mp3Bytes}, // ArrayBuffer, Uint8Array, Array
+ *     {name: 'baz.json', url: 'path/to/baz.json'}, // xhr
+ *     {name: 'dir', dir: [ // dir
+ *         {name: 'children', children: [ // dir
+ *             {name: 'folder', folder: [ // dir
+ *                 {name: 'aaa.txt', str: 'aaa.txt'}
+ *             ]}
+ *         ]}
+ *     ], level: 8}
+ * ];
  * 
  * jz.zip.pack({
  *     files: files,
- *     level: 6,
+ *     level: 6, // default is 6
  * })
- * .done(function(zipbuff) { })
+ * .done(function(buffer) { }) // buffer is ArrayBuffer
  * .fail(function(err) { });
- * 
+ *
+ * jz.zip.pack(files)
+ * .done(function(buffer) { })
+ * .fail(function(err) { });
  */
 zip.pack = function(params){
     var n = 0,
@@ -169,66 +176,32 @@ zip.pack = function(params){
         archives = [],
         centralDirs = [],
         date = new Date(),
-        arr = [],
         index = 0,
-        wait = utils.wait,
-        files, level, complete, async;
+        files, level;
     
+    params = Array.isArray(params) ? {files: params} : params;
     files = params.files;
-    level = params.level !== void(0) ? params.level : 6;
-    complete = typeof params.complete === 'function' ? params.complete : utils.noop;
-    error = typeof params.error === 'function' ? params.error : utils.noop;
+    level = typeof params.level === 'number' ? level : 6;
     
-    //load files with ajax(async).
-    function loadFiles(obj){
-        var dir = obj.children || obj.dir || obj.folder;
-        if(typeof obj === 'undefined') return;
-        if(dir) {
-            dir.forEach(loadFiles);
-        } else if(obj.url) {
-            utils.load(obj.url)
-            .done(function(i) {
-                return function(response){
-                    obj.buffer = response;
-                    obj.url = null;
-                    arr[i] = wait.RESOLVE;
-                };
-            }(index))
-            .fail(function(i) {
-                return function(err) {
-                    arr[i] = wait.REJECT;
-                    throw err;
-                }
-            }(index));
-            arr[index] = wait.PROCESSING;
-            index++;
-        }
-    }
-
-    
-    function _pack(obj, path, level){
+    function _pack(level, path, item){
         var name, buffer, compressedBuffer, hb, isDir, isDeflate,
-            dir = obj.children || obj.dir || obj.folder;
+            dir = item.children || item.dir || item.folder;
         
-        if(typeof obj === 'undefined') return;
         if(dir){
-            name = path + obj.name + (obj.name.substr(-1) === '/' ? '' : '/');
+            name = path + item.name + (item.name.substr(-1) === '/' ? '' : '/');
             buffer = new ArrayBuffer(0);
             isDir = true;
-        } else if(obj.buffer || obj.str){
-            buffer = utils.toBytes(obj.buffer || obj.str);
-            name = path + obj.name;
-        } else if(obj.url) {
-            throw new Error('Sync call does not support to read buffer with XMLHttpRequest.');
+        } else if(item.buffer || item.str){
+            buffer = utils.toBytes(item.buffer || item.str);
+            name = path + item.name;
         } else {
-            throw new Error('This type is not supported.');
+            throw new Error('jz.zip.pack: This type is not supported.');
         }
-        compressedBuffer = buffer;
 
-        //if you don't set compression level to this file, set level of the whole file.
-        level = obj.level !== void(0) ? obj.level : level;
+        compressedBuffer = buffer;
+        level = typeof item.level === 'number' ? item.level : level;
         
-        if(level > 0 && dir === void 0) {
+        if(level > 0 && !dir) {
             compressedBuffer = algorithms.deflate(buffer, level);
             isDeflate = true;
         }
@@ -242,36 +215,54 @@ zip.pack = function(params){
         n++;
         
         if(dir){
-            dir.forEach(function(item){
-                _pack(item, name, level);
-            });
+            dir.forEach(_pack.bind(null, level, name));
         }
     }
 
     function pack(){
-        files.forEach(function(item){
-            _pack(item, '', level);
-        });
+        files.forEach(_pack.bind(null, level, ''));
         archives = archives.concat(centralDirs);
         archives.push(getEndCentDirHeader(n, utils.concatByteArrays(centralDirs).length, offset));
         return utils.concatByteArrays(archives).buffer;
     }
     
-    var callbacks = new utils.Callbacks;
+    var callbacks = new utils.Callbacks,
+        callbacksArr = [];
     
-    setTimeout(function() {
-        try {
-            files.forEach(loadFiles);
-            wait(arr).done(function() {
-                var result = pack();
-                callbacks.doneCallback(result);
-                complete(result);
+    // load files with ajax(async).
+    function loadFile(item) {
+        var dir = item.children || item.dir || item.folder;
+        if(dir) {
+            dir.forEach(loadFile);
+        } else if(item.url) {
+            var callbacks = new utils.Callbacks;
+            utils.load(item.url)
+            .done(function(response) {
+                item.buffer = response;
+                item.url = null;
+                callbacks.doneCallback();
+            })
+            .fail(function(e) {
+                callbacks.failCallback(e);
             });
-        } catch(err) {
-            callbacks.failCallback(err);
-            error(err);
+            callbacksArr.push(callbacks);
         }
-    }, 1);
+    }
+
+    setTimeout(function() {
+        files.forEach(loadFile);
+        utils.parallel(callbacksArr)
+        .done(function() {
+            try {
+                callbacks.doneCallback(pack());
+            } catch (e) {
+                callbacks.failCallback(e);
+            }
+        })
+        .fail(function(e) {
+            callbacks.failCallback(e);
+        });
+    }, 0);
     
     return callbacks;
 };

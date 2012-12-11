@@ -3,22 +3,8 @@
 <html>
 <head>
     <title>deflate text</title>
+    <link rel="stylesheet" href="style.css">
     <style type="text/css">
-        html, body {
-            margin: 0;
-            padding: 0;
-        }
-
-        body {
-            margin: 100px;
-            background-color: #fafafa;
-            color: #777;
-        }
-
-        h1 {
-            font-size: 48px;
-        }
-
         #main > div {
             width: 288px;
             margin-right: 32px;
@@ -38,7 +24,7 @@
 
         textarea {
             width: 100%;
-            height: 128px;
+            height: 64px;
         }
     </style>
     <script type="text/javascript" src="../dist/jsziptools.min.js"></script>
@@ -68,7 +54,8 @@
             inputView.innerHTML = genBinaryView(inputBytes);
             outputView.innerHTML = genBinaryView(deflatedBytes);
 
-            jz.utils.bytesToString(deflatedBytes, 'UTF-8', function(text) {
+            jz.utils.bytesToString(deflatedBytes)
+            .done(function(text) {
                 output.value = text;
             });
         };

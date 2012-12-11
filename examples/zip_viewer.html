@@ -3,18 +3,8 @@
 <html>
     <head>
         <title>read filenames of a zip file</title>
+        <link rel="stylesheet" href="style.css">
         <style type="text/css">
-            html, body, ul {
-                margin: 0;
-                padding: 0;
-            }
-
-            body {
-                padding: 40px;
-                background-color: #fafafa;
-                color: #444;
-            }
-
             ul {
                 list-style-type: none;
             }
@@ -104,19 +94,23 @@
                         function view(li) {
                             var filename = li.innerHTML;
                             if (/.*(png|gif|jpg|bmp)$/.test(filename.toLowerCase())) {
-                                reader.getFileAsBlob(filename, function(blob) {
+                                reader.getFileAsBlob(filename)
+                                .done(function(blob) {
                                     preview.innerHTML = img(blobURL(blob));
                                 });
                             } else if (/.*(mp3|ogg|wav|m4a)$/.test(filename.toLowerCase())) {
-                                reader.getFileAsBlob(filename, function(blob) {
+                                reader.getFileAsBlob(filename)
+                                .done(function(blob) {
                                     preview.innerHTML = audio(blobURL(blob));
                                 });
                             } else if (/.*(mp4|webm)$/.test(filename.toLowerCase())) {
-                                reader.getFileAsBlob(filename, function(blob) {
+                                reader.getFileAsBlob(filename)
+                                .done(function(blob) {
                                     preview.innerHTML = video(blobURL(blob));
                                 });
                             } else {
-                                reader.getFileAsText(filename, function(text) {
+                                reader.getFileAsText(filename)
+                                .done(function(text) {
                                     preview.innerHTML = wrap('pre', escape(text));
                                 });
                             }
