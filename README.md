@@ -10,8 +10,8 @@ chrome, firefox, IE10.
 
 ### web examples
 
-* [Deflate text](https://ukyo.github.com/examples/deflate_text.html)
-* [Zip viewer](https://ukyo.github.com/examples/zip_viewer.html)
+* [Deflate text](https://ukyo.github.com/jsziptools/examples/deflate_text.html)
+* [Zip viewer](https://ukyo.github.com/jsziptools/examples/zip_viewer.html)
 
 ### zlib
 
