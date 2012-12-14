@@ -60,7 +60,7 @@ ZipArchiveReader.prototype.init = function() {
         folders = [],
         offset = bytes.byteLength - 4,
         view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength),
-        callbacks = new utils.Callbacks,
+        deferred = new utils.Deferred,
         self = this,
         params = this.params;
 
@@ -104,17 +104,17 @@ ZipArchiveReader.prototype.init = function() {
                 localFileHeaders.push(header);
             }
             
-            self._finishInit(callbacks);
+            self._finishInit(deferred);
             
         } catch(e) {
-            callbacks.failCallback(e);
+            deferred.reject(e);
         }
     }, 0);
 
-    return callbacks;
+    return deferred;
 };
 
-ZipArchiveReader.prototype._finishInit = function(callbacks) {
+ZipArchiveReader.prototype._finishInit = function(deferred) {
     var files = this.files,
         folders = this.folders,
         params = this.params,
@@ -137,19 +137,19 @@ ZipArchiveReader.prototype._finishInit = function(callbacks) {
 
     // convert filenames bytes to string.
     utils.parallel(localFileHeaders.map(function(header, i) {
-        var callbacks = new utils.Callbacks;
+        var deferred = new utils.Deferred;
         utils.bytesToString(header.filename, params.encoding)
         .done(function(str) {
             header.filename = str;
-            callbacks.doneCallback();
+            deferred.resolve();
         });
-        return callbacks;
+        return deferred;
     }))
     .done(function() {
-        callbacks.doneCallback(self);
+        deferred.resolve(self);
     })
     .fail(function(e) {
-        callbacks.failCallback(e);
+        deferred.reject(e);
     });
 };
 
@@ -271,50 +271,50 @@ ZipArchiveReader.prototype._decompressFile = function(filename, copy) {
 
 /**
  * @param  {string} filename File name
- * @return {jz.utils.Callbacks}
+ * @return {jz.utils.Deferred}
  */
 ZipArchiveReader.prototype.getFileAsArrayBuffer = function(filename) {
-    var callbacks = new utils.Callbacks;
+    var deferred = new utils.Deferred;
 
     setTimeout(function() {
         try {
-            callbacks.doneCallback(this._decompressFile(filename, copy).buffer);
+            deferred.resolve(this._decompressFile(filename, copy).buffer);
         } catch (e) {
-            callbacks.failCallback(e);
+            deferred.reject(e);
         }
     }.bind(this), 0);
 
-    return callbacks;
+    return deferred;
 };
 
 /**
  * @param  {string} type     fileReader.getFileAs[type]
  * @param  {string} filename File name
- * @return {jz.utils.Callbacks}
+ * @return {jz.utils.Deferred}
  */
 ZipArchiveReader.prototype._getFileAs = function(type, filename) {
     var args = arguments,
-        callbacks = new utils.Callbacks;
+        deferred = new utils.Deferred;
 
     this.getFileAsBlob(filename)
     .done(function(blob) {
         var fr = new FileReader;
         fr.onloadend = function(e){
-            callbacks.doneCallback(e.target.result);
+            deferred.resolve(e.target.result);
         };
         fr['readAs' + type].apply(fr, [blob].concat(Array.prototype.slice.call(args, 3)));
     })
     .fail(function(e) {
-        callbacks.failCallback(e);
+        deferred.reject(e);
     });
 
-    return callbacks;
+    return deferred;
 };
 
 /**
  * @param  {string} filename File name
  * @param  {string} encoding Character encoding
- * @return {jz.utils.Callbacks}
+ * @return {jz.utils.Deferred}
  */
 ZipArchiveReader.prototype.getFileAsText = function(filename, encoding) {
     return this._getFileAs('Text', filename, encoding || 'UTF-8');
@@ -322,7 +322,7 @@ ZipArchiveReader.prototype.getFileAsText = function(filename, encoding) {
 
 /**
  * @param  {string} filename File name
- * @return {jz.utils.Callbacks}
+ * @return {jz.utils.Deferred}
  */
 ZipArchiveReader.prototype.getFileAsBinaryString = function(filename){
     return this._getFileAs('BinaryString', filename);
@@ -330,7 +330,7 @@ ZipArchiveReader.prototype.getFileAsBinaryString = function(filename){
 
 /**
  * @param  {string} filename File name
- * @return {jz.utils.Callbacks}
+ * @return {jz.utils.Deferred}
  */
 ZipArchiveReader.prototype.getFileAsDataURL = function(filename){
     return this._getFileAs('DataURL', filename);
@@ -339,20 +339,20 @@ ZipArchiveReader.prototype.getFileAsDataURL = function(filename){
 /**
  * @param  {string} filename    File name
  * @param  {string} contentType Content type of file (exp: 'text/plain')
- * @return {jz.utils.Callbacks}
+ * @return {jz.utils.Deferred}
  */
 ZipArchiveReader.prototype.getFileAsBlob = function(filename, contentType){
-    var callbacks = new utils.Callbacks;
+    var deferred = new utils.Deferred;
 
     setTimeout(function() {
         try {
-            callbacks.doneCallback(new Blob([this._decompressFile(filename, false)]), {type: contentType || mimetypes.guess(filename)});
+            deferred.resolve(new Blob([this._decompressFile(filename, false)]), {type: contentType || mimetypes.guess(filename)});
         } catch (e) {
-            callbacks.failCallback(e);
+            deferred.reject(e);
         }
     }.bind(this), 0);
 
-    return callbacks;
+    return deferred;
 };
 
 //for worker
@@ -427,13 +427,13 @@ ZipArchiveReaderBlob.prototype = Object.create(ZipArchiveReader.prototype);
 ZipArchiveReaderBlob.prototype.constructor = ZipArchiveReaderBlob;
 
 /**
- * @return {jz.utils.Callbacks}
+ * @return {jz.utils.Deferred}
  */
 ZipArchiveReaderBlob.prototype.init = function() {
     var blob = this.blob,
         params = this.params,
         self = this,
-        callbacks = new utils.Callbacks,
+        deferred = new utils.Deferred,
         endCentDirHeader,
         centralDirHeaders = [],
         localFileHeaders = [],
@@ -459,7 +459,7 @@ ZipArchiveReaderBlob.prototype.init = function() {
             if (dv.getUint32(0, true) === zip.LOCAL_FILE_SIGNATURE) {
                 validateEndSignature(Math.max(0, blob.size - 0x8000));
             } else {
-                callbacks.failCallback(new Error('zip.unpack: invalid zip file.'));
+                deferred.reject(new Error('zip.unpack: invalid zip file.'));
             }
         })
     }
@@ -476,7 +476,7 @@ ZipArchiveReaderBlob.prototype.init = function() {
             if (offset) {
                 validateEndSignature(Math.max(offset - 0x8000 + 3, 0));
             } else {
-                callbacks.failCallback(new Error('zip.unpack: invalid zip file.'));
+                deferred.reject(new Error('zip.unpack: invalid zip file.'));
             }
         });
     }
@@ -507,7 +507,7 @@ ZipArchiveReaderBlob.prototype.init = function() {
     }
 
     function getLocalFileHeader(index) {
-        if (index === centralDirHeaders.length) return self._finishInit(callbacks);
+        if (index === centralDirHeaders.length) return self._finishInit(deferred);
 
         var offset = centralDirHeaders[index].headerpos;
 
@@ -530,12 +530,12 @@ ZipArchiveReaderBlob.prototype.init = function() {
 
     validateFirstLocalFileSignature();
 
-    return callbacks;
+    return deferred;
 };
 
 /**
  * @param  {string} filename File name
- * @return {jz.utils.Callbacks}
+ * @return {jz.utils.Deferred}
  */
 ZipArchiveReaderBlob.prototype.getFileAsArrayBuffer = function(filename) {
     return this._getFileAs('ArrayBuffer', filename);
@@ -544,30 +544,30 @@ ZipArchiveReaderBlob.prototype.getFileAsArrayBuffer = function(filename) {
 /**
  * @param  {string} filename    File name
  * @param  {string} contentType Content type
- * @return {Callbacks}
+ * @return {Deferred}
  */
 ZipArchiveReaderBlob.prototype.getFileAsBlob = function(filename, contentType) {
     contentType = contentType || mimetypes.guess(filename);
 
     var info = this._getFileInfo(filename),
         blob = this.blob.slice(info.offset, info.offset + info.length, {type: contentType}),
-        callbacks = new utils.Callbacks;
+        deferred = new utils.Deferred;
 
     setTimeout(function() {
-        if (!info.isCompressed) return callbacks.doneCallback(blob);
+        if (!info.isCompressed) return deferred.resolve(blob);
 
         var fr = new FileReader;
         fr.readAsArrayBuffer(blob);
         fr.onloadend = function() {
             try {
-                callbacks.doneCallback(new Blob([zInflate(new Uint8Array(fr.result), false, false)], {type: contentType}));
+                deferred.resolve(new Blob([zInflate(new Uint8Array(fr.result), false, false)], {type: contentType}));
             } catch (e) {
-                callbacks.failCallback(e);
+                deferred.reject(e);
             }
         };
     }, 0);
 
-    return callbacks;
+    return deferred;
 };
 
 if (env.isWorker) {
@@ -620,8 +620,8 @@ exposeProperty('getFileAsDataURLSync', ZipArchiveReaderBlob, ZipArchiveReaderBlo
 
 /**
  * unpack a zip file.
- * @param {Object|Uint8Array|Int8Array|Uint8ClampedArray|Array|ArrayBuffer|string|Blob} params
- * @return {Callbacks}
+ * @param {Object|Uint8Array|Int8Array|Array|ArrayBuffer|string|Blob} params
+ * @return {Deferred}
  *
  * @example
  * jz.zip.unpack({
@@ -640,7 +640,6 @@ zip.unpack = function(params){
     switch(params.constructor) {
         case Uint8Array:
         case Int8Array:
-        case Uint8ClampedArray:
         case Array:
         case String:
         case ArrayBuffer:

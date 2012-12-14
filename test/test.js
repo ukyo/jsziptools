@@ -21,9 +21,7 @@ asyncTest('test jz.utils.toBytes, jz.utils.bytesToString', function(){
             }
 
             equal(result.length, original.length, 'toBytes: check byte length');
-            start();
             ok(isCorrect, 'toBytes: check all bytes');
-            start();
 
             jz.utils.bytesToString(original, 'UTF-8')
             .done(function(str) {
@@ -33,6 +31,54 @@ asyncTest('test jz.utils.toBytes, jz.utils.bytesToString', function(){
         };
 
         fr.readAsText(new Blob([original]));
+    });
+});
+
+asyncTest('test jz.utils.waterfall', function(){
+    jz.utils.waterfall(function() {
+        return 1;
+    }, function(value) {
+        equal(value, 1, 'sync call');
+
+        var deferred = new jz.utils.Deferred;
+        setTimeout(function() {
+            deferred.resolve(2);
+        }, 0);
+        return deferred;
+    }, function(value) {
+        equal(value, 2, 'async call');
+        this.value = 3;
+    }, function() {
+        equal(this.value, 3, '"this" context is shared');
+
+        var deferred = new jz.utils.Deferred;
+        setTimeout(function() {
+            deferred.resolve(4, 5);
+        }, 0);
+        return deferred;
+    }, function(a, b) {
+        equal(a, 4, 'multi arguments');
+        equal(b, 5, 'multi arguments');
+        return 6;
+    })
+    .done(function(value) {
+        equal(value, 6, 'done');
+        start();
+    });
+});
+
+asyncTest('test jz.utils.waterfall (throw error)', function(){
+    jz.utils.waterfall(function() {
+        throw new Error('throw error');
+    }, function() {
+        return 1;
+    })
+    .done(function() {
+        ok(false, 'done callback should not be called')
+    })
+    .fail(function(e) {
+        equal(e.message, 'throw error', 'throw error');
+        start();
     });
 });
 
@@ -77,10 +123,8 @@ asyncTest('test jz.zlib.compress, jz.zlib.decompress', function(){
     jz.utils.load('nicowari.swf')
     .done(function(swf) {
         var zlibBytes = new Uint8Array(swf).subarray(8);
-        start();
         var decompressed = jz.zlib.decompress(zlibBytes, true);
         ok(decompressed, 'decompress test');
-        start();
         var compressed = jz.zlib.compress(decompressed);
         ok(jz.zlib.decompress(compressed, true), 'compress test');
         start();
@@ -92,7 +136,6 @@ asyncTest('test jz.gz.compress, jz.gz.decompress', function(){
     .done(function(gzFileBuffer, fileBuffer) {
         var decompressed = jz.gz.decompress(gzFileBuffer, true);
         same(new Uint8Array(decompressed), new Uint8Array(fileBuffer), 'decompress test');
-        start();
         var compressed = jz.gz.compress(fileBuffer, 6, {fname: 'sample.txt'});
         ok(jz.gz.decompress(compressed, true), 'check checksum');
         start();
@@ -103,45 +146,47 @@ asyncTest('test jz.zip.unpack(ArrayBuffer)', function(){
     var aPath = 'zipsample/a.txt';
     var bPath = 'zipsample/folder/b.txt';
 
-    jz.utils.waterfall(function() {
-        return jz.utils.load('zipsample.zip', aPath, bPath);
-    }, function(zipsample, a, b) {
+    jz.utils.load('zipsample.zip', aPath, bPath)
+    .then(function(zipsample, a, b) {
         this.zipsample = zipsample;
         return jz.utils.parallel(jz.utils.bytesToString(a), jz.utils.bytesToString(b));
-    }, function(corrects) {
-        this.corrects = corrects;
+    })
+    .then(function(a, b) {
+        this.a = a;
+        this.b = b;
         return jz.zip.unpack(this.zipsample);
-    }, function(reader) {
+    })
+    .then(function(reader) {
         return jz.utils.parallel(reader.getFileAsText(aPath), reader.getFileAsText(bPath));
     })
-    .done(function(texts) {
-        this.corrects.forEach(function(correct, i) {
-            equal(texts[i].replace("\r\n", "\n"), correct.replace("\r\n", "\n"), 'test unpack');
-            start();
-        });
+    .then(function(a, b) {
+        equal(a, this.a, 'test unpack');
+        equal(b, this.b, 'test unpack');
+        start();
     });
 });
 
 asyncTest('test jz.zip.unpack(Blob)', function(){
     var aPath = 'zipsample/a.txt';
     var bPath = 'zipsample/folder/b.txt';
-    
-    jz.utils.waterfall(function() {
-        return jz.utils.load('zipsample.zip', aPath, bPath);
-    }, function(zipsample, a, b) {
+
+    jz.utils.load('zipsample.zip', aPath, bPath)
+    .then(function(zipsample, a, b) {
         this.zipsample = zipsample;
         return jz.utils.parallel(jz.utils.bytesToString(a), jz.utils.bytesToString(b));
-    }, function(corrects) {
-        this.corrects = corrects;
+    })
+    .then(function(a, b) {
+        this.a = a;
+        this.b = b;
         return jz.zip.unpack(new Blob([new Uint8Array(this.zipsample)]));
-    }, function(reader) {
+    })
+    .then(function(reader) {
         return jz.utils.parallel(reader.getFileAsText(aPath), reader.getFileAsText(bPath));
     })
-    .done(function(texts) {
-        this.corrects.forEach(function(correct, i) {
-            equal(texts[i].replace("\r\n", "\n"), correct.replace("\r\n", "\n"), 'test unpack');
-            start();
-        });
+    .then(function(a, b) {
+        equal(a, this.a, 'test unpack');
+        equal(b, this.b, 'test unpack');
+        start();
     });
 });
 
@@ -149,12 +194,13 @@ asyncTest('test jz.zip.pack', function(){
     var aPath = 'zipsample/a.txt';
     var bPath = 'zipsample/folder/b.txt';
 
-    jz.utils.waterfall(function() {
-        return jz.utils.load(aPath, bPath);
-    }, function(a, b) {
+    jz.utils.load(aPath, bPath)
+    .then(function(a, b) {
         return jz.utils.parallel(jz.utils.bytesToString(a), jz.utils.bytesToString(b));
-    }, function(corrects) {
-        this.corrects = corrects;
+    })
+    .then(function(a, b) {
+        this.a = a;
+        this.b = b;
         var files = [
             {name: 'zipsample', dir: [
                 {name: 'a.txt', url: aPath},
@@ -164,16 +210,15 @@ asyncTest('test jz.zip.pack', function(){
             ]}
         ];
         return jz.zip.pack(files);
-    }, function(packed) {
-        return jz.zip.unpack(packed);
-    }, function(reader) {
+    })
+    .then(jz.zip.unpack)
+    .then(function(reader) {
         return jz.utils.parallel(reader.getFileAsText(aPath), reader.getFileAsText(bPath));
     })
-    .done(function(texts) {
-        this.corrects.forEach(function(correct, i) {
-            equal(texts[i].replace("\r\n", "\n"), correct.replace("\r\n", "\n"), 'test unpack');
-            start();
-        });
+    .then(function(a, b) {
+        equal(a, this.a, 'test unpack');
+        equal(b, this.b, 'test unpack');
+        start();
     });
 });
 
@@ -192,19 +237,17 @@ asyncTest('test worker jz.zip.unpack(ArrayBuffer)', function() {
     var aPath = 'zipsample/a.txt';
     var bPath = 'zipsample/folder/b.txt';
 
-    jz.utils.waterfall(function() {
-        return jz.utils.load(aPath, bPath);
-    }, function(a, b) {
+    jz.utils.load(aPath, bPath)
+    .then(function(a, b) {
         return jz.utils.parallel(jz.utils.bytesToString(a), jz.utils.bytesToString(b));
     })
-    .done(function(corrects) {
+    .then(function(a, b) {
         worker.postMessage('jz.zip.unpack(ArrayBuffer)');
         worker.onmessage = function(event) {
-            var texts = event.data;
-            corrects.forEach(function(correct, i) {
-                equal(texts[i].replace("\r\n", "\n"), correct.replace("\r\n", "\n"), 'test jz.zip.unpack(ArrayBuffer)');
-                start();
-            });
+            var data = event.data;
+            equal(data.a, a, 'test jz.utils.unpack(ArrayBuffer)');
+            equal(data.b, b, 'test jz.utils.unpack(ArrayBuffer)');
+            start();
         };
     });
 });
@@ -213,19 +256,17 @@ asyncTest('test worker jz.zip.unpack(Blob)', function() {
     var aPath = 'zipsample/a.txt';
     var bPath = 'zipsample/folder/b.txt';
 
-    jz.utils.waterfall(function() {
-        return jz.utils.load(aPath, bPath);
-    }, function(a, b) {
+    jz.utils.load(aPath, bPath)
+    .then(function(a, b) {
         return jz.utils.parallel(jz.utils.bytesToString(a), jz.utils.bytesToString(b));
     })
-    .done(function(corrects) {
+    .done(function(a, b) {
         worker.postMessage('jz.zip.unpack(Blob)');
         worker.onmessage = function(event) {
-            var texts = event.data;
-            corrects.forEach(function(correct, i) {
-                equal(texts[i].replace("\r\n", "\n"), correct.replace("\r\n", "\n"), 'test jz.zip.unpack(Blob)');
-                start();
-            });
+            var data = event.data;
+            equal(data.a, a, 'test jz.utils.unpack(Blob)');
+            equal(data.b, b, 'test jz.utils.unpack(Blob)');
+            start();
         };
     });
 });
@@ -234,19 +275,17 @@ asyncTest('test worker jz.zip.pack', function() {
     var aPath = 'zipsample/a.txt';
     var bPath = 'zipsample/folder/b.txt';
 
-    jz.utils.waterfall(function() {
-        return jz.utils.load(aPath, bPath);
-    }, function(a, b) {
+    jz.utils.load(aPath, bPath)
+    .then(function(a, b) {
         return jz.utils.parallel(jz.utils.bytesToString(a), jz.utils.bytesToString(b));
     })
-    .done(function(corrects) {
+    .done(function(a, b) {
         worker.postMessage('jz.zip.pack');
         worker.onmessage = function(event) {
-            var texts = event.data;
-            corrects.forEach(function(correct, i) {
-                equal(texts[i].replace("\r\n", "\n"), correct.replace("\r\n", "\n"), 'test jz.zip.pack');
-                start();
-            });
+            var data = event.data;
+            equal(data.a, a, 'test jz.utils.pack');
+            equal(data.b, b, 'test jz.utils.pack');
+            start();
         };
     });
 });

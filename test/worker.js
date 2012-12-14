@@ -26,29 +26,34 @@ onmessage = function(event) {
             postMessage(helloWorld);
             break;
         case 'jz.zip.unpack(ArrayBuffer)':
-            jz.utils.waterfall(function() {
-                return jz.utils.load('zipsample.zip');
-            }, function(zipsample) {
-                return jz.zip.unpack(zipsample);
+            jz.utils.load('zipsample.zip')
+            .done(function(zipsample) {
+                jz.zip.unpack(zipsample)
+                .done(function(reader) {
+                    postMessage({
+                        a: reader.getFileAsTextSync(aPath),
+                        b: reader.getFileAsTextSync(bPath)
+                    });
+                });
             })
+            .then(jz.zip.unpack)
             .done(function(reader) {
-                postMessage([
-                    reader.getFileAsTextSync(aPath),
-                    reader.getFileAsTextSync(bPath)
-                ]);
+                postMessage({
+                    a: reader.getFileAsTextSync(aPath),
+                    b: reader.getFileAsTextSync(bPath)
+                });
             });
             break;
         case 'jz.zip.unpack(Blob)':
-            jz.utils.waterfall(function() {
-                return jz.utils.load('zipsample.zip');
-            }, function(zipsample) {
+            jz.utils.load('zipsample.zip')
+            .then(function(zipsample) {
                 return jz.zip.unpack(new Blob([new Uint8Array(zipsample)]));
             })
             .done(function(reader) {
-                postMessage([
-                    reader.getFileAsTextSync(aPath),
-                    reader.getFileAsTextSync(bPath)
-                ]);
+                postMessage({
+                    a: reader.getFileAsTextSync(aPath),
+                    b: reader.getFileAsTextSync(bPath)
+                });
             });
             break;
         case 'jz.zip.pack':
@@ -60,16 +65,13 @@ onmessage = function(event) {
                     ]}
                 ]}
             ];
-            jz.utils.waterfall(function() {
-                return jz.zip.pack(files);
-            }, function(packed) {
-                return jz.zip.unpack(packed);
-            })
+            jz.zip.pack(files)
+            .then(jz.zip.unpack)
             .done(function(reader) {
-                postMessage([
-                    reader.getFileAsTextSync(aPath),
-                    reader.getFileAsTextSync(bPath)
-                ]);
+                postMessage({
+                    a: reader.getFileAsTextSync(aPath),
+                    b: reader.getFileAsTextSync(bPath)
+                });
             });
     }
 };
