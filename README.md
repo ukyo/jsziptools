@@ -8,8 +8,8 @@ chrome, firefox, IE10.
 
 ## tests
 
-* [test](https://ukyo.github.com/jsziptools/test/)
-* [test(minified)](https://ukyo.github.com/jsziptools/test/minified.html)
+* [test](http://ukyo.github.com/jsziptools/test/)
+* [test(minified)](http://ukyo.github.com/jsziptools/test/minified.html)
 
 ## examples
 
