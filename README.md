@@ -6,6 +6,11 @@ It's a utility of zlib, gzip and zip format binary data.
 
 chrome, firefox, IE10.
 
+## tests
+
+* [test](https://ukyo.github.com/jsziptools/test/)
+* [test(minified)](https://ukyo.github.com/jsziptools/test/minified.html)
+
 ## examples
 
 ### web examples
@@ -83,10 +88,16 @@ jz.zip.unpack({
 .done(function(reader){
   // get file pathes.
   reader.getFileNames();
-  // file is read lazy.
-  reader.getFileAsText(reader.getFileNames[0], function(result){
+  // file is read lazily.
+  reader.getFileAsText(reader.getFileNames[0])
+  .done(function(result){
     alert(result);
   });
+  // reader has another methods.
+  // 'getFileAsArrayBuffer'
+  // 'getFileAsBlob'
+  // 'getFileAsDataURL'
+  // 'getFileAsBinaryString'
 })
 .fail(function(err){});
 
@@ -103,9 +114,9 @@ jz.zip.unpack(ev.target.files[0])
 .fail(function(err){});
 ```
 
-### utilties
+## utilties
 
-#### jz.utils.load
+### jz.utils.load
 
 Load files as ArrayBuffer with XHR.
 
@@ -117,7 +128,7 @@ jz.utils.load('a.txt', 'b.txt')
 .fail(function(e) {});
 ```
 
-#### jz.utils.bytesToString
+### jz.utils.bytesToString
 
 Convert bytes(Array, ArrayBuffer or Uint8Array) to String
 
@@ -126,9 +137,15 @@ jz.utils.bytesToString(bytes, 'UTF-8')
 .done(function(str) {
   //...
 });
+
+// default is 'UTF-8'
+jz.utils.bytesToString(bytes)
+.done(function(str) {
+  //...
+});
 ```
 
-#### jz.utils.waterfall
+### jz.utils.waterfall
 
 Run in order from the top.
 
@@ -151,7 +168,7 @@ jz.utils.waterfall(function() {
 .fail(function(e) {});
 ```
 
-#### jz.utils.parallel
+### jz.utils.parallel
 
 Run in parallel.
 
@@ -162,10 +179,50 @@ jz.utils.parallel(
   jz.zip.pack(files),
   jz.zip.unpack(zip)
 )
-.done(function(results) {
-  Array.isArray(results);
+.done(function(a, foo, packed, reader) {
+  // ...
 })
 .fail(function(e) {});
+```
+
+### jz.utils.Deferred
+
+```
+// wait "ms" milliseconds.
+function wait(ms) {
+  var deferred = new jz.utils.Deferred;
+  setTimeout(function() {
+    console.log(Date.now());
+    deferred.resolve(ms);
+  }, ms);
+  return deferred;
+}
+
+wait(1000)
+.then(wait)
+.then(wait)
+.then(wait)
+.then(wait);
+
+jz.utils.waterfall(
+  wait.bind(null, 1000),
+  wait,
+  wait,
+  wait
+);
+
+// all async functions return "Deferred"
+jz.utils.load('foo.zip')
+.then(jz.zip.unzip)
+.then(function(reader) {
+  return reader.getFileAsText('bar.txt');
+})
+.done(function(bar) {
+  console.log(bar);
+})
+.fail(function(e) {
+  console.log(e);
+});
 ```
 
 ## custom build
