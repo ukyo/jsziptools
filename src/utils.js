@@ -148,7 +148,7 @@ utils.detectEncoding = function(bytes) {
         } else if((bytes[i] & 0xF8) === 0xF0) {
             if((bytes[++i] & 0xC0) === 0x80 && (bytes[++i] & 0xC0) === 0x80 && (bytes[++i] & 0xC0) === 0x80) continue;
         } else {
-            return 'cp932';
+            return 'Shift_JIS';
         }
     }
 
