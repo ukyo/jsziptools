@@ -143,7 +143,7 @@ function getFileTime(date){
  * Generate a zip file buffer from a js object.
  * 
  * @param {Object} params
- * @return {jz.utils.Callbacks}
+ * @return {jz.utils.Deferred}
  * 
  * @example
  * var files = [
@@ -226,8 +226,8 @@ zip.pack = function(params){
         return utils.concatByteArrays(archives).buffer;
     }
     
-    var callbacks = new utils.Callbacks,
-        callbacksArr = [];
+    var deferred = new utils.Deferred,
+        deferreds = [];
     
     // load files with ajax(async).
     function loadFile(item) {
@@ -235,36 +235,36 @@ zip.pack = function(params){
         if(dir) {
             dir.forEach(loadFile);
         } else if(item.url) {
-            var callbacks = new utils.Callbacks;
+            var deferred = new utils.Deferred;
             utils.load(item.url)
             .done(function(response) {
                 item.buffer = response;
                 item.url = null;
-                callbacks.doneCallback();
+                deferred.resolve();
             })
             .fail(function(e) {
-                callbacks.failCallback(e);
+                deferred.reject(e);
             });
-            callbacksArr.push(callbacks);
+            deferreds.push(deferred);
         }
     }
 
     setTimeout(function() {
         files.forEach(loadFile);
-        utils.parallel(callbacksArr)
+        utils.parallel(deferreds)
         .done(function() {
             try {
-                callbacks.doneCallback(pack());
+                deferred.resolve(pack());
             } catch (e) {
-                callbacks.failCallback(e);
+                deferred.reject(e);
             }
         })
         .fail(function(e) {
-            callbacks.failCallback(e);
+            deferred.reject(e);
         });
     }, 0);
     
-    return callbacks;
+    return deferred;
 };
 
 expose('jz.zip.pack', zip.pack);
