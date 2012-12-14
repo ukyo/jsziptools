@@ -11,7 +11,7 @@ utils.toArray = function(obj) {
 
 /**
  * convert Array, ArrayBuffer or String to Uint8Array.
- * @param {ArrayBuffer|Uint8Array|Int8Array|Uint8ClampedArray|Array|string} buffer
+ * @param {ArrayBuffer|Uint8Array|Int8Array|Array|string} buffer
  * @return {Uint8Array}
  *
  * @example
@@ -24,8 +24,7 @@ utils.toBytes = function(buffer){
         case Array:
         case ArrayBuffer: return new Uint8Array(buffer);
         case Uint8Array: return buffer;
-        case Int8Array:
-        case Uint8ClampedArray: return new Uint8Array(buffer.buffer);
+        case Int8Array: return new Uint8Array(buffer.buffer);
     }
 };
 
@@ -71,7 +70,7 @@ utils.stringToBytes = function(str){
  * Convert Uint8Array to String.
  * @param {Uint8Array|ArrayBuffer} bytes
  * @param {string}     encoding Character encoding
- * @return {jz.utils.Callbacks}
+ * @return {jz.utils.Deferred}
  *
  * @example
  * jz.utils.bytesToString(bytes).done(function(str) {
@@ -86,19 +85,19 @@ utils.bytesToString = function(bytes, encoding) {
     bytes = utils.toBytes(bytes);
 
     var fr = new FileReader(),
-        callbacks = new utils.Callbacks;
+        deferred = new utils.Deferred;
     
     fr.onload = function() {
-        callbacks.doneCallback(fr.result);
+        deferred.resolve(fr.result);
     };
 
     fr.onerror = function(e) {
-        callbacks.failCallback(e);
+        deferred.reject(e);
     };
 
     fr.readAsText(new Blob([bytes]), encoding || 'UTF-8');
 
-    return callbacks;
+    return deferred;
 };
 
 expose('jz.utils.bytesToString', utils.bytesToString);
@@ -162,7 +161,7 @@ expose('jz.utils.detectEncoding', utils.detectEncoding);
 /**
  * Load buffer with Ajax(async).
  * @param {Array.<string>|...string} urls
- * @return {jz.utils.Callbacks}
+ * @return {jz.utils.Deferred}
  *
  * @example
  * utils.load(['a.zip', 'b.zip'])
@@ -176,37 +175,39 @@ expose('jz.utils.detectEncoding', utils.detectEncoding);
 utils.load = function(urls){
     urls = Array.isArray(urls) ? urls : utils.toArray(arguments);
 
-    var callbacks = new utils.Callbacks;
+    var deferred = new utils.Deferred;
 
-    utils.parallel(urls.map(function(url, i) {
-        var callbacks = new utils.Callbacks,
-            xhr = new XMLHttpRequest;
+    setTimeout(function() {
+        utils.parallel(urls.map(function(url, i) {
+            var deferred = new utils.Deferred,
+                xhr = new XMLHttpRequest;
 
-        xhr.open('GET', url);
-        xhr.responseType = 'arraybuffer';
-        xhr.onloadend = function(){
-            var s = xhr.status;
-            if(s === 200 || s === 206 || s === 0) {
-                callbacks.doneCallback(xhr.response);
-            } else {
-                callbacks.failCallback(new Error('Load Error: ' + s));
-            }
-        };
-        xhr.onerror = function(e) {
-            callbacks.failCallback(e);
-        };
-        xhr.send();
+            xhr.open('GET', url);
+            xhr.responseType = 'arraybuffer';
+            xhr.onloadend = function(){
+                var s = xhr.status;
+                if(s === 200 || s === 206 || s === 0) {
+                    deferred.resolve(xhr.response);
+                } else {
+                    deferred.reject(new Error('Load Error: ' + s));
+                }
+            };
+            xhr.onerror = function(e) {
+                deferred.reject(e);
+            };
+            xhr.send();
 
-        return callbacks;
-    }))
-    .done(function(results) {
-        callbacks.doneCallback.apply(null, results);
-    })
-    .fail(function(e) {
-        callbacks.failCallback(e);
-    });
+            return deferred;
+        }))
+        .done(function() {
+            deferred.resolve.apply(deferred, arguments);
+        })
+        .fail(function(e) {
+            deferred.reject(e);
+        });
+    }, 5);
 
-    return callbacks;
+    return deferred;
 };
 
 expose('jz.utils.load', utils.load);
@@ -239,44 +240,44 @@ expose('jz.utils.concatByteArrays', utils.concatByteArrays);
 
 
 /**
- * @param  {Array.<jz.utils.Callbacks>|...jz.utils.Callbacks} callbacksArr
- * @return {jz.utils.Callbacks}
+ * @param  {Array.<jz.utils.Deferred>|...jz.utils.Deferred} deferreds
+ * @return {jz.utils.Deferred}
  */
-utils.parallel = function(callbacksArr) {
-    callbacksArr = Array.isArray(callbacksArr) ? callbacksArr : utils.toArray(arguments);
+utils.parallel = function(deferreds) {
+    deferreds = Array.isArray(deferreds) ? deferreds : utils.toArray(arguments);
 
-    var callbacks = new utils.Callbacks,
+    var deferred = new utils.Deferred,
         results = [],
-        count = callbacksArr.length,
+        count = deferreds.length,
         isError = false;
 
-    function doneCallback(i, result) {
+    function resolve(i, result) {
         if (isError) return;
         count--;
         results[i] = result;
-        if (!count) callbacks.doneCallback(results);
+        if (!count) deferred.resolve.apply(deferred, results);
     }
 
-    function failCallback(e) {
+    function reject(e) {
         isError = true;
-        callbacks.failCallback(e);
+        deferred.reject(e);
     }
 
-    callbacksArr.forEach(function(callbacks, i) {
-        callbacks
-        .done(doneCallback.bind(null, i))
-        .fail(failCallback);
+    deferreds.forEach(function(deferred, i) {
+        deferred
+        .done(resolve.bind(null, i))
+        .fail(reject);
     });
 
-    return callbacks;
+    return deferred;
 };
 
 expose('jz.utils.parallel', utils.parallel);
 
 
 /**
- * @param  {Array.<function>|...function} funcs each function must return jz.utils.Callbacks.
- * @return {jz.utils.Callbacks}
+ * @param  {Array.<function>|...function} callbacks each function must return jz.utils.Deferred.
+ * @return {jz.utils.Deferred}
  *
  * @example
  * jz.utils.waterfall(function(){
@@ -287,13 +288,13 @@ expose('jz.utils.parallel', utils.parallel);
  *     return jz.zip.unpack(foo);
  * }, function(reader) {
  *     var filenames = reader.getFileNames();
- *     var callbacksArr = filenames.map(function(filename) {
+ *     var deferreds = filenames.map(function(filename) {
  *         return reader.getFileAsText(filename);
  *     }).push(
  *         jz.utils.bytesToString(this.bar),
  *         jz.utils.bytesToString(this.baz)
  *     );
- *     return jz.utils.parallel(callbacksArr);
+ *     return jz.utils.parallel(deferreds);
  * })
  * .done(function(texts) {
  *     texts.forEach(console.log.bind(console));
@@ -302,60 +303,98 @@ expose('jz.utils.parallel', utils.parallel);
  *     console.log(e);
  * });
  */
-utils.waterfall = function(funcs) {
-    var callbacks = new utils.Callbacks, context = {};
+utils.waterfall = function(callbacks) {
+    var deferred = new utils.Deferred, context = {};
     
-    funcs = Array.isArray(funcs) ? funcs : utils.toArray(arguments);
+    callbacks = Array.isArray(callbacks) ? callbacks : utils.toArray(arguments);
 
-    function doneCallback() {
-        callbacks.doneCallback.apply(context, arguments);
+    function resolve() {
+        deferred.doneCallback.apply(context, arguments);
     }
 
-    function failCallback(e) {
-        callbacks.failCallback(e);
+    function reject(e) {
+        deferred.failCallback.call(context, e);
     }
 
-    (function next() {
-        funcs
-        .shift()
-        .apply(context, arguments)
-        .done(funcs.length > 0 ? next : doneCallback)
-        .fail(failCallback);
-    })();
+    setTimeout(function then() {
+        try {
+            var result = callbacks.shift().apply(context, arguments);
+            if (result instanceof utils.Deferred) {
+                result
+                .done(callbacks.length > 0 ? then : resolve)
+                .fail(reject);
+            } else {
+                callbacks.length > 0 ? then.call(null, result) : resolve(result);
+            }
+        } catch (e) {
+            reject(e);
+        }
+    }, 0);
 
-    return callbacks;
+    return deferred;
 }
 
 expose('jz.utils.waterfall', utils.waterfall);
 
 
 /**
- * Asynchronous function always returns jz.utils.Callbacks
+ * Asynchronous function always returns jz.utils.Deferred
  * @constructor
  */
-utils.Callbacks = function() {
+utils.Deferred = function() {
     this.doneCallback = utils.noop;
     this.failCallback = utils.noop;
 };
 
 /**
  * @param  {function} callback Done callback
- * @return {jz.utils.Callbacks} 
+ * @return {jz.utils.Deferred} 
  */
-utils.Callbacks.prototype.done = function(callback) {
+utils.Deferred.prototype.done = function(callback) {
     this.doneCallback = callback;
     return this;
 };
 
 /**
  * @param  {function} callback Fail callback
- * @return {jz.utils.Callbacks} 
+ * @return {jz.utils.Deferred} 
  */
-utils.Callbacks.prototype.fail = function(callback) {
+utils.Deferred.prototype.fail = function(callback) {
     this.failCallback = callback;
     return this;
 };
 
-expose('jz.utils.Callbacks', utils.Callbacks);
-exposeProperty('done', utils.Callbacks, utils.Callbacks.prototype.done);
-exposeProperty('fail', utils.Callbacks, utils.Callbacks.prototype.fail);
+utils.Deferred.prototype.resolve = function() {
+    this.doneCallback.apply(null, arguments);
+};
+
+utils.Deferred.prototype.reject = function() {
+    this.failCallback.apply(null, arguments);
+};
+
+utils.Deferred.prototype.then = function(callback) {
+    var callbacks = [function(){return this}.bind(this), callback],
+        deferred = utils.waterfall(callbacks);
+
+    return {
+        'then': function(callback) {
+            callbacks.push(callback);
+            return this;
+        },
+        'done': function(callback) {
+            deferred.done(callback);
+            return this;
+        },
+        'fail': function(callback) {
+            deferred.fail(callback);
+            return this;
+        }
+    };
+};
+
+expose('jz.utils.Deferred', utils.Deferred);
+exposeProperty('done', utils.Deferred, utils.Deferred.prototype.done);
+exposeProperty('fail', utils.Deferred, utils.Deferred.prototype.fail);
+exposeProperty('then', utils.Deferred, utils.Deferred.prototype.then);
+exposeProperty('resolve', utils.Deferred, utils.Deferred.prototype.resolve);
+exposeProperty('reject', utils.Deferred, utils.Deferred.prototype.reject);
