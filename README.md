@@ -145,29 +145,6 @@ jz.utils.bytesToString(bytes)
 });
 ```
 
-### jz.utils.waterfall
-
-Run in order from the top.
-
-```javascript
-jz.utils.waterfall(function() {
-  return jz.utils.load('foo.zip', 'a.txt');
-}, function(foo, a) {
-  this.foo = foo;
-  return jz.utils.bytesToString(a);
-}, function(a) {
-  this.a = a;
-  return jz.zip.unpack(this.foo);
-}, function(reader) {
-  return reader.getFileAsText('b.txt');
-})
-.done(function(b) {
-  console.log(this.a);
-  console.log(b);
-})
-.fail(function(e) {});
-```
-
 ### jz.utils.parallel
 
 Run in parallel.
@@ -195,7 +172,7 @@ function wait(ms) {
     console.log(Date.now());
     deferred.resolve(ms);
   }, ms);
-  return deferred;
+  return deferred.promise();
 }
 
 wait(1000)
@@ -204,14 +181,7 @@ wait(1000)
 .then(wait)
 .then(wait);
 
-jz.utils.waterfall(
-  wait.bind(null, 1000),
-  wait,
-  wait,
-  wait
-);
-
-// all async functions return "Deferred"
+// all async functions return "Promise"
 jz.utils.load('foo.zip')
 .then(jz.zip.unzip)
 .then(function(reader) {
