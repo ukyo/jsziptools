@@ -70,7 +70,7 @@ utils.stringToBytes = function(str){
  * Convert Uint8Array to String.
  * @param {Uint8Array|ArrayBuffer} bytes
  * @param {string}     encoding Character encoding
- * @return {jz.utils.Deferred}
+ * @return {Promise}
  *
  * @example
  * jz.utils.bytesToString(bytes).done(function(str) {
@@ -161,7 +161,7 @@ expose('jz.utils.detectEncoding', utils.detectEncoding);
 /**
  * Load buffer with Ajax(async).
  * @param {Array.<string>|...string} urls
- * @return {jz.utils.Deferred}
+ * @return {Promise}
  *
  * @example
  * utils.load(['a.zip', 'b.zip'])
@@ -296,7 +296,7 @@ expose('jz.utils.parallel', utils.parallel);
 
 
 /**
- * Asynchronous function always returns jz.utils.Deferred
+ * Asynchronous function always returns Promise
  * @constructor
  */
 utils.Deferred = function() {
@@ -339,7 +339,7 @@ exposeProperty('promise', utils.Deferred, utils.Deferred.prototype.promise);
 
 /**
  * @constructor
- * @param {jz.utils.Deferred} deferred
+ * @param {Promise} Promise
  */
 function Promise(deferred) {
     this.deferred = deferred;

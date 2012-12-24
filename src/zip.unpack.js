@@ -286,7 +286,7 @@ ZipArchiveReader.prototype.getFileAsArrayBuffer = function(filename) {
 /**
  * @param  {string} type     fileReader.getFileAs[type]
  * @param  {string} filename File name
- * @return {jz.utils.Deferred}
+ * @return {Promise}
  */
 ZipArchiveReader.prototype._getFileAs = function(type, filename) {
     var args = arguments,
@@ -310,7 +310,7 @@ ZipArchiveReader.prototype._getFileAs = function(type, filename) {
 /**
  * @param  {string} filename File name
  * @param  {string} encoding Character encoding
- * @return {jz.utils.Deferred}
+ * @return {Promise}
  */
 ZipArchiveReader.prototype.getFileAsText = function(filename, encoding) {
     return this._getFileAs('Text', filename, encoding || 'UTF-8');
@@ -318,7 +318,7 @@ ZipArchiveReader.prototype.getFileAsText = function(filename, encoding) {
 
 /**
  * @param  {string} filename File name
- * @return {jz.utils.Deferred}
+ * @return {Promise}
  */
 ZipArchiveReader.prototype.getFileAsBinaryString = function(filename){
     return this._getFileAs('BinaryString', filename);
@@ -326,7 +326,7 @@ ZipArchiveReader.prototype.getFileAsBinaryString = function(filename){
 
 /**
  * @param  {string} filename File name
- * @return {jz.utils.Deferred}
+ * @return {Promise}
  */
 ZipArchiveReader.prototype.getFileAsDataURL = function(filename){
     return this._getFileAs('DataURL', filename);
@@ -335,7 +335,7 @@ ZipArchiveReader.prototype.getFileAsDataURL = function(filename){
 /**
  * @param  {string} filename    File name
  * @param  {string} contentType Content type of file (exp: 'text/plain')
- * @return {jz.utils.Deferred}
+ * @return {Promise}
  */
 ZipArchiveReader.prototype.getFileAsBlob = function(filename, contentType){
     var deferred = new utils.Deferred;
@@ -423,7 +423,7 @@ ZipArchiveReaderBlob.prototype = Object.create(ZipArchiveReader.prototype);
 ZipArchiveReaderBlob.prototype.constructor = ZipArchiveReaderBlob;
 
 /**
- * @return {jz.utils.Deferred}
+ * @return {Promise}
  */
 ZipArchiveReaderBlob.prototype.init = function() {
     var blob = this.blob,
@@ -531,7 +531,7 @@ ZipArchiveReaderBlob.prototype.init = function() {
 
 /**
  * @param  {string} filename File name
- * @return {jz.utils.Deferred}
+ * @return {Promise}
  */
 ZipArchiveReaderBlob.prototype.getFileAsArrayBuffer = function(filename) {
     return this._getFileAs('ArrayBuffer', filename);

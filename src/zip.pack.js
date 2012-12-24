@@ -143,7 +143,7 @@ function getFileTime(date){
  * Generate a zip file buffer from a js object.
  * 
  * @param {Object} params
- * @return {jz.utils.Deferred}
+ * @return {Promise}
  * 
  * @example
  * var files = [
