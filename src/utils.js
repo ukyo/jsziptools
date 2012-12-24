@@ -97,7 +97,7 @@ utils.bytesToString = function(bytes, encoding) {
 
     fr.readAsText(new Blob([bytes]), encoding || 'UTF-8');
 
-    return deferred;
+    return deferred.promise();
 };
 
 expose('jz.utils.bytesToString', utils.bytesToString);
@@ -177,37 +177,57 @@ utils.load = function(urls){
 
     var deferred = new utils.Deferred;
 
-    setTimeout(function() {
-        utils.parallel(urls.map(function(url, i) {
-            var deferred = new utils.Deferred,
-                xhr = new XMLHttpRequest;
+    // setTimeout(function() {
+    //     utils.parallel(urls.map(function(url, i) {
+    //         var deferred = new utils.Deferred,
+    //             xhr = new XMLHttpRequest;
 
-            xhr.open('GET', url);
-            xhr.responseType = 'arraybuffer';
-            xhr.onloadend = function(){
-                var s = xhr.status;
-                if(s === 200 || s === 206 || s === 0) {
-                    deferred.resolve(xhr.response);
-                } else {
-                    deferred.reject(new Error('Load Error: ' + s));
-                }
-            };
-            xhr.onerror = function(e) {
-                deferred.reject(e);
-            };
-            xhr.send();
+    //         xhr.open('GET', url);
+    //         xhr.responseType = 'arraybuffer';
+    //         xhr.onloadend = function(){
+    //             var s = xhr.status;
+    //             if(s === 200 || s === 206 || s === 0) {
+    //                 deferred.resolve(xhr.response);
+    //             } else {
+    //                 deferred.reject(new Error('Load Error: ' + s + ' ' + url));
+    //             }
+    //         };
+    //         xhr.onerror = function(e) {
+    //             deferred.reject(e);
+    //         };
+    //         xhr.send();
 
-            return deferred;
-        }))
-        .done(function() {
-            deferred.resolve.apply(deferred, arguments);
-        })
-        .fail(function(e) {
+    //         return deferred.promise();
+    //     }))
+    //     .then(
+    //         deferred.resolve.bind(deferred),
+    //         deferred.reject.bind(deferred)
+    //     );
+    // }, 0);
+
+    // return deferred.promise();
+    
+    return utils.parallel(urls.map(function(url, i) {
+        var deferred = new utils.Deferred,
+            xhr = new XMLHttpRequest;
+
+        xhr.open('GET', url);
+        xhr.responseType = 'arraybuffer';
+        xhr.onloadend = function(){
+            var s = xhr.status;
+            if(s === 200 || s === 206 || s === 0) {
+                deferred.resolve(xhr.response);
+            } else {
+                deferred.reject(new Error('Load Error: ' + s + ' ' + url));
+            }
+        };
+        xhr.onerror = function(e) {
             deferred.reject(e);
-        });
-    }, 5);
+        };
+        xhr.send();
 
-    return deferred;
+        return deferred.promise();
+    }));
 };
 
 expose('jz.utils.load', utils.load);
@@ -240,101 +260,39 @@ expose('jz.utils.concatByteArrays', utils.concatByteArrays);
 
 
 /**
- * @param  {Array.<jz.utils.Deferred>|...jz.utils.Deferred} deferreds
- * @return {jz.utils.Deferred}
+ * @param  {Array.<Promise>|...Promise} promises
+ * @return {Promise}
  */
-utils.parallel = function(deferreds) {
-    deferreds = Array.isArray(deferreds) ? deferreds : utils.toArray(arguments);
+utils.parallel = function(promises) {
+    promises = Array.isArray(promises) ? promises : utils.toArray(arguments);
 
     var deferred = new utils.Deferred,
         results = [],
-        count = deferreds.length,
+        count = promises.length,
         isError = false;
 
-    function resolve(i, result) {
+    function onResolved(i, result) {
         if (isError) return;
         count--;
         results[i] = result;
         if (!count) deferred.resolve.apply(deferred, results);
     }
 
-    function reject(e) {
+    function onRejected(e) {
         isError = true;
         deferred.reject(e);
     }
 
-    deferreds.forEach(function(deferred, i) {
-        deferred
-        .done(resolve.bind(null, i))
-        .fail(reject);
-    });
+    // setTimeout(function() {
+        promises.forEach(function(promise, i) {
+            promise.then(onResolved.bind(null, i), onRejected);
+        });
+    // }, 0);
 
-    return deferred;
+    return deferred.promise();
 };
 
 expose('jz.utils.parallel', utils.parallel);
-
-
-/**
- * @param  {Array.<function>|...function} callbacks each function must return jz.utils.Deferred.
- * @return {jz.utils.Deferred}
- *
- * @example
- * jz.utils.waterfall(function(){
- *     return jz.utils.load('foo.zip', 'bar.txt', 'baz.js');
- * }, function(foo, bar, baz) {
- *     this.bar = bar;
- *     this.baz = baz;
- *     return jz.zip.unpack(foo);
- * }, function(reader) {
- *     var filenames = reader.getFileNames();
- *     var deferreds = filenames.map(function(filename) {
- *         return reader.getFileAsText(filename);
- *     }).push(
- *         jz.utils.bytesToString(this.bar),
- *         jz.utils.bytesToString(this.baz)
- *     );
- *     return jz.utils.parallel(deferreds);
- * })
- * .done(function(texts) {
- *     texts.forEach(console.log.bind(console));
- * })
- * .fail(function(e) {
- *     console.log(e);
- * });
- */
-utils.waterfall = function(callbacks) {
-    var deferred = new utils.Deferred, context = {};
-    
-    callbacks = Array.isArray(callbacks) ? callbacks : utils.toArray(arguments);
-
-    function resolve() {
-        deferred.doneCallback.apply(context, arguments);
-    }
-
-    function reject(e) {
-        deferred.failCallback.call(context, e);
-    }
-
-    setTimeout(function then() {
-        try {
-            var result = callbacks.shift().apply(context, arguments);
-            if (result instanceof utils.Deferred) {
-                result
-                .done(callbacks.length > 0 ? then : resolve)
-                .fail(reject);
-            } else {
-                callbacks.length > 0 ? then.call(null, result) : resolve(result);
-            }
-        } catch (e) {
-            reject(e);
-        }
-    }, 0);
-
-    return deferred;
-}
-
-expose('jz.utils.waterfall', utils.waterfall);
 
 
 /**
@@ -342,59 +300,88 @@ expose('jz.utils.waterfall', utils.waterfall);
  * @constructor
  */
 utils.Deferred = function() {
-    this.doneCallback = utils.noop;
-    this.failCallback = utils.noop;
-};
-
-/**
- * @param  {function} callback Done callback
- * @return {jz.utils.Deferred} 
- */
-utils.Deferred.prototype.done = function(callback) {
-    this.doneCallback = callback;
-    return this;
-};
-
-/**
- * @param  {function} callback Fail callback
- * @return {jz.utils.Deferred} 
- */
-utils.Deferred.prototype.fail = function(callback) {
-    this.failCallback = callback;
-    return this;
+    this.queue = [];
+    this.context = {};
+    this.current = {};
 };
 
 utils.Deferred.prototype.resolve = function() {
-    this.doneCallback.apply(null, arguments);
+    if (!this.queue.length) return;
+
+    this.current = this.queue.shift();
+
+    try {
+        var result = this.current.onResolved.apply(this.context, arguments);
+        Promise.isPromise(result) ?
+            result.then(this.resolve.bind(this), this.reject.bind(this)) :
+            this.resolve(result);
+    } catch (e) {
+        this.reject(e);
+    }
 };
 
-utils.Deferred.prototype.reject = function() {
-    this.failCallback.apply(null, arguments);
+utils.Deferred.prototype.reject = function(e) {
+    while (!this.current.onRejected && this.queue.length)
+        this.current = this.queue.shift();
+    this.current.onRejected && this.current.onRejected.call(this.context, e);
 };
 
-utils.Deferred.prototype.then = function(callback) {
-    var callbacks = [function(){return this}.bind(this), callback],
-        deferred = utils.waterfall(callbacks);
 
-    return {
-        'then': function(callback) {
-            callbacks.push(callback);
-            return this;
-        },
-        'done': function(callback) {
-            deferred.done(callback);
-            return this;
-        },
-        'fail': function(callback) {
-            deferred.fail(callback);
-            return this;
-        }
-    };
+utils.Deferred.prototype.promise = function() {
+    return new Promise(this);
 };
 
 expose('jz.utils.Deferred', utils.Deferred);
-exposeProperty('done', utils.Deferred, utils.Deferred.prototype.done);
-exposeProperty('fail', utils.Deferred, utils.Deferred.prototype.fail);
-exposeProperty('then', utils.Deferred, utils.Deferred.prototype.then);
 exposeProperty('resolve', utils.Deferred, utils.Deferred.prototype.resolve);
 exposeProperty('reject', utils.Deferred, utils.Deferred.prototype.reject);
+exposeProperty('promise', utils.Deferred, utils.Deferred.prototype.promise);
+
+
+/**
+ * @constructor
+ * @param {jz.utils.Deferred} deferred
+ */
+function Promise(deferred) {
+    this.deferred = deferred;
+}
+
+/**
+ * @param  {*}  x
+ * @return {Boolean}
+ */
+Promise.isPromise = function(x) {
+    return x && typeof x.then === 'function';
+}
+
+/**
+ * @param  {function} onResolved
+ * @param  {function} onRejected
+ * @return {Promise}
+ */
+Promise.prototype.then = function(onResolved, onRejected) {
+    this.deferred.queue.push({
+        onResolved: onResolved || utils.noop,
+        onRejected: onRejected
+    });
+    return this;
+};
+
+/**
+ * @param  {function} onResolved
+ * @return {Promise}
+ */
+Promise.prototype.done = function(onResolved) {
+    return this.then(onResolved);
+};
+
+/**
+ * @param  {function} onRejected
+ * @return {Promise}
+ */
+Promise.prototype.fail = function(onRejected) {
+    return this.then(utils.noop, onRejected);
+};
+
+exposeProperty('then', Promise, Promise.prototype.then);
+exposeProperty('done', Promise, Promise.prototype.done);
+exposeProperty('fail', Promise, Promise.prototype.fail);

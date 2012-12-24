@@ -49,8 +49,6 @@ function ZipArchiveReader(params){
     this.params = params;
 };
 
-var p = ZipArchiveReader.prototype;
-
 ZipArchiveReader.prototype.init = function() {
     var signature, header, endCentDirHeader, i, n,
         bytes = this.bytes,
@@ -111,7 +109,7 @@ ZipArchiveReader.prototype.init = function() {
         }
     }, 0);
 
-    return deferred;
+    return deferred.promise();
 };
 
 ZipArchiveReader.prototype._finishInit = function(deferred) {
@@ -139,18 +137,16 @@ ZipArchiveReader.prototype._finishInit = function(deferred) {
     utils.parallel(localFileHeaders.map(function(header, i) {
         var deferred = new utils.Deferred;
         utils.bytesToString(header.filename, params.encoding)
-        .done(function(str) {
+        .then(function(str) {
             header.filename = str;
             deferred.resolve();
         });
-        return deferred;
+        return deferred.promise();
     }))
-    .done(function() {
-        deferred.resolve(self);
-    })
-    .fail(function(e) {
-        deferred.reject(e);
-    });
+    .then(
+        deferred.resolve.bind(deferred, self),
+        deferred.reject.bind(deferred)
+    );
 };
 
 ZipArchiveReader.prototype._getLocalFileHeader = function(offset){
@@ -271,7 +267,7 @@ ZipArchiveReader.prototype._decompressFile = function(filename, copy) {
 
 /**
  * @param  {string} filename File name
- * @return {jz.utils.Deferred}
+ * @return {Promise}
  */
 ZipArchiveReader.prototype.getFileAsArrayBuffer = function(filename) {
     var deferred = new utils.Deferred;
@@ -284,7 +280,7 @@ ZipArchiveReader.prototype.getFileAsArrayBuffer = function(filename) {
         }
     }.bind(this), 0);
 
-    return deferred;
+    return deferred.promise();
 };
 
 /**
@@ -297,18 +293,18 @@ ZipArchiveReader.prototype._getFileAs = function(type, filename) {
         deferred = new utils.Deferred;
 
     this.getFileAsBlob(filename)
-    .done(function(blob) {
-        var fr = new FileReader;
-        fr.onloadend = function(e){
-            deferred.resolve(e.target.result);
-        };
-        fr['readAs' + type].apply(fr, [blob].concat(Array.prototype.slice.call(args, 3)));
-    })
-    .fail(function(e) {
-        deferred.reject(e);
-    });
+    .then(
+        function(blob) {
+            var fr = new FileReader;
+            fr.onloadend = function() {
+                deferred.resolve(fr.result);
+            };
+            fr['readAs' + type].apply(fr, [blob].concat(Array.prototype.slice.call(args, 3)));
+        },
+        deferred.reject.bind(deferred)
+    );
 
-    return deferred;
+    return deferred.promise();
 };
 
 /**
@@ -352,7 +348,7 @@ ZipArchiveReader.prototype.getFileAsBlob = function(filename, contentType){
         }
     }.bind(this), 0);
 
-    return deferred;
+    return deferred.promise();
 };
 
 //for worker
@@ -530,7 +526,7 @@ ZipArchiveReaderBlob.prototype.init = function() {
 
     validateFirstLocalFileSignature();
 
-    return deferred;
+    return deferred.promise();
 };
 
 /**
@@ -567,7 +563,7 @@ ZipArchiveReaderBlob.prototype.getFileAsBlob = function(filename, contentType) {
         };
     }, 0);
 
-    return deferred;
+    return deferred.promise();
 };
 
 if (env.isWorker) {
@@ -607,7 +603,6 @@ if (env.isWorker) {
     exposeProperty('getFileAsDataURLSync', ZipArchiveReaderBlob, ZipArchiveReaderBlob.prototype.getFileAsDataURLSync);
 }
 
-exposeProperty('getFileNames', ZipArchiveReaderBlob, ZipArchiveReaderBlob.prototype.getFileNames);
 exposeProperty('getFileAsArrayBuffer', ZipArchiveReaderBlob, ZipArchiveReaderBlob.prototype.getFileAsArrayBuffer);
 exposeProperty('getFileAsText', ZipArchiveReaderBlob, ZipArchiveReaderBlob.prototype.getFileAsText);
 exposeProperty('getFileAsBinaryString', ZipArchiveReaderBlob, ZipArchiveReaderBlob.prototype.getFileAsBinaryString);
