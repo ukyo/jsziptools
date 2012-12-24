@@ -1,5 +1,5 @@
 /**
- * jsziptools 2.3.0
+ * jsziptools 2.3.1
  *
  * The MIT Lisence
  * 
