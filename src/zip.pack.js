@@ -227,7 +227,7 @@ zip.pack = function(params){
     }
     
     var deferred = new utils.Deferred,
-        deferreds = [];
+        promises = [];
     
     // load files with ajax(async).
     function loadFile(item) {
@@ -237,34 +237,31 @@ zip.pack = function(params){
         } else if(item.url) {
             var deferred = new utils.Deferred;
             utils.load(item.url)
-            .done(function(response) {
-                item.buffer = response;
-                item.url = null;
-                deferred.resolve();
-            })
-            .fail(function(e) {
-                deferred.reject(e);
-            });
-            deferreds.push(deferred);
+            .then(
+                function(response) {
+                    item.buffer = response;
+                    item.url = null;
+                    deferred.resolve();
+                },
+                deferred.reject.bind(deferred)
+            );
+            promises.push(deferred.promise());
         }
     }
 
     setTimeout(function() {
         files.forEach(loadFile);
-        utils.parallel(deferreds)
-        .done(function() {
-            try {
-                deferred.resolve(pack());
-            } catch (e) {
-                deferred.reject(e);
-            }
-        })
-        .fail(function(e) {
-            deferred.reject(e);
-        });
+        utils.parallel(promises)
+        .then(
+            function() {
+                try { deferred.resolve(pack()); }
+                catch (e) { deferred.reject(e); }
+            },
+            deferred.reject.bind(deferred)
+        );
     }, 0);
     
-    return deferred;
+    return deferred.promise();
 };
 
 expose('jz.zip.pack', zip.pack);

@@ -15,7 +15,7 @@ asyncTest('test jz.utils.toBytes, jz.utils.bytesToString', function(){
 
             for(i = 0, n = result.length; i < n; ++i) {
                 if(result[i] !== original[i]) {
-                    isCorrect = False;
+                    isCorrect = false;
                     break;
                 }
             }
@@ -34,50 +34,73 @@ asyncTest('test jz.utils.toBytes, jz.utils.bytesToString', function(){
     });
 });
 
-asyncTest('test jz.utils.waterfall', function(){
-    jz.utils.waterfall(function() {
-        return 1;
-    }, function(value) {
-        equal(value, 1, 'sync call');
-
-        var deferred = new jz.utils.Deferred;
-        setTimeout(function() {
-            deferred.resolve(2);
-        }, 0);
-        return deferred;
-    }, function(value) {
-        equal(value, 2, 'async call');
-        this.value = 3;
-    }, function() {
-        equal(this.value, 3, '"this" context is shared');
-
-        var deferred = new jz.utils.Deferred;
-        setTimeout(function() {
-            deferred.resolve(4, 5);
-        }, 0);
-        return deferred;
-    }, function(a, b) {
-        equal(a, 4, 'multi arguments');
-        equal(b, 5, 'multi arguments');
-        return 6;
+asyncTest('test jz.utils.Deferred', function(){
+    var d = new jz.utils.Deferred;
+    setTimeout(function() {
+        d.resolve(10);
+    }, 10);
+    
+    d.promise()
+    .then(function(ms) {
+        equal(ms, 10, 'async call');
+        return ms;
     })
-    .done(function(value) {
-        equal(value, 6, 'done');
+    .then(function(ms) {
+        equal(ms, 10, 'sync call');
+        this.foo = 'foo';
+    })
+    .then(function() {
+        equal(this.foo, 'foo', '"this" context is shared');
+    })
+    .then(function() {
+        var d = new jz.utils.Deferred;
+        setTimeout(function() {
+            d.resolve(1, 2);
+        }, 0);
+        return d.promise();
+    })
+    .then(function(a, b) {
+        equal(a, 1, 'multi arguments');
+        equal(b, 2, 'multi arguments');
+        return 'done';
+    })
+    .done(function(s) {
+        equal(s, 'done', 'done');
         start();
     });
 });
 
-asyncTest('test jz.utils.waterfall (throw error)', function(){
-    jz.utils.waterfall(function() {
+asyncTest('test jz.utils.Deferred (throw error)', function(){
+    var d = new jz.utils.Deferred;
+    setTimeout(function() {
+        d.resolve(10);
+    }, 10);
+    
+    d.promise()
+    .then(function() {
         throw new Error('throw error');
-    }, function() {
-        return 1;
     })
     .done(function() {
         ok(false, 'done callback should not be called')
     })
     .fail(function(e) {
         equal(e.message, 'throw error', 'throw error');
+        start();
+    });
+});
+
+asyncTest('test jz.utils.Deferred (reject)', function(){
+    var d = new jz.utils.Deferred;
+    setTimeout(function() {
+        d.reject(new Error('rejected'));
+    }, 10);
+    
+    d.promise()
+    .done(function() {
+        ok(false, 'done callback should not be called')
+    })
+    .fail(function(e) {
+        equal(e.message, 'rejected', 'rejected');
         start();
     });
 });
