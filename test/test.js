@@ -81,7 +81,7 @@ asyncTest('test jz.utils.Deferred (throw error)', function(){
         throw new Error('throw error');
     })
     .done(function() {
-        ok(false, 'done callback should not be called')
+        ok(false, 'done callback should not be called');
     })
     .fail(function(e) {
         equal(e.message, 'throw error', 'throw error');
