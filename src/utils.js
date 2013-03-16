@@ -175,38 +175,6 @@ expose('jz.utils.detectEncoding', utils.detectEncoding);
 utils.load = function(urls){
     urls = Array.isArray(urls) ? urls : utils.toArray(arguments);
 
-    var deferred = new utils.Deferred;
-
-    // setTimeout(function() {
-    //     utils.parallel(urls.map(function(url, i) {
-    //         var deferred = new utils.Deferred,
-    //             xhr = new XMLHttpRequest;
-
-    //         xhr.open('GET', url);
-    //         xhr.responseType = 'arraybuffer';
-    //         xhr.onloadend = function(){
-    //             var s = xhr.status;
-    //             if(s === 200 || s === 206 || s === 0) {
-    //                 deferred.resolve(xhr.response);
-    //             } else {
-    //                 deferred.reject(new Error('Load Error: ' + s + ' ' + url));
-    //             }
-    //         };
-    //         xhr.onerror = function(e) {
-    //             deferred.reject(e);
-    //         };
-    //         xhr.send();
-
-    //         return deferred.promise();
-    //     }))
-    //     .then(
-    //         deferred.resolve.bind(deferred),
-    //         deferred.reject.bind(deferred)
-    //     );
-    // }, 0);
-
-    // return deferred.promise();
-    
     return utils.parallel(urls.map(function(url, i) {
         var deferred = new utils.Deferred,
             xhr = new XMLHttpRequest;
@@ -274,20 +242,23 @@ utils.parallel = function(promises) {
     function onResolved(i, result) {
         if (isError) return;
         count--;
-        results[i] = result;
+        results[i] = result.length === 1 ? result[0] : result;
         if (!count) deferred.resolve.apply(deferred, results);
     }
 
     function onRejected(e) {
+        if (isError) return;
         isError = true;
         deferred.reject(e);
     }
 
-    // setTimeout(function() {
-        promises.forEach(function(promise, i) {
-            promise.then(onResolved.bind(null, i), onRejected);
-        });
-    // }, 0);
+    
+    promises.forEach(function(promise, i) {
+        function _onResolved() {
+            onResolved(i, utils.toArray(arguments));
+        }
+        promise.then(_onResolved, onRejected);;
+    });
 
     return deferred.promise();
 };
@@ -302,30 +273,49 @@ expose('jz.utils.parallel', utils.parallel);
 utils.Deferred = function() {
     this.queue = [];
     this.context = {};
-    this.current = {};
+    this.resolve = this.resolve.bind(this);
+    this.reject = this.reject.bind(this);
 };
 
-utils.Deferred.prototype.resolve = function() {
+utils.Deferred.STATE_PENDING = 'pending';
+utils.Deferred.STATE_RESOLVED = 'resolved';
+utils.Deferred.STATE_REJECTED = 'rejected';
+
+utils.Deferred.isPromise = function(x) {
+    return x != null && typeof x.then === 'function';
+};
+
+utils.Deferred.prototype.transition = function(isResolve, args) {
     if (!this.queue.length) return;
 
-    this.current = this.queue.shift();
+    var current = this.queue.shift(),
+        handler = isResolve ? current.onResolved : current.onRejected,
+        result;
+
+    if (current.state !== utils.Deferred.STATE_PENDING)
+        throw new Error('jz.utils.Deferred.transition: State has already been ' + current.state);
+    current.state = isResolve ? utils.Deferred.STATE_RESOLVED : utils.Deferred.STATE_REJECTED;
+
+    if (typeof handler !== 'function')
+        return this.transition(isResolve, args);
 
     try {
-        var result = this.current.onResolved.apply(this.context, arguments);
-        Promise.isPromise(result) ?
-            result.then(this.resolve.bind(this), this.reject.bind(this)) :
+        var result = handler.apply(this.context, args);
+        utils.Deferred.isPromise(result) ?
+            result.then(this.resolve, this.reject) :
             this.resolve(result);
     } catch (e) {
         this.reject(e);
     }
 };
 
-utils.Deferred.prototype.reject = function(e) {
-    while (!this.current.onRejected && this.queue.length)
-        this.current = this.queue.shift();
-    this.current.onRejected && this.current.onRejected.call(this.context, e);
+utils.Deferred.prototype.resolve = function() {
+    this.transition(true, utils.toArray(arguments));
 };
 
+utils.Deferred.prototype.reject = function(e) {
+    this.transition(false, utils.toArray(arguments));
+};
 
 utils.Deferred.prototype.promise = function() {
     return new Promise(this);
@@ -361,7 +351,8 @@ Promise.isPromise = function(x) {
 Promise.prototype.then = function(onResolved, onRejected) {
     this.deferred.queue.push({
         onResolved: onResolved || utils.noop,
-        onRejected: onRejected
+        onRejected: onRejected,
+        state: utils.Deferred.STATE_PENDING
     });
     return this;
 };
