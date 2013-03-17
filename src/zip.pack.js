@@ -243,7 +243,7 @@ zip.pack = function(params){
                     item.url = null;
                     deferred.resolve();
                 },
-                deferred.reject.bind(deferred)
+                deferred.reject
             );
             promises.push(deferred.promise());
         }
@@ -257,7 +257,7 @@ zip.pack = function(params){
                 try { deferred.resolve(pack()); }
                 catch (e) { deferred.reject(e); }
             },
-            deferred.reject.bind(deferred)
+            deferred.reject
         );
     }, 0);
     
