@@ -14,7 +14,7 @@ crc32.js
  */
 function getEndCentDirHeader(n, centralDirHeaderSize, offset){
     var view = new DataView(new ArrayBuffer(22));
-    view.setUint32(0, zip.END_SIGNATURE, true); 
+    view.setUint32(0, zip.END_SIGNATURE, true);
     view.setUint16(4, 0, true);
     view.setUint16(6, 0, true);
     view.setUint16(8, n, true);
@@ -25,101 +25,105 @@ function getEndCentDirHeader(n, centralDirHeaderSize, offset){
     return new Uint8Array(view.buffer);
 }
 
+
 /**
- * @constructor
- * 
- * @param {ArrayBuffer}     buffer
- * @param {ArrayBuffer}     compressedBuffer
- * @param {string}          filename
- * @param {Date}            date
- * @param {boolean|number}  isDir
- * @param {boolean|number}  isDeflate
+ * [ZipElement description]
+ * @param {ArrayBuffer} buffer
+ * @param {string}      filename
+ * @param {Date}        date
+ * @param {Boolean}     isDir
+ * @param {number}      level
+ * @param {number}      offset
  */
-function HeaderBuilder(buffer, compressedBuffer, filename, date, offset, isDir, isDeflate){
+function ZipElement(buffer, filename, date, isDir, level, offset) {
     this.buffer = buffer;
-    this.compressedBuffer = compressedBuffer;
+    this.compressedBuffer = buffer;
     this.filename = utils.toBytes(filename);
     this.date = date;
+    this.level = level;
     this.offset = offset;
     this.dirFlag = isDir ? 0x10 : 0;
-    this.deflateFlag = isDeflate ? 0x8 : 0;
-    this._commonHeader = this._getCommonHeader();
-    this._cache = {lf: null, cd: null};
+
+    if(level > 0 && !isDir) {
+        this.compressedBuffer = algorithms.deflate(buffer, level);
+        this.deflateFlag = 0x8;
+    } else {
+        this.compressedBuffer = buffer;
+        this.deflateFlag = 0;
+    }
+
+    this.commonHeader = this.getCommonHeader();
 }
 
+ZipElement.prototype.getCommonHeader = function() {
+    var view = new DataView(new ArrayBuffer(26)),
+        compsize = this.compressedBuffer.byteLength,
+        uncompsize = this.buffer.byteLength,
+        utf8Flag = 0x0800;
 
-HeaderBuilder.prototype = {
-    /**
-     * @return {Uint8Array}
-     */
-    _getCommonHeader: function(){
-        var view = new DataView(new ArrayBuffer(26)),
-            compsize = this.compressedBuffer.byteLength,
-            uncompsize = this.buffer.byteLength,
-            utf8Flag = 0x0800;
-        view.setUint16(0, 10, true); // version needed to extract
-        view.setUint16(2, utf8Flag, true); // general purpose bit flag
-        view.setUint16(4, this.deflateFlag, true); // compression method
-        view.setUint16(6, getFileTime(this.date), true); // last mod file time
-        view.setUint16(8, getFileDate(this.date), true); // last mod file date
-        view.setUint32(10, algorithms.crc32(this.buffer), true); // crc-32
-        view.setUint32(14, compsize, true); // compressed size
-        view.setUint32(18, uncompsize, true); // uncompressed size
-        view.setUint16(22, this.filename.length, true); // file name length
-        view.setUint16(24, 0, true); // extra field length
-        return new Uint8Array(view.buffer);
-    },
-    
-    /**
-     * @return {Uint8Array}
-     */
-    getLocalFileHeader: function(){
-        if(this._cache.lf) return this._cache.lf;
-        
-        var view = new DataView(new ArrayBuffer(4 + this._commonHeader.length + this.filename.length)),
-            arr = new Uint8Array(view.buffer),
-            offset = 0;
-        
-        view.setUint32(offset, zip.LOCAL_FILE_SIGNATURE, true); offset += 4;
-        arr.set(this._commonHeader, offset); offset += this._commonHeader.length;
-        arr.set(this.filename, offset);
-        return this._cache.lf = new Uint8Array(view.buffer);
-    },
-    
-    /**
-     * @return {Uint8Array}
-     */
-    getCentralDirHeader: function(){
-        if(this._cache.cd) return this._cache.cd;
-        
-        var view = new DataView(new ArrayBuffer(20 + this._commonHeader.length + this.filename.length)),
-            arr = new Uint8Array(view.buffer),
-            offset = 0;
-        
-        view.setUint32(0, zip.CENTRAL_DIR_SIGNATURE, true); offset += 4; // central file header signature
-        view.setUint16(offset, 0x14, true); offset += 2; // version made by
-        arr.set(this._commonHeader, offset); offset += this._commonHeader.length;
-        view.setUint16(offset, 0, true); offset += 2; // file comment length
-        view.setUint16(offset, 0, true); offset += 2; // disk number start
-        view.setUint16(offset, 0, true); offset += 2; // internal file attributes
-        view.setUint32(offset, this.dirFlag, true); offset += 4; // external file attributes
-        view.setUint32(offset, this.offset, true); offset += 4; // relative offset of local header
-        arr.set(this.filename, offset); // file name
-        return this._cache.cd = new Uint8Array(view.buffer);
-    },
-    
-    /**
-     * @return {number}
-     */
-    getAchiveLength: function(){
-        return this.getLocalFileHeader().length + this.compressedBuffer.byteLength;
-    }
+    view.setUint16(0, 10, true); // version needed to extract
+    view.setUint16(2, utf8Flag, true); // general purpose bit flag
+    view.setUint16(4, this.deflateFlag, true); // compression method
+    view.setUint16(6, getFileTime(this.date), true); // last mod file time
+    view.setUint16(8, getFileDate(this.date), true); // last mod file date
+    view.setUint32(10, algorithms.crc32(this.buffer), true); // crc-32
+    view.setUint32(14, compsize, true); // compressed size
+    view.setUint32(18, uncompsize, true); // uncompressed size
+    view.setUint16(22, this.filename.length, true); // file name length
+    view.setUint16(24, 0, true); // extra field length
+
+    return new Uint8Array(view.buffer);
+};
+
+/**
+ * @return {Uint8Array}
+ */
+ZipElement.prototype.getLocalFile = function() {
+    return utils.concatByteArrays(
+        this.getLocalFileHeader(),
+        new Uint8Array(this.compressedBuffer)
+    );
+};
+
+/**
+ * @return {Uint8Array}
+ */
+ZipElement.prototype.getLocalFileHeader = function() {
+    var view = new DataView(new ArrayBuffer(4 + this.commonHeader.length + this.filename.length)),
+        bytes = new Uint8Array(view.buffer),
+        offset = 0;
+
+    view.setUint32(offset, zip.LOCAL_FILE_SIGNATURE, true); offset += 4;
+    bytes.set(this.commonHeader, offset); offset += this.commonHeader.length;
+    bytes.set(this.filename, offset);
+    return bytes;
+};
+
+/**
+ * @return {Uint8Array}
+ */
+ZipElement.prototype.getCentralDirHeader = function() {
+    var view = new DataView(new ArrayBuffer(20 + this.commonHeader.length + this.filename.length)),
+        bytes = new Uint8Array(view.buffer),
+        offset = 0;
+
+    view.setUint32(0, zip.CENTRAL_DIR_SIGNATURE, true); offset += 4; // central file header signature
+    view.setUint16(offset, 0x14, true); offset += 2; // version made by
+    bytes.set(this.commonHeader, offset); offset += this.commonHeader.length;
+    view.setUint16(offset, 0, true); offset += 2; // file comment length
+    view.setUint16(offset, 0, true); offset += 2; // disk number start
+    view.setUint16(offset, 0, true); offset += 2; // internal file attributes
+    view.setUint32(offset, this.dirFlag, true); offset += 4; // external file attributes
+    view.setUint32(offset, this.offset, true); offset += 4; // relative offset of local header
+    bytes.set(this.filename, offset); // file name
+
+    return bytes;
 };
 
 
 /**
  * Get DOS style Date(year, month, day).
- * 
+ *
  * @param {Date} date
  * @return {number}
  */
@@ -130,7 +134,7 @@ function getFileDate(date){
 
 /**
  * Get DOS style Time(hour, minute, second).
- * 
+ *
  * @param {Date} date
  * @return {number}
  */
@@ -141,10 +145,10 @@ function getFileTime(date){
 
 /**
  * Generate a zip file buffer from a js object.
- * 
+ *
  * @param {Object} params
  * @return {Promise}
- * 
+ *
  * @example
  * var files = [
  *     {name: 'foo.txt', str: 'foo'}, // String
@@ -158,7 +162,7 @@ function getFileTime(date){
  *         ]}
  *     ], level: 8}
  * ];
- * 
+ *
  * jz.zip.pack({
  *     files: files,
  *     level: 6, // default is 6
@@ -173,24 +177,25 @@ function getFileTime(date){
 zip.pack = function(params){
     var n = 0,
         offset = 0,
-        archives = [],
+        archive = [],
         centralDirs = [],
         date = new Date(),
         index = 0,
         files, level;
-    
+
     params = Array.isArray(params) ? {files: params} : params;
     files = params.files;
     level = typeof params.level === 'number' ? level : 6;
-    
+
     function _pack(level, path, item){
-        var name, buffer, compressedBuffer, hb, isDir, isDeflate,
+        var name, buffer, zipElement, localFile,
             dir = item.children || item.dir || item.folder;
-        
+
+        level = typeof item.level === 'number' ? item.level : level;
+
         if(dir){
-            name = path + item.name + (item.name.substr(-1) === '/' ? '' : '/');
             buffer = new ArrayBuffer(0);
-            isDir = true;
+            name = path + item.name + (item.name.substr(-1) === '/' ? '' : '/');
         } else if(item.buffer || item.str){
             buffer = utils.toBytes(item.buffer || item.str);
             name = path + item.name;
@@ -198,22 +203,15 @@ zip.pack = function(params){
             throw new Error('jz.zip.pack: This type is not supported.');
         }
 
-        compressedBuffer = buffer;
-        level = typeof item.level === 'number' ? item.level : level;
-        
-        if(level > 0 && !dir) {
-            compressedBuffer = algorithms.deflate(buffer, level);
-            isDeflate = true;
-        }
-        
-        hb = new HeaderBuilder(buffer, compressedBuffer, name, date, offset, isDir, isDeflate);
-        archives.push(hb.getLocalFileHeader());
-        archives.push(new Uint8Array(compressedBuffer));
-        centralDirs.push(hb.getCentralDirHeader());
-        
-        offset += hb.getAchiveLength();
+        zipElement = new ZipElement(buffer, name, date, dir, level, offset);
+        localFile = zipElement.getLocalFile();
+
+        archive.push(localFile);
+        centralDirs.push(zipElement.getCentralDirHeader());
+
+        offset += localFile.byteLength;
         n++;
-        
+
         if(dir){
             dir.forEach(_pack.bind(null, level, name));
         }
@@ -221,14 +219,14 @@ zip.pack = function(params){
 
     function pack(){
         files.forEach(_pack.bind(null, level, ''));
-        archives = archives.concat(centralDirs);
-        archives.push(getEndCentDirHeader(n, utils.concatByteArrays(centralDirs).length, offset));
-        return utils.concatByteArrays(archives).buffer;
+        archive.push.apply(archive, centralDirs);
+        archive.push(getEndCentDirHeader(n, utils.concatByteArrays(centralDirs).length, offset));
+        return utils.concatByteArrays(archive).buffer;
     }
-    
+
     var deferred = new utils.Deferred,
         promises = [];
-    
+
     // load files with ajax(async).
     function loadFile(item) {
         var dir = item.children || item.dir || item.folder;
@@ -260,7 +258,7 @@ zip.pack = function(params){
             deferred.reject
         );
     }, 0);
-    
+
     return deferred.promise();
 };
 
