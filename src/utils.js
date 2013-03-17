@@ -24,7 +24,7 @@ utils.toBytes = function(buffer){
         case Array:
         case ArrayBuffer: return new Uint8Array(buffer);
         case Uint8Array: return buffer;
-        case Int8Array: return new Uint8Array(buffer.buffer);
+        case Int8Array: return new Uint8Array(buffer.buffer, buffer.byteOffset, buffer.byteLength);
     }
 };
 
@@ -91,9 +91,7 @@ utils.bytesToString = function(bytes, encoding) {
         deferred.resolve(fr.result);
     };
 
-    fr.onerror = function(e) {
-        deferred.reject(e);
-    };
+    fr.onerror = deferred.reject;
 
     fr.readAsText(new Blob([bytes]), encoding || 'UTF-8');
 
@@ -183,15 +181,11 @@ utils.load = function(urls){
         xhr.responseType = 'arraybuffer';
         xhr.onloadend = function(){
             var s = xhr.status;
-            if(s === 200 || s === 206 || s === 0) {
-                deferred.resolve(xhr.response);
-            } else {
+            (s === 200 || s === 206 || s === 0) ?
+                deferred.resolve(xhr.response) :
                 deferred.reject(new Error('Load Error: ' + s + ' ' + url));
-            }
         };
-        xhr.onerror = function(e) {
-            deferred.reject(e);
-        };
+        xhr.onerror = deferred.reject;
         xhr.send();
 
         return deferred.promise();
