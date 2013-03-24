@@ -83,7 +83,7 @@ unzip:
 ```javascript
 jz.zip.unpack({
   buffer: buffer,
-  encoding: 'cp932'
+  encoding: 'Sfift_JIS'
 })
 .done(function(reader){
   // get file pathes.
