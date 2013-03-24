@@ -164,7 +164,7 @@ jz.utils.parallel(
 
 ### jz.utils.Deferred
 
-```
+```javascript
 // wait "ms" milliseconds.
 function wait(ms) {
   var deferred = new jz.utils.Deferred;
@@ -199,7 +199,7 @@ jz.utils.load('foo.zip')
 
 You can use the `build.py` to build jsziptools.
 
-```
+```sh
 $ #see help
 $ ./build.py -h
 usage: build.py [-h] [-C COMPILER_PATH] [-m MODULES] [-o OUTPUT_PATH]
@@ -249,7 +249,7 @@ Example of a configuration file:
 
 Usage:
 
-```
+```sh
 $ ./build.py -c buildconf.json
 $ #add to jquery
 $ ./build.py -c jquery.buildconf.json

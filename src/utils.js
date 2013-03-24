@@ -37,7 +37,7 @@ utils.stringToBytes = function(str){
         byteLength = 32,
         bytes = new Uint8Array(byteLength),
         i, c, _bytes;
-    
+
     for(i = 0; i < n; ++i){
         c = str.charCodeAt(i);
         if(c <= 0x7F){
@@ -86,7 +86,7 @@ utils.bytesToString = function(bytes, encoding) {
 
     var fr = new FileReader(),
         deferred = new utils.Deferred;
-    
+
     fr.onload = function() {
         deferred.resolve(fr.result);
     };
@@ -208,7 +208,7 @@ utils.concatByteArrays = function(byteArrays){
         size = 0,
         offset = 0,
         i, n, ret;
-    
+
     for(i = 0, n = byteArrays.length; i < n; ++i) size += byteArrays[i].length;
     ret = new Uint8Array(size);
     for(i = 0; i < n; ++i) {
@@ -246,7 +246,7 @@ utils.parallel = function(promises) {
         deferred.reject(e);
     }
 
-    
+
     promises.forEach(function(promise, i) {
         function _onResolved() {
             onResolved(i, utils.toArray(arguments));
@@ -276,7 +276,7 @@ utils.Deferred.STATE_RESOLVED = 'resolved';
 utils.Deferred.STATE_REJECTED = 'rejected';
 
 utils.Deferred.isPromise = function(x) {
-    return x != null && typeof x.then === 'function';
+    return x instanceof Promise || x != null && typeof x.then === 'function';
 };
 
 utils.Deferred.prototype.transition = function(isResolve, args) {
@@ -330,21 +330,13 @@ function Promise(deferred) {
 }
 
 /**
- * @param  {*}  x
- * @return {Boolean}
- */
-Promise.isPromise = function(x) {
-    return x && typeof x.then === 'function';
-}
-
-/**
  * @param  {function} onResolved
  * @param  {function} onRejected
  * @return {Promise}
  */
 Promise.prototype.then = function(onResolved, onRejected) {
     this.deferred.queue.push({
-        onResolved: onResolved || utils.noop,
+        onResolved: onResolved,
         onRejected: onRejected,
         state: utils.Deferred.STATE_PENDING
     });
@@ -364,7 +356,7 @@ Promise.prototype.done = function(onResolved) {
  * @return {Promise}
  */
 Promise.prototype.fail = function(onRejected) {
-    return this.then(utils.noop, onRejected);
+    return this.then(null, onRejected);
 };
 
 exposeProperty('then', Promise, Promise.prototype.then);
