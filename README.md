@@ -211,11 +211,8 @@ optional arguments:
   -m MODULES         Set module names you want to use.
   -o OUTPUT_PATH     Set a output file path.
   -c CONF_FILE_PATH  Set a configuration file path.
-  -j JQUERY_WRAP     Add to the jQuery namespace.
 $ #select modules
 $ ./build.py -m gz.decompress zlib.decompress -o build/gz_zlib_decomp.min.js
-$ #add to jquery
-$ ./build.py -m gz.decompress zlib.decompress -o build/gz_zlib_decomp.min.js -j jz
 ```
 
 modules:
@@ -237,13 +234,12 @@ Example of a configuration file:
 ```json
 {
     "compiler": "./compiler.jar",
-    "output": "./build/jQuery.jsziptools.unzip.min.js",
+    "output": "./build/jsziptools.unzip.min.js",
     "files": [
         "src/algorithms/crc32.js",
         "src/algorithms/inflate.js",
         "src/zip.unpack.js"
-    ],
-    "jquery": "jz"
+    ]
 }
 ```
 
@@ -251,6 +247,4 @@ Usage:
 
 ```sh
 $ ./build.py -c buildconf.json
-$ #add to jquery
-$ ./build.py -c jquery.buildconf.json
 ```

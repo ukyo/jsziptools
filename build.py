@@ -35,12 +35,6 @@ parser.add_argument('-c',
                     dest='conf',
                     help='Set a configuration file path.')
 
-parser.add_argument('-j',
-                    metavar='JQUERY_WRAP',
-                    dest='jquery',
-                    help='Add to the jQuery namespace.',
-                    default=JQUERY_WRAP)
-
 
 ALL_FILES = (
     "src/zpipe/dist/zpipe.raw.js",
@@ -162,13 +156,11 @@ def main():
         compiler = conf['compiler'] if 'compiler' in conf else CLOSURE_COMPILER_PATH
         output = conf['output'] if 'output' in conf else OUTPUT_PATH
         files = conf['files']
-        jquery = conf['jquery'] if 'jquery' in conf else JQUERY_WRAP
     else:
         compiler = option.compiler
         output = option.output
         option.module = [option.module] if type(option.module) == str else option.module
         files = select_modules(option.module)
-        jquery = option.jquery
 
     command = "java -jar %s --compilation_level ADVANCED_OPTIMIZATIONS \
         --js %s \
