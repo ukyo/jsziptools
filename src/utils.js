@@ -233,31 +233,38 @@ utils.parallel = function(promises) {
         count = promises.length,
         isError = false;
 
-    function onResolved(i, result) {
-        if (isError) return;
-        count--;
-        results[i] = result.length === 1 ? result[0] : result;
-        if (!count) deferred.resolve.apply(deferred, results);
+    if (promises.some(utils.Deferred.isPromise)) {
+        var onResolved = function(i, result) {
+            if (isError) return;
+            count--;
+            results[i] = result.length === 1 ? result[0] : result;
+            if (!count) deferred.resolve.apply(deferred, results);
+        };
+
+        var onRejected = function(e) {
+            if (isError) return;
+            isError = true;
+            deferred.reject(e);
+        };
+
+        promises.forEach(function(promise, i) {
+            if (!utils.Deferred.isPromise(promise)) return onResolved(i, promise);
+            promise.then(
+                function() { onResolved(i, utils.toArray(arguments)) },
+                onRejected
+            );
+        });
+    } else {
+        setTimeout(function() {
+            deferred.resolve.apply(deferred, promises);
+        }, 0);
     }
-
-    function onRejected(e) {
-        if (isError) return;
-        isError = true;
-        deferred.reject(e);
-    }
-
-
-    promises.forEach(function(promise, i) {
-        function _onResolved() {
-            onResolved(i, utils.toArray(arguments));
-        }
-        promise.then(_onResolved, onRejected);;
-    });
 
     return deferred.promise();
 };
 
 expose('jz.utils.parallel', utils.parallel);
+expose('jz.utils.when', utils.parallel);
 
 
 /**
@@ -266,6 +273,7 @@ expose('jz.utils.parallel', utils.parallel);
  */
 utils.Deferred = function() {
     this.queue = [];
+    this.index = 0;
     this.context = {};
     this.resolve = this.resolve.bind(this);
     this.reject = this.reject.bind(this);
@@ -280,11 +288,13 @@ utils.Deferred.isPromise = function(x) {
 };
 
 utils.Deferred.prototype.transition = function(isResolve, args) {
-    if (!this.queue.length) return;
+    if (this.queue.length <= this.index) return;
 
-    var current = this.queue.shift(),
+    var current = this.queue[this.index++],
         handler = isResolve ? current.onResolved : current.onRejected,
         result;
+
+    current.onResolved = current.onResolved = null; // gc
 
     if (current.state !== utils.Deferred.STATE_PENDING)
         throw new Error('jz.utils.Deferred.transition: State has already been ' + current.state);

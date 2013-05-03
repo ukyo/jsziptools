@@ -3,6 +3,65 @@ test('test jz.utils.toBytes', function(){
     equal(jz.utils.toBytes(new Uint8Array(10)).constructor, Uint8Array, 'uint8array to uint8array');
 });
 
+asyncTest('test jz.utils.parallel', function() {
+    jz.utils.parallel()
+    .then(function() {
+        equal(arguments.length, 0, 'no args');
+        return jz.utils.parallel([]);
+    })
+    .then(function() {
+        equal(arguments.length, 0, 'a empty array');
+        return jz.utils.parallel(1);
+    })
+    .then(function(a) {
+        equal(arguments.length, 1, 'a argument is not a Promise.');
+        equal(a, 1);
+        return jz.utils.parallel(1, 2);
+    })
+    .then(function(a, b) {
+        equal(arguments.length, 2, 'arguments are not Promises.');
+        equal(a, 1);
+        equal(b, 2);
+        return jz.utils.parallel([1]);
+    })
+    .then(function(a) {
+        equal(arguments.length, 1, 'a argument is not a Promise.');
+        equal(a, 1);
+        return jz.utils.parallel([1, 2]);
+    })
+    .then(function(a, b) {
+        equal(arguments.length, 2, 'arguments are not Promises.');
+        equal(a, 1);
+        equal(b, 2);
+        var def = new jz.utils.Deferred;
+        setTimeout(def.resolve.bind(def, 1), 0);
+        return jz.utils.parallel(def.promise());
+    })
+    .then(function(a) {
+        equal(arguments.length, 1, 'a argument is a Promise.');
+        equal(a, 1);
+        var def1 = new jz.utils.Deferred;
+        var def2 = new jz.utils.Deferred;
+        setTimeout(def1.resolve.bind(def1, 1), 0);
+        setTimeout(def2.resolve.bind(def2, 2), 0);
+        return jz.utils.parallel(def1.promise(), def2.promise());
+    })
+    .then(function(a, b) {
+        equal(arguments.length, 2, 'arguments are Promises.');
+        equal(a, 1);
+        equal(b, 2);
+        var def = new jz.utils.Deferred;
+        setTimeout(def.resolve.bind(def, 1), 0);
+        return jz.utils.parallel(def.promise(), 2);
+    })
+    .then(function(a, b) {
+        equal(arguments.length, 2, 'arguments are a Promise and a number.');
+        equal(a, 1);
+        equal(b, 2);
+    })
+    .done(start);
+});
+
 asyncTest('test jz.utils.toBytes, jz.utils.bytesToString', function(){
     jz.utils.load('kokoro_utf8.txt')
     .done(function(kokoro) {
@@ -25,7 +84,7 @@ asyncTest('test jz.utils.toBytes, jz.utils.bytesToString', function(){
 
             jz.utils.bytesToString(original, 'UTF-8')
             .done(function(str) {
-                equal(str, fr.result, 'bytesToString: check all chars');    
+                equal(str, fr.result, 'bytesToString: check all chars');
                 start();
             });
         };
@@ -39,7 +98,7 @@ asyncTest('test jz.utils.Deferred', function(){
     setTimeout(function() {
         d.resolve(10);
     }, 10);
-    
+
     d.promise()
     .then(function(ms) {
         equal(ms, 10, 'async call');
@@ -75,7 +134,7 @@ asyncTest('test jz.utils.Deferred (throw error)', function(){
     setTimeout(function() {
         d.resolve(10);
     }, 10);
-    
+
     d.promise()
     .then(function() {
         throw new Error('throw error');
@@ -94,7 +153,7 @@ asyncTest('test jz.utils.Deferred (reject)', function(){
     setTimeout(function() {
         d.reject(new Error('rejected'));
     }, 10);
-    
+
     d.promise()
     .done(function() {
         ok(false, 'done callback should not be called')
@@ -126,13 +185,13 @@ test('test jz.algorithms.deflate, jz.algorithms.inflate', function(){
     } catch (e) {
         ok(e, 'test error: invalid deflate stream');
     }
-    
+
     var compressed = jz.algorithms.deflate(ui8arr);
     ok(compressed, 'compress with deflate');
-    
+
     var decompressed = jz.algorithms.inflate(compressed);
     ok(decompressed, 'decompress with inflate');
-    
+
     ui8arr = new Uint8Array(decompressed);
     var arr2 = [];
     for(var i = 0; i < ui8arr.length; ++i) arr2.push(ui8arr[i]);

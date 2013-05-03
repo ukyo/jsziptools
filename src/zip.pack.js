@@ -249,20 +249,14 @@ zip.pack = function(params){
 
     setTimeout(function() {
         files.forEach(loadFile);
-        if (promises.length) {
-            utils.parallel(promises)
-            .then(
-                function() {
-                    try { deferred.resolve(pack()); }
-                    catch (e) { deferred.reject(e); }
-                },
-                deferred.reject
-            );
-        }
-        else {
-            try { deferred.resolve(pack()); }
-            catch (e) { deferred.reject(e); }
-        }
+        utils.parallel(promises)
+        .then(
+            function() {
+                try { deferred.resolve(pack()); }
+                catch (e) { deferred.reject(e); }
+            },
+            deferred.reject
+        );
     }, 0);
 
     return deferred.promise();
