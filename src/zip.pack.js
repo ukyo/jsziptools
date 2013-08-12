@@ -36,6 +36,7 @@ function getEndCentDirHeader(n, centralDirHeaderSize, offset){
  * @param {number}      offset
  */
 function ZipElement(buffer, filename, date, isDir, level, offset) {
+    if (buffer.byteLength === 0) level = 0;
     this.buffer = buffer;
     this.compressedBuffer = buffer;
     this.filename = utils.toBytes(filename);
@@ -196,12 +197,17 @@ zip.pack = function(params){
         if(dir){
             buffer = new ArrayBuffer(0);
             name = path + item.name + (item.name.substr(-1) === '/' ? '' : '/');
-        } else if(item.buffer || item.str){
-            buffer = utils.toBytes(item.buffer || item.str);
-            name = path + item.name;
         } else {
-            throw new Error('jz.zip.pack: This type is not supported.');
+            if (item.buffer != null) buffer = item.buffer;
+            if (item.str != null) buffer = item.str;
+            if (buffer != null) {
+                buffer = utils.toBytes(buffer);
+                name = path + item.name;
+            } else {
+                throw new Error('jz.zip.pack: This type is not supported.');
+            }
         }
+
 
         zipElement = new ZipElement(buffer, name, date, dir, level, offset);
         localFile = zipElement.getLocalFile();
