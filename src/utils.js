@@ -4,8 +4,12 @@ jsziptools.js
 
 utils.noop = function() {};
 
-utils.toArray = function(obj) {
-    return Array.prototype.slice.call(obj);
+/**
+ * @param {*} arg
+ * @return {Array}
+ */
+utils.toArray = function(arg) {
+    return Array.prototype.slice.call(arg);
 };
 
 
@@ -31,6 +35,10 @@ utils.toBytes = function(buffer){
 expose('jz.utils.toBytes', utils.toBytes);
 
 
+/**
+ * @param {string} str
+ * @return {Uint8Array}
+ */
 utils.stringToBytes = function(str){
     var n = str.length,
         idx = -1,
