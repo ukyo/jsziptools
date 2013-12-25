@@ -1,0 +1,33 @@
+{
+  "name": "jsziptools",
+  "version": "2.3.2",
+  "description": "It's a utility of zlib, gzip and zip format binary data.",
+  "main": "jsziptools.js",
+  "directories": {
+    "example": "examples",
+    "test": "test"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/ukyo/jsziptools.git"
+  },
+  "keywords": [
+    "zip",
+    "gz",
+    "zlib"
+  ],
+  "author": "Syu Kato",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/ukyo/jsziptools/issues"
+  },
+  "devDependencies": {
+    "grunt-contrib-uglify": "~0.2.7",
+    "grunt": "~0.4.2",
+    "grunt-contrib-concat": "~0.3.0",
+    "grunt-contrib-clean": "~0.5.0"
+  }
+}

@@ -12,8 +12,6 @@ utils.js
  * @param {ArrayBuffer|Uint8Array|Array|string} bytes zlib format buffer.
  * @return {ArrayBuffer} buffer.
  */
-zlib.decompress = function(bytes, check){
-    return zpipe.inflate(utils.toBytes(bytes), true, true).buffer;
-};
-
-expose('jz.zlib.decompress', zlib.decompress);
+expose('jz.zlib.decompress', function (bytes, chunkSize) {
+  return zlib['inflate'](utils.toBytes(bytes), chunkSize).buffer;
+});

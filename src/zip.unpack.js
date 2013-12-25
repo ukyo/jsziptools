@@ -248,11 +248,10 @@ ZipArchiveReader.prototype._getFileInfo = function(filename) {
 /**
  * @param  {Uint8Array} bytes        Compressed bytes
  * @param  {boolean}    isCompressed Is file compressed.
- * @param  {boolean}    copy         If 'copy' is true, return copy.
  * @return {Uint8Array} Decompressed bytes.
  */
-ZipArchiveReader.prototype._decompress = function(bytes, isCompressed, copy) {
-    return isCompressed ? zpipe.inflate(bytes, false, copy) : copy ? new Uint8Array(bytes) : bytes;
+ZipArchiveReader.prototype._decompress = function(bytes, isCompressed) {
+    return isCompressed ? algorithms.inflate(bytes) : bytes;
 }
 
 /**
@@ -556,7 +555,7 @@ ZipArchiveReaderBlob.prototype.getFileAsBlob = function(filename, contentType) {
         fr.readAsArrayBuffer(blob);
         fr.onloadend = function() {
             try {
-                deferred.resolve(new Blob([zInflate(new Uint8Array(fr.result), false, false)], {type: contentType}));
+                deferred.resolve(new Blob([algorithms.inflate(new Uint8Array(fr.result))], {type: contentType}));
             } catch (e) {
                 deferred.reject(e);
             }

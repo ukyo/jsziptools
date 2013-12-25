@@ -1,6 +1,5 @@
 importScripts(
-    '../src/zpipe/dist/zpipe.raw.js',
-    '../src/zpipe/src/zpipe.funcs.js',
+    '../vendor/zlib-asm/zlib.js',
     '../src/jsziptools.js',
     '../src/utils.js',
     '../src/algorithms/adler32.js',

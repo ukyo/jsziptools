@@ -37,8 +37,7 @@ parser.add_argument('-c',
 
 
 ALL_FILES = (
-    "src/zpipe/dist/zpipe.raw.js",
-    "src/zpipe/src/zpipe.funcs.js",
+    "vendor/zlib-asm/zlib.js",
     "src/jsziptools.js",
     "src/utils.js",
     "src/algorithms/adler32.js",
@@ -54,8 +53,7 @@ ALL_FILES = (
 )
 
 selected_modules = {
-    "src/zpipe/dist/zpipe.raw.js": True,
-    "src/zpipe/src/zpipe.funcs.js": True,
+    "vendor/zlib-asm/zlib.js": True,
     "src/jsziptools.js": True,
     "src/utils.js": True,
     "src/algorithms/adler32.js": False,

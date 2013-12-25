@@ -9,8 +9,8 @@ utils.js
  * @param {number} level
  * @return {ArrayBuffer}
  */
-algorithms.deflate = function(bytes, level){
-    return zpipe.deflate(utils.toBytes(bytes), level, false, true).buffer;
+algorithms.deflate = function (bytes, level, chunkSize) {
+  return zlib['rawDeflate'](utils.toBytes(bytes), level, chunkSize).buffer;
 };
 
 expose('jz.algorithms.deflate', algorithms.deflate);

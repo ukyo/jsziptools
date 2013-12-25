@@ -13,8 +13,6 @@ utils.js
  * @param {integer} level compress level.
  * @return {ArrayBuffer} zlib format buffer.
  */
-zlib.compress = function(bytes, level){
-    return zpipe.deflate(utils.toBytes(bytes), level, true, true).buffer;
-};
-
-expose('jz.zlib.compress', zlib.compress);
+expose('jz.zlib.compress', function (bytes, level, chunkSize) {
+  return zlib['deflate'](utils.toBytes(bytes), level, chunkSize).buffer;
+});
