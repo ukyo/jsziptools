@@ -1,3 +1,6 @@
 [submodule "vendor/zlib-asm"]
 	path = vendor/zlib-asm
 	url = git@github.com:ukyo/zlib-asm.git
+[submodule "vendor/ES6-Promises"]
+	path = vendor/ES6-Promises
+	url = git@github.com:jakearchibald/ES6-Promises.git
