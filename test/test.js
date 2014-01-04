@@ -3,164 +3,23 @@ test('test jz.utils.toBytes', function(){
     equal(jz.utils.toBytes(new Uint8Array(10)).constructor, Uint8Array, 'uint8array to uint8array');
 });
 
-asyncTest('test jz.utils.parallel', function() {
-    jz.utils.parallel()
-    .then(function() {
-        equal(arguments.length, 0, 'no args');
-        return jz.utils.parallel([]);
-    })
-    .then(function() {
-        equal(arguments.length, 0, 'a empty array');
-        return jz.utils.parallel(1);
-    })
-    .then(function(a) {
-        equal(arguments.length, 1, 'a argument is not a Promise.');
-        equal(a, 1);
-        return jz.utils.parallel(1, 2);
-    })
-    .then(function(a, b) {
-        equal(arguments.length, 2, 'arguments are not Promises.');
-        equal(a, 1);
-        equal(b, 2);
-        return jz.utils.parallel([1]);
-    })
-    .then(function(a) {
-        equal(arguments.length, 1, 'a argument is not a Promise.');
-        equal(a, 1);
-        return jz.utils.parallel([1, 2]);
-    })
-    .then(function(a, b) {
-        equal(arguments.length, 2, 'arguments are not Promises.');
-        equal(a, 1);
-        equal(b, 2);
-        var def = new jz.utils.Deferred;
-        setTimeout(def.resolve.bind(def, 1), 0);
-        return jz.utils.parallel(def.promise());
-    })
-    .then(function(a) {
-        equal(arguments.length, 1, 'a argument is a Promise.');
-        equal(a, 1);
-        var def1 = new jz.utils.Deferred;
-        var def2 = new jz.utils.Deferred;
-        setTimeout(def1.resolve.bind(def1, 1), 0);
-        setTimeout(def2.resolve.bind(def2, 2), 0);
-        return jz.utils.parallel(def1.promise(), def2.promise());
-    })
-    .then(function(a, b) {
-        equal(arguments.length, 2, 'arguments are Promises.');
-        equal(a, 1);
-        equal(b, 2);
-        var def = new jz.utils.Deferred;
-        setTimeout(def.resolve.bind(def, 1), 0);
-        return jz.utils.parallel(def.promise(), 2);
-    })
-    .then(function(a, b) {
-        equal(arguments.length, 2, 'arguments are a Promise and a number.');
-        equal(a, 1);
-        equal(b, 2);
-    })
-    .done(start);
-});
-
-asyncTest('test jz.utils.toBytes, jz.utils.bytesToString', function(){
+asyncTest('test jz.utils.bytesToString', function(){
+    var original;
     jz.utils.load('kokoro_utf8.txt')
-    .done(function(kokoro) {
-        var original = new Uint8Array(kokoro),
-            fr = new FileReader();
-
-        fr.onloadend = function(){
-            var result = jz.utils.toBytes(fr.result),
-                i, n, isCorrect = true;
-
-            for(i = 0, n = result.length; i < n; ++i) {
-                if(result[i] !== original[i]) {
-                    isCorrect = false;
-                    break;
-                }
-            }
-
-            equal(result.length, original.length, 'toBytes: check byte length');
-            ok(isCorrect, 'toBytes: check all bytes');
-
-            jz.utils.bytesToString(original, 'UTF-8')
-            .done(function(str) {
-                equal(str, fr.result, 'bytesToString: check all chars');
-                start();
-            });
-        };
-
-        fr.readAsText(new Blob([original]));
-    });
-});
-
-asyncTest('test jz.utils.Deferred', function(){
-    var d = new jz.utils.Deferred;
-    setTimeout(function() {
-        d.resolve(10);
-    }, 10);
-
-    d.promise()
-    .then(function(ms) {
-        equal(ms, 10, 'async call');
-        return ms;
+    .spread(function(kokoro) {
+        original = new Uint8Array(kokoro);
+        return new Promise(function (resolve, reject) {
+            var fr = new FileReader();
+            fr.onloadend = function(){ resolve(fr.result); };
+            fr.readAsText(new Blob([original]));
+        });
     })
-    .then(function(ms) {
-        equal(ms, 10, 'sync call');
-        this.foo = 'foo';
-    })
-    .then(function() {
-        equal(this.foo, 'foo', '"this" context is shared');
-    })
-    .then(function() {
-        var d = new jz.utils.Deferred;
-        setTimeout(function() {
-            d.resolve(1, 2);
-        }, 0);
-        return d.promise();
-    })
-    .then(function(a, b) {
-        equal(a, 1, 'multi arguments');
-        equal(b, 2, 'multi arguments');
-        return 'done';
-    })
-    .done(function(s) {
-        equal(s, 'done', 'done');
-        start();
-    });
-});
-
-asyncTest('test jz.utils.Deferred (throw error)', function(){
-    var d = new jz.utils.Deferred;
-    setTimeout(function() {
-        d.resolve(10);
-    }, 10);
-
-    d.promise()
-    .then(function() {
-        throw new Error('throw error');
-    })
-    .done(function() {
-        ok(false, 'done callback should not be called');
-    })
-    .fail(function(e) {
-        equal(e.message, 'throw error', 'throw error');
-        start();
-    });
-});
-
-asyncTest('test jz.utils.Deferred (reject)', function(){
-    var d = new jz.utils.Deferred;
-    setTimeout(function() {
-        d.reject(new Error('rejected'));
-    }, 10);
-
-    d.promise()
-    .done(function() {
-        ok(false, 'done callback should not be called')
-    })
-    .fail(function(e) {
-        equal(e.message, 'rejected', 'rejected');
-        start();
+    .then(function (a) {
+        jz.utils.bytesToString(original, 'UTF-8')
+        .then(function(str) {
+            equal(str, a, 'bytesToString: check all chars');
+            start();
+        });
     });
 });
 
@@ -203,7 +62,7 @@ asyncTest('test jz.zlib.compress, jz.zlib.decompress', function(){
     //this file is compressed.
     //http://www.nicovideo.jp/watch/nm12945826
     jz.utils.load('nicowari.swf')
-    .done(function(swf) {
+    .spread(function(swf) {
         var zlibBytes = new Uint8Array(swf).subarray(8);
         var decompressed = jz.zlib.decompress(zlibBytes, true);
         ok(decompressed, 'decompress test');
@@ -215,7 +74,7 @@ asyncTest('test jz.zlib.compress, jz.zlib.decompress', function(){
 
 asyncTest('test jz.gz.compress, jz.gz.decompress', function(){
     jz.utils.load('sample.txt.gz', 'sample.txt')
-    .done(function(gzFileBuffer, fileBuffer) {
+    .spread(function(gzFileBuffer, fileBuffer) {
         var decompressed = jz.gz.decompress(gzFileBuffer, true);
         same(new Uint8Array(decompressed), new Uint8Array(fileBuffer), 'decompress test');
         var compressed = jz.gz.compress(fileBuffer, 6, {fname: 'sample.txt'});
@@ -227,23 +86,27 @@ asyncTest('test jz.gz.compress, jz.gz.decompress', function(){
 asyncTest('test jz.zip.unpack(ArrayBuffer)', function(){
     var aPath = 'zipsample/a.txt';
     var bPath = 'zipsample/folder/b.txt';
+    var _zipsample;
+    var _a;
+    var _b;
 
     jz.utils.load('zipsample.zip', aPath, bPath)
-    .then(function(zipsample, a, b) {
-        this.zipsample = zipsample;
-        return jz.utils.parallel(jz.utils.bytesToString(a), jz.utils.bytesToString(b));
+    .spread(function(zipsample, a, b) {
+        _zipsample = zipsample;
+        return Promise.all([
+            jz.zip.unpack(zipsample),
+            jz.utils.bytesToString(a), 
+            jz.utils.bytesToString(b)
+        ]);
     })
-    .then(function(a, b) {
-        this.a = a;
-        this.b = b;
-        return jz.zip.unpack(this.zipsample);
+    .spread(function(reader, a, b) {
+        _a = a;
+        _b = b;
+        return Promise.all([reader.getFileAsText(aPath), reader.getFileAsText(bPath)]);
     })
-    .then(function(reader) {
-        return jz.utils.parallel(reader.getFileAsText(aPath), reader.getFileAsText(bPath));
-    })
-    .then(function(a, b) {
-        equal(a, this.a, 'test unpack');
-        equal(b, this.b, 'test unpack');
+    .spread(function(a, b) {
+        equal(a, _a, 'test unpack');
+        equal(b, _b, 'test unpack');
         start();
     });
 });
@@ -251,38 +114,43 @@ asyncTest('test jz.zip.unpack(ArrayBuffer)', function(){
 asyncTest('test jz.zip.unpack(Blob)', function(){
     var aPath = 'zipsample/a.txt';
     var bPath = 'zipsample/folder/b.txt';
+    var _zipsample;
+    var _a;
+    var _b;
 
     jz.utils.load('zipsample.zip', aPath, bPath)
-    .then(function(zipsample, a, b) {
-        this.zipsample = zipsample;
-        return jz.utils.parallel(jz.utils.bytesToString(a), jz.utils.bytesToString(b));
+    .spread(function(zipsample, a, b) {
+        return Promise.all([
+            jz.zip.unpack(new Blob([new Uint8Array(zipsample)])),
+            jz.utils.bytesToString(a), 
+            jz.utils.bytesToString(b)
+        ]);
     })
-    .then(function(a, b) {
-        this.a = a;
-        this.b = b;
-        return jz.zip.unpack(new Blob([new Uint8Array(this.zipsample)]));
+    .spread(function(reader, a, b) {
+        return Promise.all([reader.getFileAsText(aPath), reader.getFileAsText(bPath), a, b]);
     })
-    .then(function(reader) {
-        return jz.utils.parallel(reader.getFileAsText(aPath), reader.getFileAsText(bPath));
-    })
-    .then(function(a, b) {
-        equal(a, this.a, 'test unpack');
-        equal(b, this.b, 'test unpack');
+    .spread(function(a, b, _a, _b) {
+        equal(a, _a, 'test unpack');
+        equal(b, _b, 'test unpack');
         start();
+    })
+    .catch(function (e) {
+        console.log(e);
     });
 });
 
 asyncTest('test jz.zip.pack', function(){
     var aPath = 'zipsample/a.txt';
     var bPath = 'zipsample/folder/b.txt';
+    var _a, _b;
 
     jz.utils.load(aPath, bPath)
-    .then(function(a, b) {
-        return jz.utils.parallel(jz.utils.bytesToString(a), jz.utils.bytesToString(b));
+    .spread(function(a, b) {
+        return Promise.all([jz.utils.bytesToString(a), jz.utils.bytesToString(b)]);
     })
-    .then(function(a, b) {
-        this.a = a;
-        this.b = b;
+    .spread(function(a, b) {
+        _a = a;
+        _b = b;
         var files = [
             {name: 'zipsample', dir: [
                 {name: 'a.txt', url: aPath},
@@ -295,13 +163,24 @@ asyncTest('test jz.zip.pack', function(){
     })
     .then(jz.zip.unpack)
     .then(function(reader) {
-        return jz.utils.parallel(reader.getFileAsText(aPath), reader.getFileAsText(bPath));
+        return Promise.all([reader.getFileAsText(aPath), reader.getFileAsText(bPath)]);
     })
-    .then(function(a, b) {
-        equal(a, this.a, 'test unpack');
-        equal(b, this.b, 'test unpack');
+    .spread(function(a, b) {
+        equal(a, _a, 'test unpack');
+        equal(b, _b, 'test unpack');
         start();
     });
+});
+
+asyncTest('test worker jz.utils.bytesToString', function() {
+    var aPath = 'zipsample/a.txt';
+    var bPath = 'zipsample/folder/b.txt';
+
+    worker.postMessage('jz.utils.bytesToString');
+    worker.onmessage = function(event) {
+        equal(event.data, 'Hello world', 'test jz.utils.bytesToString');
+        start();
+    };
 });
 
 asyncTest('test worker jz.utils.bytesToStringSync', function() {
@@ -315,15 +194,23 @@ asyncTest('test worker jz.utils.bytesToStringSync', function() {
     };
 });
 
+asyncTest('test promises in worker', function () {
+    worker.postMessage('promise');
+    worker.onmessage = function(event) {
+        equal(event.data, 'promise', 'test promise');
+        start();
+    };
+})
+
 asyncTest('test worker jz.zip.unpack(ArrayBuffer)', function() {
     var aPath = 'zipsample/a.txt';
     var bPath = 'zipsample/folder/b.txt';
 
     jz.utils.load(aPath, bPath)
-    .then(function(a, b) {
-        return jz.utils.parallel(jz.utils.bytesToString(a), jz.utils.bytesToString(b));
+    .spread(function(a, b) {
+        return Promise.all([jz.utils.bytesToString(a), jz.utils.bytesToString(b)]);
     })
-    .then(function(a, b) {
+    .spread(function(a, b) {
         worker.postMessage('jz.zip.unpack(ArrayBuffer)');
         worker.onmessage = function(event) {
             var data = event.data;
@@ -339,10 +226,10 @@ asyncTest('test worker jz.zip.unpack(Blob)', function() {
     var bPath = 'zipsample/folder/b.txt';
 
     jz.utils.load(aPath, bPath)
-    .then(function(a, b) {
-        return jz.utils.parallel(jz.utils.bytesToString(a), jz.utils.bytesToString(b));
+    .spread(function(a, b) {
+        return Promise.all([jz.utils.bytesToString(a), jz.utils.bytesToString(b)]);
     })
-    .done(function(a, b) {
+    .spread(function(a, b) {
         worker.postMessage('jz.zip.unpack(Blob)');
         worker.onmessage = function(event) {
             var data = event.data;
@@ -358,10 +245,10 @@ asyncTest('test worker jz.zip.pack', function() {
     var bPath = 'zipsample/folder/b.txt';
 
     jz.utils.load(aPath, bPath)
-    .then(function(a, b) {
-        return jz.utils.parallel(jz.utils.bytesToString(a), jz.utils.bytesToString(b));
+    .spread(function(a, b) {
+        return Promise.all([jz.utils.bytesToString(a), jz.utils.bytesToString(b)]);
     })
-    .done(function(a, b) {
+    .spread(function(a, b) {
         worker.postMessage('jz.zip.pack');
         worker.onmessage = function(event) {
             var data = event.data;

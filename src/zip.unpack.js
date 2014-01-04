@@ -58,7 +58,6 @@ ZipArchiveReader.prototype.init = function() {
         folders = [],
         offset = bytes.byteLength - 4,
         view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength),
-        deferred = new utils.Deferred,
         self = this,
         params = this.params;
 
@@ -67,57 +66,47 @@ ZipArchiveReader.prototype.init = function() {
     this.localFileHeaders = localFileHeaders;
     this.centralDirHeaders = centralDirHeaders;
 
-    setTimeout(function() {
-        try {
-            // check the first local file signature
-            if (view.getUint32(0, true) !== zip.LOCAL_FILE_SIGNATURE) {
-                throw new Error('zip.unpack: invalid zip file');
-            }
-
-            // read the end central dir header.
-            while(true){
-                if(view.getUint32(offset, true) === zip.END_SIGNATURE) {
-                    endCentDirHeader = self._getEndCentDirHeader(offset);
-                    break;
-                }
-                offset--;
-                if(offset === 0) throw new Error('zip.unpack: invalid zip file');
-            }
-
-            // read central dir headers.
-            offset = endCentDirHeader.startpos;
-            for(i = 0, n = endCentDirHeader.direntry; i < n; ++i) {
-                header = self._getCentralDirHeader(offset);
-                centralDirHeaders.push(header);
-                offset += header.allsize;
-            }
-
-            // read local file headers.
-            for(i = 0; i < n; ++i) {
-                offset = centralDirHeaders[i].headerpos;
-                header = self._getLocalFileHeader(offset);
-                header.crc32 = centralDirHeaders[i].crc32;
-                header.compsize = centralDirHeaders[i].compsize;
-                header.uncompsize = centralDirHeaders[i].uncompsize;
-                localFileHeaders.push(header);
-            }
-            
-            self._finishInit(deferred);
-            
-        } catch(e) {
-            deferred.reject(e);
+    // check the first local file signature
+    if (view.getUint32(0, true) !== zip.LOCAL_FILE_SIGNATURE) {
+        throw new Error('zip.unpack: invalid zip file');
+    }
+    
+    // read the end central dir header.
+    while(true){
+        if(view.getUint32(offset, true) === zip.END_SIGNATURE) {
+            endCentDirHeader = self._getEndCentDirHeader(offset);
+            break;
         }
-    }, 0);
+        offset--;
+        if(offset === 0) throw new Error('zip.unpack: invalid zip file');
+    }
 
-    return deferred.promise();
+    // read central dir headers.
+    offset = endCentDirHeader.startpos;
+    for(i = 0, n = endCentDirHeader.direntry; i < n; ++i) {
+        header = self._getCentralDirHeader(offset);
+        centralDirHeaders.push(header);
+        offset += header.allsize;
+    }
+
+    // read local file headers.
+    for(i = 0; i < n; ++i) {
+        offset = centralDirHeaders[i].headerpos;
+        header = self._getLocalFileHeader(offset);
+        header.crc32 = centralDirHeaders[i].crc32;
+        header.compsize = centralDirHeaders[i].compsize;
+        header.uncompsize = centralDirHeaders[i].uncompsize;
+        localFileHeaders.push(header);
+    }
+
+    return this._init();
 };
 
-ZipArchiveReader.prototype._finishInit = function(deferred) {
+ZipArchiveReader.prototype._init = function() {
     var files = this.files,
         folders = this.folders,
         params = this.params,
         localFileHeaders = this.localFileHeaders,
-        concatedFilename,
         self = this;
 
     localFileHeaders.forEach(function(header, i){
@@ -127,26 +116,22 @@ ZipArchiveReader.prototype._finishInit = function(deferred) {
 
     // detect encoding. cp932 or utf-8.
     if (params.encoding == null) {
-        concatedFilename = utils.concatByteArrays(localFileHeaders.map(function(header) {
+        Promise.resolve(localFileHeaders.map(function (header) {
             return header.filename;
-        }));
-        params.encoding = utils.detectEncoding(concatedFilename);
+        }))
+        .then(utils.concatByteArrays)
+        .then(utils.detectEncoding)
+        .then(function (encoding) {
+            params.encoding = encoding;
+        })
     }
 
-    // convert filenames bytes to string.
-    utils.parallel(localFileHeaders.map(function(header, i) {
-        var deferred = new utils.Deferred;
-        utils.bytesToString(header.filename, params.encoding)
-        .then(function(str) {
-            header.filename = str;
-            deferred.resolve();
+    return Promise.all(localFileHeaders.map(function (header, i) {
+        return utils.bytesToString(header.filename, params.encoding).then(function (filename) {
+            header.filename = filename;
         });
-        return deferred.promise();
     }))
-    .then(
-        deferred.resolve.bind(deferred, self),
-        deferred.reject.bind(deferred)
-    );
+    .then(function () { return self });
 };
 
 ZipArchiveReader.prototype._getLocalFileHeader = function(offset){
@@ -256,12 +241,11 @@ ZipArchiveReader.prototype._decompress = function(bytes, isCompressed) {
 
 /**
  * @param  {string}     filename File name
- * @param  {boolean}    copy     If 'copy' is true, return copy.
  * @return {Uint8Array} Decompressed bytes.
  */
-ZipArchiveReader.prototype._decompressFile = function(filename, copy) {
+ZipArchiveReader.prototype._decompressFile = function(filename) {
     var info = this._getFileInfo(filename);
-    return this._decompress(new Uint8Array(this.buffer, info.offset, info.length), info.isCompressed, copy);
+    return this._decompress(new Uint8Array(this.buffer, info.offset, info.length), info.isCompressed);
 }
 
 /**
@@ -269,17 +253,9 @@ ZipArchiveReader.prototype._decompressFile = function(filename, copy) {
  * @return {Promise}
  */
 ZipArchiveReader.prototype.getFileAsArrayBuffer = function(filename) {
-    var deferred = new utils.Deferred;
-
-    setTimeout(function() {
-        try {
-            deferred.resolve(this._decompressFile(filename, copy).buffer);
-        } catch (e) {
-            deferred.reject(e);
-        }
-    }.bind(this), 0);
-
-    return deferred.promise();
+    return new Promise(function (resolve) {
+        resolve(this._decompressFile(filename).buffer);
+    }.bind(this));
 };
 
 /**
@@ -288,22 +264,16 @@ ZipArchiveReader.prototype.getFileAsArrayBuffer = function(filename) {
  * @return {Promise}
  */
 ZipArchiveReader.prototype._getFileAs = function(type, filename) {
-    var args = arguments,
-        deferred = new utils.Deferred;
+    var args = arguments;
 
-    this.getFileAsBlob(filename)
-    .then(
-        function(blob) {
+    return this.getFileAsBlob(filename).then(function (blob) {
+        return new Promise(function (resolve, reject) {
             var fr = new FileReader;
-            fr.onloadend = function() {
-                deferred.resolve(fr.result);
-            };
+            fr.onload = function () { resolve(fr.result) };
+            fr.onerror = reject;
             fr['readAs' + type].apply(fr, [blob].concat(Array.prototype.slice.call(args, 3)));
-        },
-        deferred.reject.bind(deferred)
-    );
-
-    return deferred.promise();
+        });
+    });
 };
 
 /**
@@ -337,17 +307,9 @@ ZipArchiveReader.prototype.getFileAsDataURL = function(filename){
  * @return {Promise}
  */
 ZipArchiveReader.prototype.getFileAsBlob = function(filename, contentType){
-    var deferred = new utils.Deferred;
-
-    setTimeout(function() {
-        try {
-            deferred.resolve(new Blob([this._decompressFile(filename, false)]), {type: contentType || mimetypes.guess(filename)});
-        } catch (e) {
-            deferred.reject(e);
-        }
-    }.bind(this), 0);
-
-    return deferred.promise();
+    return new Promise(function (resolve) {
+        resolve(new Blob([this._decompressFile(filename, false)], {type: contentType || mimetypes.guess(filename)}));
+    }.bind(this));
 };
 
 //for worker
@@ -428,7 +390,6 @@ ZipArchiveReaderBlob.prototype.init = function() {
     var blob = this.blob,
         params = this.params,
         self = this,
-        deferred = new utils.Deferred,
         endCentDirHeader,
         centralDirHeaders = [],
         localFileHeaders = [],
@@ -448,44 +409,52 @@ ZipArchiveReaderBlob.prototype.init = function() {
         };
     }
 
+    function readChunk (start, end) {
+        return new Promise(function (resolve, reject) {
+            var fr = new FileReader;
+            fr.readAsArrayBuffer(blob.slice(start, end));
+            fr.onload = function () { resolve(fr.result) };
+            fr.onerror = reject;
+        });
+    }
+
     function validateFirstLocalFileSignature() {
-        readChunk(0, 4, function(buffer) {
-            var dv = new DataView(buffer);
-            if (dv.getUint32(0, true) === zip.LOCAL_FILE_SIGNATURE) {
-                validateEndSignature(Math.max(0, blob.size - 0x8000));
+        return readChunk(0, 4).then(function (chunk) {
+            if ((new DataView(chunk)).getUint32(0, true) === zip.LOCAL_FILE_SIGNATURE) {
+                return Math.max(0, blob.size - 0x8000);
             } else {
-                deferred.reject(new Error('zip.unpack: invalid zip file.'));
+                throw new Error('zip.unpack: invalid zip file.');
             }
-        })
+        });
     }
 
     function validateEndSignature(offset) {
-        readChunk(offset, Math.min(blob.size, offset + 0x8000), function(buffer) {
+        return readChunk(offset, Math.min(blob.size, offset + 0x8000)).then(function (buffer) {
             var dv = new DataView(buffer),
                 i, n;
 
-            for (i = 0, n = buffer.byteLength - 4; i < n; ++i)
+            for (i = buffer.byteLength - 4; i--;)
                 if (dv.getUint32(i, true) === zip.END_SIGNATURE)
-                    return getEndCentDirHeader(offset + i);
+                    return offset + i;
 
             if (offset) {
-                validateEndSignature(Math.max(offset - 0x8000 + 3, 0));
+                return validateEndSignature(Math.max(offset - 0x8000 + 3, 0));
             } else {
-                deferred.reject(new Error('zip.unpack: invalid zip file.'));
+                throw new Error('zip.unpack: invalid zip file.');
             }
         });
     }
 
     function getEndCentDirHeader(offset) {
-        readChunk(offset, blob.size, function(buffer) {
+        return readChunk(offset, blob.size).then(function (buffer) {
             this.buffer = buffer;
             endCentDirHeader = ZipArchiveReader.prototype._getEndCentDirHeader.call(this, 0);
-            getCentralDirHeaders(offset);
+            return offset;
         }.bind({}));
     }
 
     function getCentralDirHeaders(end) {
-        readChunk(endCentDirHeader.startpos, end, function(buffer) {
+        return readChunk(endCentDirHeader.startpos, end).then(function (buffer) {
             this.buffer = buffer;
 
             var offset = 0,
@@ -497,35 +466,37 @@ ZipArchiveReaderBlob.prototype.init = function() {
                 offset += header.allsize;
             }
 
-            getLocalFileHeader(0);
-        }.bind({}))
+            return 0;
+        }.bind({}));
     }
 
     function getLocalFileHeader(index) {
-        if (index === centralDirHeaders.length) return self._finishInit(deferred);
+        if (index === centralDirHeaders.length) return self._init();
 
         var offset = centralDirHeaders[index].headerpos;
 
-        readChunk(offset + 26, offset + 30, function(buffer) {
+        return readChunk(offset + 26, offset + 30).then(function (buffer) {
             var view = new DataView(buffer),
                 fnamelen = view.getUint16(0, true),
                 extralen = view.getUint16(2, true);
-
-            readChunk(offset, offset + 30 + fnamelen + extralen, function(buffer) {
-                this.buffer = buffer;
-                var header = ZipArchiveReader.prototype._getLocalFileHeader.call(this, 0);
-                header.crc32 = centralDirHeaders[index].crc32;
-                header.compsize = centralDirHeaders[index].compsize;
-                header.uncompsize = centralDirHeaders[index].uncompsize;
-                localFileHeaders.push(header);
-                getLocalFileHeader(index + 1);
-            }.bind({}));
+            return readChunk(offset, offset + 30 + fnamelen + extralen);
         })
+        .then(function(buffer) {
+            this.buffer = buffer;
+            var header = ZipArchiveReader.prototype._getLocalFileHeader.call(this, 0);
+            header.crc32 = centralDirHeaders[index].crc32;
+            header.compsize = centralDirHeaders[index].compsize;
+            header.uncompsize = centralDirHeaders[index].uncompsize;
+            localFileHeaders.push(header);
+            return getLocalFileHeader(index + 1);
+        }.bind({}));
     }
 
-    validateFirstLocalFileSignature();
-
-    return deferred.promise();
+    return validateFirstLocalFileSignature()
+    .then(validateEndSignature)
+    .then(getEndCentDirHeader)
+    .then(getCentralDirHeaders)
+    .then(getLocalFileHeader);
 };
 
 /**
@@ -545,24 +516,15 @@ ZipArchiveReaderBlob.prototype.getFileAsBlob = function(filename, contentType) {
     contentType = contentType || mimetypes.guess(filename);
 
     var info = this._getFileInfo(filename),
-        blob = this.blob.slice(info.offset, info.offset + info.length, {type: contentType}),
-        deferred = new utils.Deferred;
+        blob = this.blob.slice(info.offset, info.offset + info.length, {type: contentType});
 
-    setTimeout(function() {
-        if (!info.isCompressed) return deferred.resolve(blob);
-
+    return new Promise(function (resolve, reject) {
+        if (!info.isCompressed) return resolve(blob);
         var fr = new FileReader;
         fr.readAsArrayBuffer(blob);
-        fr.onloadend = function() {
-            try {
-                deferred.resolve(new Blob([algorithms.inflate(new Uint8Array(fr.result))], {type: contentType}));
-            } catch (e) {
-                deferred.reject(e);
-            }
-        };
-    }, 0);
-
-    return deferred.promise();
+        fr.onload = function () { resolve(new Blob([algorithms.inflate(new Uint8Array(fr.result))], {type: contentType})) };
+        fr.onerror = reject;
+    });
 };
 
 if (env.isWorker) {

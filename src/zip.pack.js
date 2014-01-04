@@ -208,7 +208,6 @@ zip.pack = function(params){
             }
         }
 
-
         zipElement = new ZipElement(buffer, name, date, dir, level, offset);
         localFile = zipElement.getLocalFile();
 
@@ -223,49 +222,31 @@ zip.pack = function(params){
         }
     }
 
-    function pack(){
+    function pack () {
         files.forEach(_pack.bind(null, level, ''));
         archive.push.apply(archive, centralDirs);
         archive.push(getEndCentDirHeader(n, utils.concatByteArrays(centralDirs).length, offset));
         return utils.concatByteArrays(archive).buffer;
     }
 
-    var deferred = new utils.Deferred,
-        promises = [];
+    var promises = [];
 
     // load files with ajax(async).
-    function loadFile(item) {
+    function loadFile (item) {
         var dir = item.children || item.dir || item.folder;
         if(dir) {
             dir.forEach(loadFile);
         } else if(item.url) {
-            var deferred = new utils.Deferred;
-            utils.load(item.url)
-            .then(
-                function(response) {
-                    item.buffer = response;
-                    item.url = null;
-                    deferred.resolve();
-                },
-                deferred.reject
-            );
-            promises.push(deferred.promise());
+            promises.push(utils.load(item.url).then(function (args) {
+                var response = args[0];
+                item.buffer = response;
+                item.url = null;
+            }));
         }
     }
 
-    setTimeout(function() {
-        files.forEach(loadFile);
-        utils.parallel(promises)
-        .then(
-            function() {
-                try { deferred.resolve(pack()); }
-                catch (e) { deferred.reject(e); }
-            },
-            deferred.reject
-        );
-    }, 0);
-
-    return deferred.promise();
+    files.forEach(loadFile);
+    return Promise.all(promises).then(pack);
 };
 
 expose('jz.zip.pack', zip.pack);

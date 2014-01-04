@@ -22,6 +22,7 @@ module.exports = (grunt) ->
       release:
         src: [
           'src/header.js'
+          'vendor/ES6-Promises/dist/promise-0.1.1.min.js'
           'vendor/zlib-asm/zlib.js'
           '_jsziptools.js'
           'src/footer.js'
