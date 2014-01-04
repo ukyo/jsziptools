@@ -263,16 +263,11 @@ ZipArchiveReader.prototype.getFileAsArrayBuffer = function(filename) {
  * @param  {string} filename File name
  * @return {Promise}
  */
-ZipArchiveReader.prototype._getFileAs = function(type, filename) {
+ZipArchiveReader.prototype._getFileAs = function(type, filename, encoding) {
     var args = arguments;
 
     return this.getFileAsBlob(filename).then(function (blob) {
-        return new Promise(function (resolve, reject) {
-            var fr = new FileReader;
-            fr.onload = function () { resolve(fr.result) };
-            fr.onerror = reject;
-            fr['readAs' + type].apply(fr, [blob].concat(Array.prototype.slice.call(args, 3)));
-        });
+        return utils.readFileAs.call(null, type, blob, encoding);
     });
 };
 
@@ -401,21 +396,8 @@ ZipArchiveReaderBlob.prototype.init = function() {
     this.localFileHeaders = localFileHeaders;
     this.centralDirHeaders = centralDirHeaders;
 
-    function readChunk(start, end, callback) {
-        var fr = new FileReader;
-        fr.readAsArrayBuffer(blob.slice(start, end));
-        fr.onloadend = function() {
-            callback(fr.result);
-        };
-    }
-
     function readChunk (start, end) {
-        return new Promise(function (resolve, reject) {
-            var fr = new FileReader;
-            fr.readAsArrayBuffer(blob.slice(start, end));
-            fr.onload = function () { resolve(fr.result) };
-            fr.onerror = reject;
-        });
+        return utils.readFileAsArrayBuffer(blob.slice(start, end));
     }
 
     function validateFirstLocalFileSignature() {
@@ -518,12 +500,9 @@ ZipArchiveReaderBlob.prototype.getFileAsBlob = function(filename, contentType) {
     var info = this._getFileInfo(filename),
         blob = this.blob.slice(info.offset, info.offset + info.length, {type: contentType});
 
-    return new Promise(function (resolve, reject) {
-        if (!info.isCompressed) return resolve(blob);
-        var fr = new FileReader;
-        fr.readAsArrayBuffer(blob);
-        fr.onload = function () { resolve(new Blob([algorithms.inflate(new Uint8Array(fr.result))], {type: contentType})) };
-        fr.onerror = reject;
+    if (!info.isCompressed) return Promise.resolve(blob);
+    return utils.readFileAsArrayBuffer(blob).then(function (buffer) {
+        return new Blob(algorithms.inflate(new Uint8Array(buffer)), {type: contentType});
     });
 };
 

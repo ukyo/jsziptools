@@ -35,6 +35,36 @@ utils.toBytes = function(buffer){
 expose('jz.utils.toBytes', utils.toBytes);
 
 
+utils.readFileAs = function (type, blob, encoding) {
+    var fn;
+    if (env.isWorker) {
+        fn = function (resolve) {
+            var fr = new FileReaderSync;
+            resolve(fr['readAs' + type].call(fr, blob, encoding));
+        };
+    } else {
+        fn = function (resolve, reject) {
+            var fr = new FileReader;
+            fr.onload = function () {
+                resolve(fr.result);
+            };
+            fr.onerror = reject;
+            fr['readAs' + type].call(fr, blob, encoding);
+        };
+    }
+    return new Promise(fn);
+}
+
+
+utils.readFileAsText = function (blob, encoding) {
+    return utils.readFileAs('Text', blob, encoding || 'UTF-8');
+};
+
+utils.readFileAsArrayBuffer = utils.readFileAs.bind(null, 'ArrayBuffer');
+utils.readFileAsDataURL = utils.readFileAs.bind(null, 'DataURL');
+utils.readFileAsBinaryString = utils.readFileAs.bind(null, 'BinaryString');
+
+
 /**
  * @param {string} str
  * @return {Uint8Array}
@@ -90,14 +120,7 @@ utils.stringToBytes = function(str){
  * });
  */
 utils.bytesToString = function(bytes, encoding) {
-    return new Promise(function (resolve, reject) {
-        var fr = new FileReader();
-        fr.onload = function () {
-            resolve(fr.result);
-        };
-        fr.onerror = reject;
-        fr.readAsText(new Blob([utils.toBytes(bytes)]), encoding || 'UTF-8');
-    });
+    return utils.readFileAsText(new Blob([utils.toBytes(bytes)]), encoding);
 };
 
 expose('jz.utils.bytesToString', utils.bytesToString);
