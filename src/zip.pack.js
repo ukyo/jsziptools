@@ -27,7 +27,7 @@ function getEndCentDirHeader(n, centralDirHeaderSize, offset){
 
 
 /**
- * [ZipElement description]
+ * @constructor
  * @param {ArrayBuffer} buffer
  * @param {string}      filename
  * @param {Date}        date
@@ -168,12 +168,12 @@ function getFileTime(date){
  *     files: files,
  *     level: 6, // default is 6
  * })
- * .done(function(buffer) { }) // buffer is ArrayBuffer
- * .fail(function(err) { });
+ * .then(function(buffer) { }) // buffer is ArrayBuffer
+ * .catch(function(err) { });
  *
  * jz.zip.pack(files)
- * .done(function(buffer) { })
- * .fail(function(err) { });
+ * .then(function(buffer) { })
+ * .catch(function(err) { });
  */
 zip.pack = function(params){
     var n = 0,
