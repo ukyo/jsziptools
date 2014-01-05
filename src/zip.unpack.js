@@ -19,6 +19,15 @@ var mimetypes = (function(){
     });
 
     return {
+        /**
+         * @param {string} ext
+         * @param {string} mimetype
+         * @example
+         * mimetypes.set('gz', 'application/x-gzip');
+         * mimetypes.set({
+         *   epub: 'application/epub+zip'
+         * });
+         */
         set: function(ext, mimetype){
             if(typeof ext === 'object') {
                 Object.keys(ext).forEach(function (k) { dict[k] = ext[k] });
@@ -26,15 +35,22 @@ var mimetypes = (function(){
                 dict[ext] = mimetype;
             }
         },
+
+        /**
+         * @param  {string} filename
+         * @return {string}
+         * @example
+         * mimetypes.guess('foo.epub'); // 'application/epub+zip'
+         */
         guess: function(filename){
             return dict[filename.split(".").pop()] || "aplication/octet-stream";
         }
     };
 })();
 
-
 /**
  * @constructor
+ * @param {object} params
  */
 function ZipArchiveReader(params){
     this.bytes = utils.toBytes(params.buffer);
@@ -42,6 +58,9 @@ function ZipArchiveReader(params){
     this.params = params;
 };
 
+/**
+ * @return {Promise}
+ */
 ZipArchiveReader.prototype.init = function() {
     var signature, header, endCentDirHeader, i, n,
         bytes = this.bytes,
@@ -92,10 +111,13 @@ ZipArchiveReader.prototype.init = function() {
         localFileHeaders.push(header);
     }
 
-    return this._init();
+    return this._completeInit();
 };
 
-ZipArchiveReader.prototype._init = function() {
+/**
+ * @return {Promise}
+ */
+ZipArchiveReader.prototype._completeInit = function() {
     var files = this.files,
         folders = this.folders,
         params = this.params,
@@ -127,6 +149,10 @@ ZipArchiveReader.prototype._init = function() {
     .then(function () { return self });
 };
 
+/**
+ * @param  {number} offset
+ * @return {object}
+ */
 ZipArchiveReader.prototype._getLocalFileHeader = function(offset){
     var view = new DataView(this.buffer, offset),
         bytes = new Uint8Array(this.buffer, offset),
@@ -150,6 +176,10 @@ ZipArchiveReader.prototype._getLocalFileHeader = function(offset){
     return ret;
 };
 
+/**
+ * @param  {number} offset
+ * @return {object}
+ */
 ZipArchiveReader.prototype._getCentralDirHeader = function(offset){
     var view = new DataView(this.buffer, offset),
         ret = {};
@@ -176,6 +206,10 @@ ZipArchiveReader.prototype._getCentralDirHeader = function(offset){
     return ret;
 };
 
+/**
+ * @param  {number} offset
+ * @return {object}
+ */
 ZipArchiveReader.prototype._getEndCentDirHeader = function(offset){
     var view = new DataView(this.buffer, offset);
     return {
@@ -393,17 +427,17 @@ ZipArchiveReaderBlob.prototype.init = function() {
         return utils.readFileAsArrayBuffer(blob.slice(start, end));
     }
 
-    function validateFirstLocalFileSignature() {
+    return (function validateFirstLocalFileSignature () {
         return readChunk(0, 4).then(function (chunk) {
-            if ((new DataView(chunk)).getUint32(0, true) === zip.LOCAL_FILE_SIGNATURE) {
+            if (new DataView(chunk).getUint32(0, true) === zip.LOCAL_FILE_SIGNATURE) {
                 return Math.max(0, blob.size - 0x8000);
             } else {
                 throw new Error('zip.unpack: invalid zip file.');
             }
         });
-    }
+    })()
 
-    function validateEndSignature(offset) {
+    .then(function validateEndSignature (offset) {
         return readChunk(offset, Math.min(blob.size, offset + 0x8000)).then(function (buffer) {
             var dv = new DataView(buffer),
                 i, n;
@@ -418,35 +452,31 @@ ZipArchiveReaderBlob.prototype.init = function() {
                 throw new Error('zip.unpack: invalid zip file.');
             }
         });
-    }
+    })
 
-    function getEndCentDirHeader(offset) {
+    .then(function getEndCentDirHeader (offset) {
         return readChunk(offset, blob.size).then(function (buffer) {
-            this.buffer = buffer;
-            endCentDirHeader = ZipArchiveReader.prototype._getEndCentDirHeader.call(this, 0);
+            endCentDirHeader = ZipArchiveReader.prototype._getEndCentDirHeader.call({buffer: buffer}, 0);
             return offset;
-        }.bind({}));
-    }
+        });
+    })
 
-    function getCentralDirHeaders(end) {
+    .then(function getCentralDirHeaders (end) {
         return readChunk(endCentDirHeader.startpos, end).then(function (buffer) {
-            this.buffer = buffer;
-
             var offset = 0,
+                context = {buffer: buffer},
                 i, n, header;
 
             for (i = 0, n = endCentDirHeader.direntry; i < n; ++i) {
-                header = ZipArchiveReader.prototype._getCentralDirHeader.call(this, offset);
+                header = ZipArchiveReader.prototype._getCentralDirHeader.call(context, offset);
                 centralDirHeaders.push(header);
                 offset += header.allsize;
             }
+        });
+    })
 
-            return 0;
-        }.bind({}));
-    }
-
-    function getLocalFileHeader(index) {
-        if (index === centralDirHeaders.length) return self._init();
+    .then(function getLocalFileHeaders (index) {
+        if (index === centralDirHeaders.length) return;
 
         var offset = centralDirHeaders[index].headerpos;
 
@@ -456,22 +486,17 @@ ZipArchiveReaderBlob.prototype.init = function() {
                 extralen = view.getUint16(2, true);
             return readChunk(offset, offset + 30 + fnamelen + extralen);
         })
-        .then(function(buffer) {
-            this.buffer = buffer;
-            var header = ZipArchiveReader.prototype._getLocalFileHeader.call(this, 0);
+        .then(function (buffer) {
+            var header = ZipArchiveReader.prototype._getLocalFileHeader.call({buffer: buffer}, 0);
             header.crc32 = centralDirHeaders[index].crc32;
             header.compsize = centralDirHeaders[index].compsize;
             header.uncompsize = centralDirHeaders[index].uncompsize;
             localFileHeaders.push(header);
-            return getLocalFileHeader(index + 1);
-        }.bind({}));
-    }
+            return getLocalFileHeaders(index + 1);
+        });
+    }.bind(null, 0))
 
-    return validateFirstLocalFileSignature()
-    .then(validateEndSignature)
-    .then(getEndCentDirHeader)
-    .then(getCentralDirHeaders)
-    .then(getLocalFileHeader);
+    .then(this._completeInit.bind(this));
 };
 
 /**
@@ -485,7 +510,7 @@ ZipArchiveReaderBlob.prototype.getFileAsArrayBuffer = function(filename) {
 /**
  * @param  {string} filename    File name
  * @param  {string} contentType Content type
- * @return {Deferred}
+ * @return {Promise}
  */
 ZipArchiveReaderBlob.prototype.getFileAsBlob = function(filename, contentType) {
     contentType = contentType || mimetypes.guess(filename);
@@ -556,12 +581,12 @@ exposeProperty('getFileAsDataURLSync', ZipArchiveReaderBlob, ZipArchiveReaderBlo
  *     buffer: buffer, // zip buffer
  *     encoding: 'UTF-8' // encoding of filenames
  * })
- * .done(function(reader){ })
- * .fail(function(err){ });
+ * .then(function(reader){ })
+ * .catch(function(err){ });
  *
  * jz.zip.unpack(buffer)
- * .done(function(reader){ })
- * .fail(function(err){ });
+ * .then(function(reader){ })
+ * .catch(function(err){ });
  *
  */
 zip.unpack = function(params){
