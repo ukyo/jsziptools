@@ -10,7 +10,8 @@
  *   chunkSize: 0xf000
  * });
  */
-stream.algorithms.inflate = function (params) {
+stream.algorithms.inflate = function (buffer, streamFn, shareMemory, chunkSize) {
+    var params = utils.getParams(arguments, ['buffer', 'streamFn', 'shareMemory', 'chunkSize']);
     params.input = utils.toBytes(params.buffer);
     zlib.stream.rawInflate(params);
 };
