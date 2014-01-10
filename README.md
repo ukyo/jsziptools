@@ -336,7 +336,7 @@ jz.stream.zip.pack({
 
 It gets filenames in the zip archive.
 
-* @return {Array.<string>}
+* @return {Array.\<string\>}
 
 #### ZipArchiveReader#readFileAsArrayBuffer(filename)
 
