@@ -10,7 +10,8 @@
  *   chunkSize: 0xf000
  * });
  */
-stream.algorithms.deflate = function (params) {
+stream.algorithms.deflate = function (buffer, streamFn, level, shareMemory, chunkSize) {
+    var params = utils.getParams(arguments, ['buffer', 'streamFn', 'level', 'shareMemory', 'chunkSize']);
     params.input = utils.toBytes(params.buffer);
     zlib.stream.rawDeflate(params);
 };
