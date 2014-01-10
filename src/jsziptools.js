@@ -29,6 +29,12 @@ var utils = {},
     zip = {},
     env = {},
     zpipe = {},
+    stream = {
+        algorithms: {},
+        zlib: {},
+        gz: {},
+        zip: {}
+    },
     global = this;
 
 zip.LOCAL_FILE_SIGNATURE = 0x04034B50;
@@ -37,6 +43,7 @@ zip.END_SIGNATURE = 0x06054B50;
 env.isWorker = typeof importScripts === 'function';
 
 expose('jz.algos', algorithms);
+expose('jz.stream.algos', stream.algorithms);
 
 function expose(namespace, o) {
     var paths = namespace.split('.');
