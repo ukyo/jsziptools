@@ -14,7 +14,6 @@ importScripts(
     '../src/stream/gz.compress.js',
     '../src/stream/gz.decompress.js',
     '../src/stream/zip.pack.js',
-    '../src/stream/zip.unpack.js',
     '../src/zlib.compress.js',
     '../src/zlib.decompress.js',
     '../src/gz.compress.js',
