@@ -64,10 +64,10 @@ asyncTest('test jz.zlib.compress, jz.zlib.decompress', function(){
     jz.utils.load('nicowari.swf')
     .spread(function(swf) {
         var zlibBytes = new Uint8Array(swf).subarray(8);
-        var decompressed = jz.zlib.decompress(zlibBytes, true);
+        var decompressed = jz.zlib.decompress(zlibBytes);
         ok(decompressed, 'decompress test');
         var compressed = jz.zlib.compress(decompressed);
-        ok(jz.zlib.decompress(compressed, true), 'compress test');
+        ok(jz.zlib.decompress(compressed), 'compress test');
         start();
     });
 });
@@ -75,10 +75,10 @@ asyncTest('test jz.zlib.compress, jz.zlib.decompress', function(){
 asyncTest('test jz.gz.compress, jz.gz.decompress', function(){
     jz.utils.load('sample.txt.gz', 'sample.txt')
     .spread(function(gzFileBuffer, fileBuffer) {
-        var decompressed = jz.gz.decompress(gzFileBuffer, true);
+        var decompressed = jz.gz.decompress(gzFileBuffer);
         same(new Uint8Array(decompressed), new Uint8Array(fileBuffer), 'decompress test');
-        var compressed = jz.gz.compress(fileBuffer, 6, {fname: 'sample.txt'});
-        ok(jz.gz.decompress(compressed, true), 'check checksum');
+        var compressed = jz.gz.compress(fileBuffer, 6);
+        ok(jz.gz.decompress(compressed), 'check checksum');
         start();
     });
 });
@@ -102,7 +102,7 @@ asyncTest('test jz.zip.unpack(ArrayBuffer)', function(){
     .spread(function(reader, a, b) {
         _a = a;
         _b = b;
-        return Promise.all([reader.getFileAsText(aPath), reader.getFileAsText(bPath)]);
+        return Promise.all([reader.readFileAsText(aPath), reader.readFileAsText(bPath)]);
     })
     .spread(function(a, b) {
         equal(a, _a, 'test unpack');
@@ -127,7 +127,7 @@ asyncTest('test jz.zip.unpack(Blob)', function(){
         ]);
     })
     .spread(function(reader, a, b) {
-        return Promise.all([reader.getFileAsText(aPath), reader.getFileAsText(bPath), a, b]);
+        return Promise.all([reader.readFileAsText(aPath), reader.readFileAsText(bPath), a, b]);
     })
     .spread(function(a, b, _a, _b) {
         equal(a, _a, 'test unpack');
@@ -163,12 +163,16 @@ asyncTest('test jz.zip.pack', function(){
     })
     .then(jz.zip.unpack)
     .then(function(reader) {
-        return Promise.all([reader.getFileAsText(aPath), reader.getFileAsText(bPath)]);
+        return Promise.all([reader.readFileAsText(aPath), reader.readFileAsText(bPath)]);
     })
     .spread(function(a, b) {
+        console.log(arguments);
         equal(a, _a, 'test unpack');
         equal(b, _b, 'test unpack');
         start();
+    })
+    .catch(function (e) {
+        console.log(e.message);
     });
 });
 
