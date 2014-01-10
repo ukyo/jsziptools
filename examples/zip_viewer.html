@@ -44,7 +44,7 @@
             }
 
         </style>
-        <script src="../dist/jsziptools.min.js"></script>
+        <script src="../jsziptools.js"></script>
         <script>
             window.onload = function(){
                 function cancel(e) {
@@ -88,29 +88,29 @@
                     cancel(e);
 
                     jz.zip.unpack(e.dataTransfer.files[0])
-                    .done(function(reader) {
+                    .then(function(reader) {
                         filenamesView.innerHTML = reader.getFileNames().map(wrap.bind(null, 'li')).join('');
 
                         function view(li) {
                             var filename = li.innerHTML;
                             if (/.*(png|gif|jpg|bmp)$/.test(filename.toLowerCase())) {
-                                reader.getFileAsBlob(filename)
-                                .done(function(blob) {
+                                reader.readFileAsBlob(filename)
+                                .then(function(blob) {
                                     preview.innerHTML = img(blobURL(blob));
                                 });
                             } else if (/.*(mp3|ogg|wav|m4a)$/.test(filename.toLowerCase())) {
-                                reader.getFileAsBlob(filename)
-                                .done(function(blob) {
+                                reader.readFileAsBlob(filename)
+                                .then(function(blob) {
                                     preview.innerHTML = audio(blobURL(blob));
                                 });
                             } else if (/.*(mp4|webm)$/.test(filename.toLowerCase())) {
-                                reader.getFileAsBlob(filename)
-                                .done(function(blob) {
+                                reader.readFileAsBlob(filename)
+                                .then(function(blob) {
                                     preview.innerHTML = video(blobURL(blob));
                                 });
                             } else {
-                                reader.getFileAsText(filename)
-                                .done(function(text) {
+                                reader.readFileAsText(filename)
+                                .then(function(text) {
                                     preview.innerHTML = wrap('pre', escape(text));
                                 });
                             }
@@ -122,7 +122,7 @@
 
                         [].forEach.call(document.querySelectorAll('li'), _on);
                     })
-                    .fail(console.log.bind(console));
+                    .catch(console.log.bind(console));
                 });
             };
         </script>
