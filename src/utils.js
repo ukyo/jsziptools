@@ -12,6 +12,20 @@ utils.toArray = function(arg) {
     return Array.prototype.slice.call(arg);
 };
 
+/**
+ * @param  {Arguments} args
+ * @param  {Array.<string>} propertyNames
+ * @return {object}
+ */
+utils.getParams = function (args, propertyNames) {
+    if (Object.prototype.toString.call(args[0]) === '[object Object]') return args[0];
+    var params = {};
+    propertyNames.forEach(function (name, i) {
+        params[name] = args[i];
+    });
+    return params;
+}
+
 
 /**
  * convert Array, ArrayBuffer or String to Uint8Array.
@@ -23,12 +37,15 @@ utils.toArray = function(arg) {
  * var bytes = jz.utils.toBytes([1, 2, 3]);
  */
 utils.toBytes = function(buffer){
-    switch(buffer.constructor){
-        case String: return utils.stringToBytes(buffer);
-        case Array:
-        case ArrayBuffer: return new Uint8Array(buffer);
-        case Uint8Array: return buffer;
-        case Int8Array: return new Uint8Array(buffer.buffer, buffer.byteOffset, buffer.byteLength);
+    switch(Object.prototype.toString.call(buffer)){
+        case '[object String]': return utils.stringToBytes(buffer);
+        case '[object Array]':
+        case '[object ArrayBuffer]': return new Uint8Array(buffer);
+        case '[object Uint8Array]': return buffer;
+        case '[object Int8Array]':
+        case '[object Uint8ClampedArray]':
+        case '[object CanvasPixelArray]': return new Uint8Array(buffer.buffer, buffer.byteOffset, buffer.byteLength);
+        default: throw new Error('jz.utils.toBytes: not supported type.');
     }
 };
 
@@ -184,18 +201,17 @@ Promise.prototype.spread = function (onFulfillment, onRejection) {
 };
 
 /**
- * Load buffer with Ajax(async).
+ * Load buffers with Ajax(async).
  * @param {Array.<string>|...string} urls
  * @return {Promise}
  *
  * @example
  * utils.load(['a.zip', 'b.zip'])
- * .done(function(a, b){ })
- * .fail(function(err){ });
- *
+ * .spread(function(a, b){
+ *   // arguments are Uint8Array
+ * });
+ * // or
  * utils.load('a.zip', 'b.zip')
- * .done(function(a, b){ })
- * .fail(function(err){ });
  */
 utils.load = function(urls){
     urls = Array.isArray(urls) ? urls : utils.toArray(arguments);
@@ -207,7 +223,7 @@ utils.load = function(urls){
             xhr.onloadend = function () {
                 var s = xhr.status;
                 (s === 200 || s === 206 || s === 0) ?
-                    resolve(xhr.response) : reject(new Error('Load Error: ' + s + ' ' + url));
+                    resolve(new Uint8Array(xhr.response)) : reject(new Error('Load Error: ' + s + ' ' + url));
             };
             xhr.onerror = reject;
             xhr.send();
@@ -219,26 +235,26 @@ expose('jz.utils.load', utils.load);
 
 
 /**
- * @param {...(Uint8Array|int8Array|Uint8ClampedArray)} byteArrays
+ * @param {...(Uint8Array|ArrayBuffer)} buffers
  * @return {Uint8Array}
  *
  * @example
- * var bytes = jz.utils.concatByteArrays(bytes1, bytes2, bytes3);
- * var bytes = jz.utils.concatByteArrays([bytes1, bytes2, bytes3]);
+ * var bytes = jz.utils.concatBytes(bytes1, bytes2, bytes3);
+ * var bytes = jz.utils.concatBytes([bytes1, bytes2, bytes3]);
  */
-utils.concatByteArrays = function(byteArrays){
-    var byteArrays = Array.isArray(byteArrays) ? byteArrays : utils.toArray(arguments),
+utils.concatBytes = function(buffers){
+    var buffers = Array.isArray(buffers) ? buffers : utils.toArray(arguments),
         size = 0,
         offset = 0,
         i, n, ret;
 
-    for(i = 0, n = byteArrays.length; i < n; ++i) size += byteArrays[i].length;
+    for(i = 0, n = buffers.length; i < n; ++i) size += buffers[i].length;
     ret = new Uint8Array(size);
     for(i = 0; i < n; ++i) {
-        ret.set(byteArrays[i], offset);
-        offset += byteArrays[i].length;
+        ret.set(buffers[i], offset);
+        offset += buffers[i].length;
     }
     return ret;
 };
 
-expose('jz.utils.concatByteArrays', utils.concatByteArrays);
+expose('jz.utils.concatBytes', utils.concatBytes);
