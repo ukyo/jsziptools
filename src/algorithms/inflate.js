@@ -5,11 +5,12 @@ utils.js
 
 
 /**
- * @param {ArrayBuffer|Uint8Array|Array|string} bytes
- * @return {ArrayBuffer}
+ * @param {ArrayBuffer|Uint8Array|Array|string} buffer
+ * @return {Uint8Array}
  */
-algorithms.inflate = function(bytes, chunkSize){
-    return zlib['rawInflate'](utils.toBytes(bytes), chunkSize).buffer;
+algorithms.inflate = function(buffer, chunkSize){
+    var params = utils.getParams(arguments, ['buffer', 'chunkSize']);
+    return zlib['rawInflate'](utils.toBytes(params.buffer), params.chunkSize);
 };
 
 expose('jz.algorithms.inflate', algorithms.inflate);
