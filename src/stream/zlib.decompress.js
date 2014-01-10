@@ -11,6 +11,7 @@
  * });
  */
 stream.zlib.decompress = function (params) {
+    var params = utils.getParams(arguments, ['buffer', 'streamFn', 'shareMemory', 'chunkSize']);
     params.input = utils.toBytes(params.buffer);
     zlib.stream.inflate(params);
 };
