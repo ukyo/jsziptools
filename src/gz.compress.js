@@ -1,85 +1,25 @@
-/* require:
-jsziptools.js
-utils.js
-crc32.js
-deflate.js
-*/
-
-
 /**
- * Compress to a gzip format buffer.
- * 
- * @param {ArrayBuffer|Uint8Array|Array|string} bytes
- * @param {number} level compress level.
- * @param {Object} metadata This function supports
- * fname(file name) and fcomment (file comment).
- * @return {ArrayBuffer}
+ * @param  {ArrayBuffer|Uint8Array|Array|string} buffer
+ * @param  {number}                              level
+ * @param  {number}                              chunkSize
+ * @param  {string}                              fname
+ * @param  {string}                              fcomment
+ * @return {Uint8Array}
  */
-gz.compress = function(bytes, level, metadata){
-    var deflatedBytes, ret, i, end, view, checksum, isize,
-        flg = 0,
-        headerLength = 10,
-        offset = 0,
-        fname,
-        fcomment,
-        now = Date.now();
-
-    metadata = metadata || {};
-    if(metadata.fname) fname = utils.toBytes(metadata.fname);
-    if(metadata.fcomment) fcomment = utils.toBytes(metadata.fcomment);
-
-    bytes = utils.toBytes(bytes);
-    
-    deflatedBytes = new Uint8Array(algorithms.deflate(bytes, level));
-    
-    //calc metadata length
-    if(fname){
-        headerLength += fname.length + 1;
-        flg |= 0x8;
-    }
-    
-    if(fcomment){
-        headerLength += fcomment.length + 1;
-        flg |= 0x10;
-    }
-    
-    ret = new Uint8Array(deflatedBytes.length + headerLength + 8);
-    view = new DataView(ret.buffer);
-    
-    //write gzip header
-    ret[offset++] = 0x1F;
-    ret[offset++] = 0x8B;
-    ret[offset++] = 0x8;
-    ret[offset++] = flg;
-    
-    view.setUint32(offset, now, true);
-    offset += 4;
-    
-    ret[offset++] = 4;
-    ret[offset++] = 0xFF;
-    
-    if(fname){
-        ret.set(fname, offset);
-        offset += fname.length;
-        ret[offset++] = 0;
-    }
-    
-    if(fcomment){
-        ret.set(fcomment, offset);
-        offset += fcomment.length;
-        ret[offset++] = 0;
-    }
-    
-    //write crc32 checksum
-    view.setUint32(ret.length - 8, algorithms.crc32(bytes), true);
-    
-    //write isize
-    view.setUint32(ret.length - 4, bytes.length, true);
-    
-    //copy data
-    ret.set(deflatedBytes, headerLength);
-    
-    return ret.buffer;
+gz.compress = function(buffer, level, chunkSize, fname, fcomment) {
+    var params = utils.getParams(arguments, ['buffer', 'level', 'chunkSize', 'fname', 'fcomment']),
+        chunks = [];
+    stream.gz.compress({
+        buffer: params.buffer,
+        level: params.level,
+        chunkSize: params.chunkSize,
+        fname: params.fname,
+        fcomment: params.fcomments,
+        streamFn: function(chunk) {
+            chunks.push(chunk);
+        }
+    });
+    return utils.concatBytes(chunks);
 };
 
 expose('jz.gz.compress', gz.compress);
