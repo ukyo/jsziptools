@@ -18,35 +18,241 @@ chrome, firefox, IE10.
 * [Deflate text](http://ukyo.github.com/jsziptools/examples/deflate_text.html)
 * [Zip viewer](http://ukyo.github.com/jsziptools/examples/zip_viewer.html)
 
-### zlib
+## APIs
 
-decompress compressed swf file:
+If the api is written as *foo({a, b, c})*, you can call it as below.
 
-```javascript
-jz.utils.load('compressed.swf')
-.done(function(swf){
-  var header = new Uint8Array(swf, 0, 8);
-  var decompressedData = jz.zlib.decompress(new Uint8Array(swf, 8));
+```js
+foo(1, 2, 3);
+foo({
+  a: 1,
+  b: 2,
+  c: 3
 });
 ```
 
+### Promise
+
+jsziptools uses ES6 Promises and add `spread` method.
+
+### Promise.prototype.spread(onFulfillment, onRejection)
+
+* @param {function} onFulfillment
+* @param {function} onRejection - optional
+* @return {Promise}
+
+It spreads a Array argument in a `onFulfillment` callback. 
+
+```js
+// in ES6 Promises then
+Promise.all([1, 2, 3]).then(function (args) {
+  var one = args[0], two = args[1], three = args[2];
+});
+
+// in Promise.prototype.spread
+Promise.all([1, 2, 3]).spread(function (one, two, three) {
+  // ...
+});
+```
+
+### utils
+
+#### jz.utils.toBytes(buffer)
+
+* @param {ArrayBuffer|Uint8Array|Array|string} buffer
+* @return {Uint8Array}
+
+#### jz.utils.readFileAsArrayBuffer(blob)
+
+* @param {Blob} blob
+* @return {Promise}
+
+```js
+jz.utils.readFileAsArrayBuffer(blob)
+.then(function (buffer) {
+  // ...
+});
+```
+
+#### jz.utils.readFileAsText(blob, encoding)
+
+* @param {Blob} blob
+* @param {string} encoding - optional (default is `"UTF-8"`)
+* @return {Promise}
+
+#### jz.utils.readFileAsDataURL(blob)
+
+* @param {Blob} blob
+* @return {Promise}
+
+#### jz.utils.readFileAsBinaryString(blob)
+
+* @param {Blob} blob
+* @return {Promise}
+
+#### jz.utils.bytesToString(buffer)
+
+* @param {Uint8Array|ArrayBuffer|Array|string} buffer
+* @return {Promise}
+
+```js
+jz.utils.bytesToString(bytes)
+.then(function (str) {
+  // ...
+});
+```
+
+#### jz.utils.concatBytes(buffers)
+
+* @param {Array.\<Uint8Array|ArrayBuffer\>} buffers
+* @return {Uint8Array}
+
+```js
+var concated = jz.utils.concatBytes([bytes1, bytes2]);
+// or
+var concated = jz.utils.concatBytes(bytes1, bytes2);
+```
+
+#### jz.utils.load(urls)
+
+It loads files as `Uint8Array`.
+
+* @param {Array.\<string\>} urls
+* @return {Promise}
+
+```js
+jz.utils.load(['foo.png', 'bar.jpg'])
+.spread(function (foo, bar) {
+  // ...
+});
+// or
+jz.utils.load('foo.png', 'bar.jpg')
+.spread(function (foo, bar) {
+  // ...
+});
+```
+
+### algos
+
+#### jz.algos.deflate({buffer, level, chunkSize})
+
+* @param {Uint8Array|ArrayBuffer} buffer
+* @param {number} level - optional (default is `6`, range is 0-9)
+* @param {number} chunkSize - optional (default is `0x8000`)
+* @return {Uint8Array}
+
+#### jz.algos.inflate({buffer, chunkSize})
+
+* @param {Uint8Array|ArrayBuffer} buffer
+* @param {number} chunkSize - optional (default is `0x8000`)
+* @return {Uint8Array}
+
+#### jz.algos.adler32(buffer)
+
+* @param {Uint8Array|ArrayBuffer} buffer
+* @return {number}
+
+#### jz.algos.crc32({buffer, crc})
+
+* @param {Uint8Array|ArrayBuffer} buffer
+* @param {number}
+* @return {number}
+
+#### jz.stream.algos.deflate({buffer, streamFn, level, shareMemory, chunkSize})
+
+* @param {Uint8Array|ArrayBuffer} buffer
+* @param {function(chunk: Uint8Array)} streamFn
+* @param {number} level - optional (default is `6`)
+* @param {boolean} shareMemory - optional (default is `false`)
+* @param {number} chunkSize - optional (default is `0x8000`)
+
+```js
+jz.stream.algos.deflate({
+  buffer: buffer,
+  streamFn: function (chunk) {
+    // ...
+  },
+  shareMemory: false
+});
+```
+
+#### jz.steram.algos.inflate({buffer, streamFn, shareMemory, chunkSize})
+
+* @param {Uint8Array|ArrayBuffer} buffer
+* @param {function(chunk: Uint8Array)} streamFn
+* @param {boolean} shareMemory - optional (default is `false`)
+* @param {number} chunkSize - optional (default is `0x8000`)
+
+### zlib
+
+#### jz.zlib.compress({buffer, level, chunkSize})
+
+* @param {Uint8Array|ArrayBuffer} buffer
+* @param {number} level - optional (default is `6`)
+* @param {number} chunkSize - optional (default is `0x8000`)
+* @return {Uint8Array}
+
+#### jz.zlib.decompress({buffer, chunkSize})
+
+* @param {Uint8Array|ArrayBuffer} buffer
+* @param {number} chunkSize - optional (default is `0x8000`)
+* @return {Uint8Array}
+
+#### jz.stream.zlib.compress({buffer, streamFn, level, shareMemory, chunkSize})
+
+* @param {Uint8Array|ArrayBuffer} buffer
+* @param {function(chunk: Uint8Array)} streamFn
+* @param {number} level - optional (default is `6`)
+* @param {boolean} shareMemory - optional (default is `false`)
+* @param {number} chunkSize - optional (default is `0x8000`)
+
+#### jz.stream.zlib.decompress({buffer, streamFn, shareMemory, chunkSize})
+
+* @param {Uint8Array|ArrayBuffer} buffer
+* @param {function(chunk: Uint8Array)} streamFn
+* @param {boolean} shareMemory - optional (default is `false`)
+* @param {number} chunkSize - optional (default is `0x8000`)
 
 ### gzip
 
-compress and download:
+#### jz.gz.compress({buffer, level, chunkSize})
 
-```javascript
-var text = 'aaaaaabbbbbbbbbbbccccccccc';
-var gzbuff = jz.gz.compress(jz.utils.toBytes(text));
-var URL = window.URL || window.webkitURL;
-location.href = URL.createObjectURL(new Blob([new Uint8Array(gzbuff)]));
-```
+* @param {Uint8Array|ArrayBuffer} buffer
+* @param {number} level - optional (default is `6`)
+* @param {number} chunkSize - optional (default is `0x8000`)
+* @return {Uint8Array}
+
+#### jz.gz.decompress({buffer, chunkSize})
+
+* @param {Uint8Array|ArrayBuffer} buffer
+* @param {number} chunkSize - optional (default is `0x8000`)
+* @return {Uint8Array}
+
+#### jz.stream.gz.compress({buffer, streamFn, level, shareMemory, chunkSize})
+
+* @param {Uint8Array|ArrayBuffer} buffer
+* @param {function(chunk: Uint8Array)} streamFn
+* @param {number} level - optional (default is `6`)
+* @param {boolean} shareMemory - optional (default is `false`)
+* @param {number} chunkSize - optional (default is `0x8000`)
+
+#### jz.stream.gz.decompress({buffer, streamFn, shareMemory, chunkSize})
+
+* @param {Uint8Array|ArrayBuffer} buffer
+* @param {function(chunk: Uint8Array)} streamFn
+* @param {boolean} shareMemory - optional (default is `false`)
+* @param {number} chunkSize - optional (default is `0x8000`)
 
 ### zip
 
-zip:
+#### jz.zip.pack({files, level, chunkSize})
 
-```javascript
+* @param {Array.<object>} files
+* @param {number} level - optional (default is `6`)
+* @param {number} chunkSize - optional (default is `0x8000`)
+* @return {Promise}
+
+```js
 var files = [
   {name: "foo", dir: [ // folder
     {name: "hello.txt", buffer: "Hello World!"}, // string
@@ -59,11 +265,12 @@ jz.zip.pack({
   files: files,
   level: 5
 })
-.done(function(buffer){}) // ArrayBuffer
-.fail(function(err){});
+.then(function (buffer) {
+  // buffer is Uint8Array
+});
 
 
-// set compression level to each files.
+// You cat set compression level to each files.
 var files = [
   {name: "mimetype", buffer: "application/epub+zip", level: 0}, //string
   {name: "META-INF", dir: [ //folder
@@ -74,177 +281,111 @@ var files = [
 ];
 
 jz.zip.pack(files)
-.done(function(buffer){})
-.fail(function(err){});;
+.then(function (buffer) {
+  // ...
+});
 ```
 
-unzip:
+#### jz.zip.unpack({buffer, encoding, chunkSize})
 
-```javascript
+* @param {Uint8Array|ArrayBuffer|Blob} buffer
+* @param {string} encoding - optional (default is `"UTF-8"`)
+* @param {number} chunkSize - optional (default is `0x8000`)
+* @return {Promise}
+
+```js
 jz.zip.unpack({
   buffer: buffer,
-  encoding: 'Sfift_JIS'
+  encoding: 'Shift_JIS' // encoding of filenames
 })
-.done(function(reader){
-  // get file pathes.
+.then(function (reader) {
+  // reader is ZipArchiveReader. See below.
+  // get file names.
   reader.getFileNames();
-  // file is read lazily.
-  reader.getFileAsText(reader.getFileNames[0])
-  .done(function(result){
-    alert(result);
+  reader.readFileAsText(reader.getFileNames[0])
+  .then(function (text) {
+    // ...
   });
-  // reader has another methods.
-  // 'getFileAsArrayBuffer'
-  // 'getFileAsBlob'
-  // 'getFileAsDataURL'
-  // 'getFileAsBinaryString'
-})
-.fail(function(err){});
-
-// you can skip to set the encoding.
-
-jz.zip.unpack(buffer)
-.done(function(reader){})
-.fail(function(err){});
-
-// read file
-
-jz.zip.unpack(ev.target.files[0])
-.done(function(reader){})
-.fail(function(err){});
-```
-
-## utilties
-
-### jz.utils.load
-
-Load files as ArrayBuffer with XHR.
-
-```javascript
-jz.utils.load('a.txt', 'b.txt')
-.done(function(a, b) {
-  //...
-})
-.fail(function(e) {});
-```
-
-### jz.utils.bytesToString
-
-Convert bytes(Array, ArrayBuffer or Uint8Array) to String
-
-```javascript
-jz.utils.bytesToString(bytes, 'UTF-8')
-.done(function(str) {
-  //...
-});
-
-// default is 'UTF-8'
-jz.utils.bytesToString(bytes)
-.done(function(str) {
-  //...
 });
 ```
 
-### jz.utils.parallel
+#### jz.stream.zip.pack({files, streamFn, level, shareMemory, chunkSize})
 
-Run in parallel.
+* @param {Array} files
+* @param {function(chunk: Uint8Array)} streamFn
+* @param {number} level - optional (default is `6`)
+* @param {boolean} shareMemory - optional (default is `false`)
+* @param {number} chunkSize - optional (default is `0x8000`)
+* @return {Promise}
 
-```javascript
-jz.utils.parallel(
-  jz.utils.load('a.txt'),
-  jz.utils.bytesToString(bytes),
-  jz.zip.pack(files),
-  jz.zip.unpack(zip)
-)
-.done(function(a, foo, packed, reader) {
-  // ...
+```js
+jz.stream.zip.pack({
+  files: files,
+  streamFn: function (chunk) {
+    // ...
+  }
 })
-.fail(function(e) {});
-```
-
-### jz.utils.Deferred
-
-```javascript
-// wait "ms" milliseconds.
-function wait(ms) {
-  var deferred = new jz.utils.Deferred;
-  setTimeout(function() {
-    console.log(Date.now());
-    deferred.resolve(ms);
-  }, ms);
-  return deferred.promise();
-}
-
-wait(1000)
-.then(wait)
-.then(wait)
-.then(wait)
-.then(wait);
-
-// all async functions return "Promise"
-jz.utils.load('foo.zip')
-.then(jz.zip.unzip)
-.then(function(reader) {
-  return reader.getFileAsText('bar.txt');
-})
-.done(function(bar) {
-  console.log(bar);
-})
-.fail(function(e) {
-  console.log(e);
+.then(function () {
+  // no args
 });
 ```
 
-## custom build
+### ZipArchiveReader
 
-You can use the `build.py` to build jsziptools.
+#### ZipArchiveReader#getFileNames()
 
-```sh
-$ #see help
-$ ./build.py -h
-usage: build.py [-h] [-C COMPILER_PATH] [-m MODULES] [-o OUTPUT_PATH]
-                [-c CONF_FILE_PATH]
+It gets filenames in the zip archive.
 
-optional arguments:
-  -h, --help         show this help message and exit
-  -C COMPILER_PATH   Set a Closure Compiler path.
-  -m MODULES         Set module names you want to use.
-  -o OUTPUT_PATH     Set a output file path.
-  -c CONF_FILE_PATH  Set a configuration file path.
-$ #select modules
-$ ./build.py -m gz.decompress zlib.decompress -o build/gz_zlib_decomp.min.js
-```
+* @return {Array.<string>}
 
-modules:
+#### ZipArchiveReader#readFileAsArrayBuffer(filename)
 
-* `gz.compress`
-* `gz.decompress`
-* `gz` (`gz.compress`and`gz.decompess`)
-* `zlib.compress`
-* `zlib.decompress`
-* `zlib` (`zlib.compress`and`zlib.decompress`)
-* `zip.pack`
-* `zip.unpack`
-* `zip` (`zip.pack`and`zip.unpack`)
+* @param {string} filename
+* @return {Promise}
 
-You also can write a configuration file that is written in json.
+#### ZipArchiveReader#readFileAsBlob(filename)
 
-Example of a configuration file:
+* @param {string} filename
+* @return {Promise}
 
-```json
-{
-    "compiler": "./compiler.jar",
-    "output": "./build/jsziptools.unzip.min.js",
-    "files": [
-        "src/algorithms/crc32.js",
-        "src/algorithms/inflate.js",
-        "src/zip.unpack.js"
-    ]
-}
-```
+#### ZipArchiveReader#readFileAsText(filename, encoding)
 
-Usage:
+* @param {string} filename
+* @param {string} encoding
+* @return {Promise}
 
-```sh
-$ ./build.py -c buildconf.json
-```
+#### ZipArchiveReader#readFileAsDataURL(filename)
+
+* @param {string} filename
+* @return {Promise}
+
+#### ZipArchiveReader#readFileAsBinaryString(filename)
+
+* @param {string} filename
+* @return {Promise}
+
+#### ZipArchiveReader#readFileAsArrayBufferSync(filename)
+
+* @param {string} filename
+* @return {ArrayBuffer}
+
+#### ZipArchiveReader#readFileAsBlobSync(filename)
+
+* @param {string} filename
+* @return {Blob}
+
+#### ZipArchiveReader#readFileAsTextSync(filename, encoding)
+
+* @param {string} filename
+* @param {string} encoding
+* @return {string}
+
+#### ZipArchiveReader#readFileAsBinaryStringSync(filename)
+
+* @param {string} filename
+* @return {string}
+
+#### ZipArchiveReader#readFileAsDataURLSync(filename)
+
+* @param {string} filename
+* @return {string}
