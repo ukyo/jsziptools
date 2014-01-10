@@ -31,8 +31,8 @@ onmessage = function(event) {
             .spread(jz.zip.unpack)
             .then(function(reader) {
                 postMessage({
-                    a: reader.getFileAsTextSync(aPath),
-                    b: reader.getFileAsTextSync(bPath)
+                    a: reader.readFileAsTextSync(aPath),
+                    b: reader.readFileAsTextSync(bPath)
                 });
             })
             .catch(function (e) {
@@ -47,8 +47,8 @@ onmessage = function(event) {
             })
             .then(function(reader) {
                 postMessage({
-                    a: reader.getFileAsTextSync(aPath),
-                    b: reader.getFileAsTextSync(bPath)
+                    a: reader.readFileAsTextSync(aPath),
+                    b: reader.readFileAsTextSync(bPath)
                 });
             });
             break;
@@ -65,8 +65,8 @@ onmessage = function(event) {
             .then(jz.zip.unpack)
             .then(function(reader) {
                 postMessage({
-                    a: reader.getFileAsTextSync(aPath),
-                    b: reader.getFileAsTextSync(bPath)
+                    a: reader.readFileAsTextSync(aPath),
+                    b: reader.readFileAsTextSync(bPath)
                 });
             });
             break;
