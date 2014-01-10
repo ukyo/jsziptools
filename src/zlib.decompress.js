@@ -9,9 +9,10 @@ utils.js
 /**
  * Decompress a zlib format buffer.
  * 
- * @param {ArrayBuffer|Uint8Array|Array|string} bytes zlib format buffer.
- * @return {ArrayBuffer} buffer.
+ * @param {ArrayBuffer|Uint8Array|Array|string} buffer zlib format buffer.
+ * @return {Uint8Array}
  */
-expose('jz.zlib.decompress', function (bytes, chunkSize) {
-  return zlib['inflate'](utils.toBytes(bytes), chunkSize).buffer;
+expose('jz.zlib.decompress', function (buffer, chunkSize) {
+  var params = utils.getParams(arguments, ['buffer', 'chunkSize']);
+  return zlib['inflate'](utils.toBytes(params.buffer), params.chunkSize);
 });
