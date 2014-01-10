@@ -24,11 +24,15 @@ algorithms.crc32 = (function(){
         return table;
     })();
     
-    return function(bytes){
-        var result = 0xFFFFFFFF, bytes = utils.toBytes(bytes), i, n, t = table;
-        for(i = 0, n = bytes.length; i < n; ++i)
-            result = (result >>> 8) ^ t[bytes[i] ^ (result & 0xFF)];
-        return (~result) >>> 0;
+    return function(buffer, crc){
+        var params = utils.getParams(arguments, ['buffer', 'crc']),
+            bytes = utils.toBytes(params.buffer),
+            crc = params.crc == null ? 0xFFFFFFFF : ~params.crc >>> 0,
+            i = 0,
+            n = bytes.length,
+            t = table;
+        for(; i < n; ++i) crc = (crc >>> 8) ^ t[bytes[i] ^ (crc & 0xFF)];
+        return ~crc >>> 0;
     };
 })();
 
