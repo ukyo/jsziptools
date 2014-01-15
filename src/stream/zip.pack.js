@@ -241,4 +241,4 @@ stream.zip.pack = function(files, streamFn, level, shareMemory, chunkSize) {
     });
 };
 
-expose('jz.zip.pack', zip.pack);
+expose('jz.stream.zip.pack', stream.zip.pack);
