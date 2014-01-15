@@ -1,11 +1,6 @@
-/* require:
-jsziptools.js
-utils.js
-*/
-
-
 /**
  * @param {ArrayBuffer|Uint8Array|Array|string} buffer
+ * @param {number} chunkSize
  * @return {Uint8Array}
  */
 algorithms.inflate = function(buffer, chunkSize){
