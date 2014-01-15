@@ -1,0 +1,7 @@
+{
+  "framework": "buster",
+  "launch_in_dev": [
+    "Chrome",
+    "Firefox"
+  ]
+}
