@@ -367,7 +367,7 @@ if (env.isWorker) {
      * @return {string}
      */
     ZipArchiveReader.prototype.readFileAsBinaryStringSync = function(filename) {
-        return new FileReaderSync().readAsBinarySting(this.readFileAsBlobSync(filename));
+        return new FileReaderSync().readAsBinaryString(this.readFileAsBlobSync(filename));
     };
 
     /**
@@ -526,7 +526,7 @@ ZipArchiveReaderBlob.prototype.readFileAsBlob = function(filename, contentType) 
 
     if (!info.isCompressed) return Promise.resolve(blob);
     return utils.readFileAsArrayBuffer(blob).then(function(buffer) {
-        return new Blob(algorithms.inflate(new Uint8Array(buffer)), {
+        return new Blob([algorithms.inflate(new Uint8Array(buffer))], {
             type: contentType
         });
     });
