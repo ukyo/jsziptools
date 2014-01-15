@@ -78,4 +78,4 @@ stream.gz.compress = function (buffer, streamFn, level, shareMemory, chunkSize, 
     streamFn(footer);
 };
 
-expose('jz.gz.compress', gz.compress);
+expose('jz.stream.gz.compress', stream.gz.compress);
