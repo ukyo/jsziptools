@@ -1,0 +1,23 @@
+{
+  "name": "jsziptools",
+  "main": "jsziptools.js",
+  "version": "2.4.0",
+  "homepage": "https://github.com/ukyo/jsziptools",
+  "authors": [
+    "ukyo <ukyo.web@gmail.com>"
+  ],
+  "description": "zip for browser",
+  "keywords": [
+    "zlib",
+    "gzip",
+    "zip"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}
