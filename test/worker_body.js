@@ -1,74 +1,54 @@
+var reader, readerBlob;
+jz.utils.load('zipsample.zip')
+.spread(function(buffer) {
+    return Promise.all([
+        jz.zip.unpack(buffer),
+        jz.zip.unpack(new Blob([new Uint8Array(buffer)]))
+    ]);
+})
+.spread(function(_reader, _readerBlob) {
+    reader = _reader;
+    readerBlob = _readerBlob;
+    postMessage('ready');
+});
+
 onmessage = function(event) {
     var message = event.data,
-        aPath = 'zipsample/a.txt',
-        bPath = 'zipsample/folder/b.txt';
+        helloWorldBuffer = new FileReaderSync().readAsArrayBuffer(new Blob(['こんにちは世界']));
 
     switch (message) {
-        case 'jz.utils.bytesToString':
-            jz.utils.bytesToString([0x48, 0x65, 0x6c, 0x6c, 0x6f, 0x20, 0x77, 0x6f, 0x72, 0x6c, 0x64])
-            .then(function (helloWorld) {
-                postMessage(helloWorld);
-            });
+        case 'jz.utils.bytesToStringSync(buffer)':
+            postMessage(jz.utils.bytesToStringSync(helloWorldBuffer));
             break;
-        case 'jz.utils.bytesToStringSync':
-            var helloWorld = jz.utils.bytesToStringSync([0x48, 0x65, 0x6c, 0x6c, 0x6f, 0x20, 0x77, 0x6f, 0x72, 0x6c, 0x64]);
-            postMessage(helloWorld);
+        case 'ZipArchiveReader#readFileAsTextSync(filename)':
+            postMessage(reader.readFileAsTextSync('zipsample/a.txt'));
             break;
-        case 'promise':
-            new Promise(function (resolve) {
-                setTimeout(resolve, 10);
-            })
-            .then(function () {
-                return Promise.all(['promise']);
-            })
-            .spread(function (str) {
-                postMessage(str);
-            });
+        case 'ZipArchiveReader#readFileAsArrayBufferSync(filename)':
+            postMessage(reader.readFileAsArrayBufferSync('zipsample/a.txt'));
             break;
-        case 'jz.zip.unpack(ArrayBuffer)':
-            // postMessage({a: "a\n", b:"b\n"});
-            jz.utils.load('zipsample.zip')
-            .spread(jz.zip.unpack)
-            .then(function(reader) {
-                postMessage({
-                    a: reader.readFileAsTextSync(aPath),
-                    b: reader.readFileAsTextSync(bPath)
-                });
-            })
-            .catch(function (e) {
-                postMessage(e.message);
-            });
+        case 'ZipArchiveReader#readFileAsDataURLSync(filename)':
+            postMessage(reader.readFileAsDataURLSync('zipsample/a.txt'));
             break;
-        case 'jz.zip.unpack(Blob)':
-            jz.utils.load('zipsample.zip')
-            .spread(function(zipsample) {
-                postMessage({a: "a\n", b:"b\n"});
-                return jz.zip.unpack(new Blob([new Uint8Array(zipsample)]));
-            })
-            .then(function(reader) {
-                postMessage({
-                    a: reader.readFileAsTextSync(aPath),
-                    b: reader.readFileAsTextSync(bPath)
-                });
-            });
+        case 'ZipArchiveReader#readFileAsBlobSync(filename)':
+            postMessage(reader.readFileAsBlobSync('zipsample/a.txt'));
             break;
-        case 'jz.zip.pack':
-            var files = [
-                {name: 'zipsample', dir: [
-                    {name: 'a.txt', url: aPath},
-                    {name: 'folder', dir: [
-                        {name: 'b.txt', url: bPath}
-                    ]}
-                ]}
-            ];
-            jz.zip.pack(files)
-            .then(jz.zip.unpack)
-            .then(function(reader) {
-                postMessage({
-                    a: reader.readFileAsTextSync(aPath),
-                    b: reader.readFileAsTextSync(bPath)
-                });
-            });
+        case 'ZipArchiveReader#readFileAsBinaryStringSync(filename)':
+            postMessage(reader.readFileAsBinaryStringSync('zipsample/a.txt'));
+            break;
+        case 'ZipArchiveReaderBlob#readFileAsTextSync(filename)':
+            postMessage(readerBlob.readFileAsTextSync('zipsample/a.txt'));
+            break;
+        case 'ZipArchiveReaderBlob#readFileAsArrayBufferSync(filename)':
+            postMessage(readerBlob.readFileAsArrayBufferSync('zipsample/a.txt'));
+            break;
+        case 'ZipArchiveReaderBlob#readFileAsDataURLSync(filename)':
+            postMessage(readerBlob.readFileAsDataURLSync('zipsample/a.txt'));
+            break;
+        case 'ZipArchiveReaderBlob#readFileAsBlobSync(filename)':
+            postMessage(readerBlob.readFileAsBlobSync('zipsample/a.txt'));
+            break;
+        case 'ZipArchiveReaderBlob#readFileAsBinaryStringSync(filename)':
+            postMessage(readerBlob.readFileAsBinaryStringSync('zipsample/a.txt'));
             break;
     }
 };
