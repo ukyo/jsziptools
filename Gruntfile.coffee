@@ -31,7 +31,7 @@ module.exports = (grunt) ->
         options:
           banner: """
             /*!
-             * jsziptools.js <%= pkg.version %> - MIT License. https://github.com/ukyo/jsziptools/LICENSE
+             * jsziptools.js <%= pkg.version %> - MIT License. https://github.com/ukyo/jsziptools/blob/master/LICENSE
              * ES6-Promises - MIT License. https://github.com/jakearchibald/ES6-Promises/blob/master/LICENSE
              */
             ;(function(){
@@ -48,10 +48,9 @@ module.exports = (grunt) ->
       release: '_jsziptools.js'
 
     testem:
-      options:
-        launch_in_dev: ['Chrome', 'Firefox']
+      # options:
+      #   launch_in_dev: ['Chrome', 'Firefox']
       dev:
-        framework: 'buster'
         src: [
           'vendor/ES6-Promises/dist/promise-0.1.1.min.js'
           'vendor/zlib-asm/zlib.js'
@@ -78,7 +77,6 @@ module.exports = (grunt) ->
           'test/test.js'
         ]
       release:
-        framework: 'buster'
         src: [
           'jsziptools.js'
           'test/loadWorkerRelease.js'
@@ -91,3 +89,4 @@ module.exports = (grunt) ->
   grunt.loadNpmTasks 'grunt-contrib-testem'
 
   grunt.registerTask 'release', ['uglify', 'concat', 'clean', 'testem:ci:release']
+  grunt.registerTask 'watch', ['testem:run:dev']
