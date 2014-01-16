@@ -228,13 +228,15 @@ jz.stream.algos.deflate({
 * @param {number} chunkSize - optional (default is `0x8000`)
 * @return {Uint8Array}
 
-#### jz.stream.gz.compress({buffer, streamFn, level, shareMemory, chunkSize})
+#### jz.stream.gz.compress({buffer, streamFn, level, shareMemory, chunkSize, fname, fcomment})
 
 * @param {Uint8Array|ArrayBuffer} buffer
 * @param {function(chunk: Uint8Array)} streamFn
 * @param {number} level - optional (default is `6`)
 * @param {boolean} shareMemory - optional (default is `false`)
 * @param {number} chunkSize - optional (default is `0x8000`)
+* @param {string} fname - optional
+* @param {string} fcomment - optional
 
 #### jz.stream.gz.decompress({buffer, streamFn, shareMemory, chunkSize})
 
