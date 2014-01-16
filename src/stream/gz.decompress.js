@@ -1,8 +1,8 @@
 /**
  * @param  {ArrayBuffer|Uint8Array|Array|string} buffer
- * @param  {function} streamFn
- * @param  {boolean} shareMemory
- * @param  {number} chunkSize
+ * @param  {function}                            streamFn
+ * @param  {boolean}                             shareMemory
+ * @param  {number}                              chunkSize
  */
 stream.gz.decompress = function(buffer, streamFn, shareMemory, chunkSize) {
     var params = utils.getParams(arguments, ['buffer', 'streamFn', 'shareMemory', 'chunkSize']),

@@ -1,9 +1,3 @@
-/* require:
-jsziptools.js
-*/
-
-utils.noop = function() {};
-
 /**
  * @param {*} arg
  * @return {Array}
@@ -139,11 +133,11 @@ utils.stringToBytes = function(str) {
 /**
  * Convert Uint8Array to String.
  * @param {Uint8Array|ArrayBuffer} bytes
- * @param {string}     encoding Character encoding
+ * @param {string}                 encoding Character encoding
  * @return {Promise}
  *
  * @example
- * jz.utils.bytesToString(bytes).done(function(str) {
+ * jz.utils.bytesToString(bytes).then(function(str) {
  *     console.log(str);
  * });
  *
@@ -163,7 +157,7 @@ utils.bytesToStringSync = null;
 if (env.isWorker) {
     /**
      * @param {Uint8Array|Array|ArrayBuffer} bytes
-     * @param {string} encoding
+     * @param {string}                       encoding
      * @return {string}
      *
      * @example
@@ -180,11 +174,11 @@ if (env.isWorker) {
 
 /**
  * @param {Uint8Array} bytes
- * @return {string} encoding
+ * @return {string}    encoding
  *
  * @example
  * var encoding = jz.utils.detectEncoding(bytes);
- * jz.utils.bytesToString(bytes, encoding).done(function(str) {
+ * jz.utils.bytesToString(bytes, encoding).then(function(str) {
  *     console.log(str);
  * });
  */

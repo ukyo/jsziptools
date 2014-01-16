@@ -1,19 +1,15 @@
-/* require:
-jsziptools.js
-utils.js
-crc32.js
-deflate.js
-*/
-
-
 /**
  * Compress to a gzip format buffer.
  * 
- * @param {ArrayBuffer|Uint8Array|Array|string} buffer
- * @param {number} level compress level.
- * @param {Object} metadata This function supports
+ * @param {Uint8Array|ArrayBuffer}      buffer
+ * @param {function(chunk: Uint8Array)} streamFn
+ * @param {number}                      level - optional (default is `6`)
+ * @param {boolean}                     shareMemory - optional (default is `false`)
+ * @param {number}                      chunkSize - optional (default is `0x8000`)
+ * @param {string}                      fname - optional
+ * @param {string}                      fcomment - optional
  */
-stream.gz.compress = function (buffer, streamFn, level, shareMemory, chunkSize, fname, fcomment) {
+stream.gz.compress = function(buffer, streamFn, level, shareMemory, chunkSize, fname, fcomment) {
     var params = utils.getParams(arguments, ['buffer', 'streamFn', 'level', 'shareMemory', 'chunkSize', 'fname', 'fcomment']),
         bytes = utils.toBytes(params.buffer),
         level = params.level,
@@ -26,10 +22,8 @@ stream.gz.compress = function (buffer, streamFn, level, shareMemory, chunkSize, 
         headerLength = 10,
         offset = 0,
         now = Date.now(),
-        header,
-        footer,
-        view;
-    
+        header, footer, view;
+
     // add length of metadatas
     if (fname) {
         headerLength += fname.length + 1;

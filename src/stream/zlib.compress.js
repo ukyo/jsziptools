@@ -15,7 +15,7 @@
  *   chunkSize: 0xf000
  * });
  */
-stream.zlib.compress = function (buffer, streamFn, level, shareMemory, chunkSize) {
+stream.zlib.compress = function(buffer, streamFn, level, shareMemory, chunkSize) {
     var params = utils.getParams(arguments, ['buffer', 'streamFn', 'level', 'shareMemory', 'chunkSize']);
     params.input = utils.toBytes(params.buffer);
     zlib.stream.deflate(params);

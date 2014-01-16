@@ -1,7 +1,7 @@
 /**
  * @param  {Array.<object>} files
- * @param  {number} level
- * @param  {number} chunkSize
+ * @param  {number}         level
+ * @param  {number}         chunkSize
  * @return {Uint8Array}
  *
  * The object in `files` has some properties.
@@ -23,7 +23,7 @@
  *   // buffer is Uint8Array.
  * });
  */
-zip.pack = function (files, level, chunkSize) {
+zip.pack = function(files, level, chunkSize) {
     var params = utils.getParams(arguments, ['files', 'level', 'chunkSize']),
         chunks = [];
     return stream.zip.pack({
@@ -31,11 +31,10 @@ zip.pack = function (files, level, chunkSize) {
         shareMemory: false,
         level: params.level,
         chunkSize: params.chunkSize,
-        streamFn: function (chunk) {
+        streamFn: function(chunk) {
             chunks.push(chunk);
         }
-    })
-    .then(function () {
+    }).then(function() {
         return utils.concatBytes(chunks);
     });
 };

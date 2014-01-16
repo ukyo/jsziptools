@@ -584,8 +584,8 @@ exposeProperty('readFileAsDataURLSync', ZipArchiveReaderBlob, ZipArchiveReaderBl
 /**
  * unpack a zip file.
  * @param {Object|Uint8Array|Int8Array|Array|ArrayBuffer|string|Blob} buffer
- * @param {string} encoding
- * @param {number} chunkSize
+ * @param {string}                                                    encoding
+ * @param {number}                                                    chunkSize
  * @return {Promise}
  *
  * @example
