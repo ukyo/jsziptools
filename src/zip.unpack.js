@@ -535,14 +535,13 @@ ZipArchiveReaderBlob.prototype.readFileAsBlob = function(filename, contentType) 
 if (env.isWorker) {
     /**
      * @param  {string}  filename File name
-     * @param  {boolean} copy     If copy is true, return copy.
      * @return {Uint8Array}
      */
-    ZipArchiveReaderBlob.prototype._decompressFile = function(filename, copy) {
+    ZipArchiveReaderBlob.prototype._decompressFile = function(filename) {
         var info = this._getFileInfo(filename),
             blob = this.blob.slice(info.offset, info.offset + info.length),
             bytes = new Uint8Array(new FileReaderSync().readAsArrayBuffer(blob));
-        return this._decompress(bytes, info.isCompressed, copy);
+        return this._decompress(bytes, info.isCompressed);
     };
 
     /**
