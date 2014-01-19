@@ -1,11 +1,3 @@
-/* require:
-jsziptools.js
-adler32.js
-inflate.js
-utils.js
-*/
-
-
 /**
  * Decompress a zlib format buffer.
  * 
