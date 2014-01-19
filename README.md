@@ -391,3 +391,76 @@ It gets filenames in the zip archive.
 
 * @param {string} filename
 * @return {string}
+
+### jz.zip.ZipArchiveWriter({shareMemory, chunkSize})
+
+Low level zip archive writer.
+
+* @param {boolean} shareMemory - optional (default is `false`)
+* @param {number} chunkSize - optional (default is `0x8000`)
+
+```js
+ var writer = new jz.zip.ZipArchiveWriter({shareMemory: true, chunkSize: 0xf000});
+ writer
+ .on('data', function(chunk) {
+   // chunk is Uint8Array.
+ })
+ .on('end', function() {
+   // ...
+ });
+ .write('foo/bar/baz.txt', buffer)
+ .write('a.mp3', mp3Buff)
+ .writeEnd();
+```
+
+#### #on(name, callback)
+
+* @param {string} name
+* @param {function} callback
+* @return {jz.zip.ZipArchiveWriter} this
+
+#### #write(path, buffer, level)
+
+Write the file. Directories are created automatically.
+
+* @param {string} path
+* @param {Uint8Array} buffer
+* @param {number} level - optional (default is `6`)
+* @return {jz.zip.ZipArchiveWriter} this
+
+```js
+writer.write('a/b/c/d/foo.txt', buffer, 7);
+```
+
+#### #writeDir(path)
+
+* @param {string} path
+* @return {jz.zip.ZipArchiveWriter} this
+
+```js
+writer.writeDir('foo/');
+// or
+writer.writeDir('bar/');
+```
+
+#### #writeFile(path, buffer, level)
+
+* @param {string} path
+* @param {Uint8Array} buffer
+* @param {number} level - optional (default is `6`)
+* @return {jz.zip.ZipArchiveWriter} this
+
+```js
+writer.writeDir('a/');
+writer.writeDir('a/b/');
+writer.writeDir('a/b/c/');
+writer.writeFile('a/b/c/foo.txt', buffer, 7);
+```
+
+#### #writeEnd()
+
+Write central directory headers and the end central dirctory header.
+
+```js
+writer.writeEnd();
+```

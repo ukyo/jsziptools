@@ -438,6 +438,48 @@ describe('jz.zip', function() {
         });  
     });
 
+    describe('jz.zip.ZipArchiveWriter', function() {
+        var writer = new jz.zip.ZipArchiveWriter({
+            shareMemory: true,
+            chunkSize: 0x8000
+        });
+
+        it('has params.', function() {
+            expect(writer.shareMemory).toBe(true);
+            expect(writer.chunkSize).toBe(0x8000);
+        });
+
+        describe('#write', function() {
+            it('exists.', function() {
+                expect(writer.write).toBeDefined();
+            });
+        });
+
+        describe('#writeDir', function() {
+            it('exists.', function() {
+                expect(writer.writeDir).toBeDefined();
+            });
+        });
+
+        describe('#writeFile', function() {
+            it('exists.', function() {
+                expect(writer.writeFile).toBeDefined();
+            });
+        });
+
+        describe('#writeEnd', function() {
+            it('exists.', function() {
+                expect(writer.writeEnd).toBeDefined();
+            });
+        });
+
+        describe('#on', function() {
+            it('exists.', function() {
+                expect(writer.on).toBeDefined();
+            });
+        });
+    });
+
     describe('jz.zip.pack({files, level, chunkSize})', function() {
         it('pack to the zip archive (buffer).', function() {
             var files = [

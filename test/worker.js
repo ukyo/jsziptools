@@ -7,6 +7,7 @@ importScripts(
     '../src/algorithms/crc32.js',
     '../src/algorithms/deflate.js',
     '../src/algorithms/inflate.js',
+    '../src/ZipArchiveWriter.js',
     '../src/stream/algorithms/deflate.js',
     '../src/stream/algorithms/inflate.js',
     '../src/stream/zlib.compress.js',
