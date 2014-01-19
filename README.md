@@ -440,7 +440,7 @@ writer.write('a/b/c/d/foo.txt', buffer, 7);
 ```js
 writer.writeDir('foo/');
 // or
-writer.writeDir('bar/');
+writer.writeDir('bar');
 ```
 
 #### #writeFile(path, buffer, level)
