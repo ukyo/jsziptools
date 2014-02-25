@@ -18,6 +18,12 @@
     "node_modules",
     "bower_components",
     "test",
-    "tests"
+    "tests",
+    "examples",
+    "src",
+    "vendor",
+    "Gruntfile.coffee",
+    "package.json",
+    "testem.json"
   ]
 }
