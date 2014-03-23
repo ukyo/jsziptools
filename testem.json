@@ -1,5 +1,5 @@
 {
-  "framework": "buster",
+  "framework": "mocha+chai",
   "launch_in_dev": [
     "Chrome",
     "Firefox"
