@@ -30,11 +30,10 @@
  *   // no args.
  * });
  */
-stream.zip.pack = function(files, streamFn, level, shareMemory, chunkSize) {
-    var params = utils.getParams(arguments, ['files', 'streamFn', 'level', 'shareMemory', 'chunkSize']),
-        promises = [],
-        writer = new ZipArchiveWriter(params);
-    writer.on('data', params.streamFn);
+stream.zip.pack = defun(['files', 'streamFn', 'level', 'shareMemory', 'chunkSize'], function(files, streamFn, level, shareMemory, chunkSize) {
+    var promises = [],
+        writer = new ZipArchiveWriter(shareMemory, chunkSize);
+    writer.on('data', streamFn);
 
     function packItem(level, path, item) {
         var dir = item.children || item.dir || item.folder,
@@ -69,11 +68,11 @@ stream.zip.pack = function(files, streamFn, level, shareMemory, chunkSize) {
         }
     }
 
-    params.files.forEach(loadFile);
+    files.forEach(loadFile);
     return Promise.all(promises).then(function() {
-        params.files.forEach(packItem.bind(null, params.level, ''));
+        files.forEach(packItem.bind(null, level, ''));
         writer.writeEnd();
     });
-};
+});
 
 expose('jz.stream.zip.pack', stream.zip.pack);

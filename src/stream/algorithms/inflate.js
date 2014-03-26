@@ -13,10 +13,13 @@
  *   chunkSize: 0xf000
  * });
  */
-stream.algorithms.inflate = function(buffer, streamFn, shareMemory, chunkSize) {
-    var params = utils.getParams(arguments, ['buffer', 'streamFn', 'shareMemory', 'chunkSize']);
-    params.input = utils.toBytes(params.buffer);
-    zlib.stream.rawInflate(params);
-};
+stream.algorithms.inflate = defun(['buffer', 'streamFn', 'shareMemory', 'chunkSize'], function(buffer, streamFn, shareMemory, chunkSize) {
+    zlib.stream.rawInflate({
+        input: utils.toBytes(buffer),
+        streamFn: streamFn,
+        shareMemory: shareMemory,
+        chunkSize: chunkSize
+    });
+});
 
 expose('jz.stream.algorithms.inflate', stream.algorithms.inflate);

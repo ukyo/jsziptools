@@ -15,16 +15,15 @@
  * .write('a.mp3', mp3Buff)
  * .writeEnd();
  */
-function ZipArchiveWriter(shareMemory, chunkSize) {
-    var params = utils.getParams(arguments, ['shareMemory', 'chunkSize']);
-    this.shareMemory = params.shareMemory;
-    this.chunkSize = params.chunkSize;
+var ZipArchiveWriter = defun(['shareMemory', 'chunkSize'], function ZipArchiveWriter(shareMemory, chunkSize) {
+    this.shareMemory = shareMemory;
+    this.chunkSize = chunkSize;
     this.dirs = {};
     this.centralDirHeaders = [];
     this.offset = 0;
     this.date = new Date;
     this.listners = {};
-}
+});
 
 /**
  * @param {string}     path

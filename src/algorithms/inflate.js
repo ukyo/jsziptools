@@ -3,9 +3,8 @@
  * @param {number} chunkSize
  * @return {Uint8Array}
  */
-algorithms.inflate = function(buffer, chunkSize){
-    var params = utils.getParams(arguments, ['buffer', 'chunkSize']);
-    return zlib['rawInflate'](utils.toBytes(params.buffer), params.chunkSize);
-};
+algorithms.inflate = defun(['buffer', 'chunkSize'], function(buffer, chunkSize){
+    return zlib['rawInflate'](utils.toBytes(buffer), chunkSize);
+});
 
 expose('jz.algorithms.inflate', algorithms.inflate);

@@ -24,16 +24,15 @@ algorithms.crc32 = (function(){
         return table;
     })();
     
-    return function(buffer, crc){
-        var params = utils.getParams(arguments, ['buffer', 'crc']),
-            bytes = utils.toBytes(params.buffer),
-            crc = params.crc == null ? 0xFFFFFFFF : ~params.crc >>> 0,
+    return defun(['buffer', 'crc'], function(buffer, crc){
+        var bytes = utils.toBytes(buffer),
+            crc = crc == null ? 0xFFFFFFFF : ~crc >>> 0,
             i = 0,
             n = bytes.length,
             t = table;
         for(; i < n; ++i) crc = (crc >>> 8) ^ t[bytes[i] ^ (crc & 0xFF)];
         return ~crc >>> 0;
-    };
+    });
 })();
 
 expose('jz.algorithms.crc32', algorithms.crc32);

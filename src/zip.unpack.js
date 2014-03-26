@@ -136,11 +136,11 @@ ZipArchiveReader.prototype._completeInit = function() {
 
     return Promise.all(localFileHeaders.map(function(header, i) {
         return utils.bytesToString(header.filename, params.encoding).then(function(filename) {
-    header.filename = filename;
-});
-})).then(function() {
-    return self
-});
+            header.filename = filename;
+        });
+    })).then(function() {
+        return self
+    });
 };
 
 /**
@@ -602,9 +602,12 @@ exposeProperty('readFileAsDataURLSync', ZipArchiveReaderBlob, ZipArchiveReaderBl
  *   });
  * });
  */
-zip.unpack = function(buffer, encoding, chunkSize) {
-    var params = utils.getParams(arguments, ['buffer', 'encoding', 'chunkSize']);
-    return new(params.buffer instanceof Blob ? ZipArchiveReaderBlob : ZipArchiveReader)(params).init();
-};
+zip.unpack = defun(['buffer', 'encoding', 'chunkSize'], function(buffer, encoding, chunkSize) {
+    return new(buffer instanceof Blob ? ZipArchiveReaderBlob : ZipArchiveReader)({
+        buffer: buffer,
+        encoding: encoding,
+        chunkSize: chunkSize
+    }).init();
+});
 
 expose('jz.zip.unpack', zip.unpack);

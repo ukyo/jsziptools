@@ -9,15 +9,10 @@
  * @param {string}                      fname - optional
  * @param {string}                      fcomment - optional
  */
-stream.gz.compress = function(buffer, streamFn, level, shareMemory, chunkSize, fname, fcomment) {
-    var params = utils.getParams(arguments, ['buffer', 'streamFn', 'level', 'shareMemory', 'chunkSize', 'fname', 'fcomment']),
-        bytes = utils.toBytes(params.buffer),
-        level = params.level,
-        streamFn = params.streamFn,
-        shareMemory = params.shareMemory,
-        chunkSize = params.chunkSize,
-        fname = params.fname && utils.toBytes(params.fname),
-        fcomment = params.fcomment && utils.toBytes(params.fcomment),
+stream.gz.compress = defun(['buffer', 'streamFn', 'level', 'shareMemory', 'chunkSize', 'fname', 'fcomment'], function(buffer, streamFn, level, shareMemory, chunkSize, fname, fcomment) {
+    var bytes = utils.toBytes(buffer),
+        fname = fname && utils.toBytes(fname),
+        fcomment = fcomment && utils.toBytes(fcomment),
         flg = 0,
         headerLength = 10,
         offset = 0,
@@ -70,6 +65,6 @@ stream.gz.compress = function(buffer, streamFn, level, shareMemory, chunkSize, f
     view.setUint32(0, algorithms.crc32(bytes), true); // crc checksum
     view.setUint32(4, bytes.length, true); // isize
     streamFn(footer);
-};
+});
 
 expose('jz.stream.gz.compress', stream.gz.compress);

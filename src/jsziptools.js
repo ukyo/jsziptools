@@ -34,3 +34,17 @@ function expose(namespace, o) {
 function exposeProperty(name, cls, property) {
     cls.prototype[name] = property;
 }
+
+function defun(propertyNames, fn) {
+    return function() {
+        var args, params = arguments[0];
+        if (Object.prototype.toString.call(params) === '[object Object]') {
+            args = propertyNames.map(function(name) {
+                return params[name];
+            });
+        } else {
+            args = arguments;
+        }
+        return fn.apply(this, args);
+    };
+}

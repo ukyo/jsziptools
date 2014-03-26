@@ -9,9 +9,8 @@ utils.js
  * @param {number} level
  * @return {Uint8Array}
  */
-algorithms.deflate = function (buffer, level, chunkSize) {
-    var params = utils.getParams(arguments, ['buffer', 'level', 'chunkSize']);
-    return zlib['rawDeflate'](utils.toBytes(params.buffer), params.level, params.chunkSize);
-};
+algorithms.deflate = defun(['buffer', 'level', 'chunkSize'], function(buffer, level, chunkSize) {
+    return zlib['rawDeflate'](utils.toBytes(buffer), level, chunkSize);
+});
 
 expose('jz.algorithms.deflate', algorithms.deflate);

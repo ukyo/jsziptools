@@ -23,20 +23,19 @@
  *   // buffer is Uint8Array.
  * });
  */
-zip.pack = function(files, level, chunkSize) {
-    var params = utils.getParams(arguments, ['files', 'level', 'chunkSize']),
-        chunks = [];
+zip.pack = defun(['files', 'level', 'chunkSize'], function(files, level, chunkSize) {
+    var chunks = [];
     return stream.zip.pack({
-        files: params.files,
+        files: files,
         shareMemory: false,
-        level: params.level,
-        chunkSize: params.chunkSize,
+        level: level,
+        chunkSize: chunkSize,
         streamFn: function(chunk) {
             chunks.push(chunk);
         }
     }).then(function() {
         return utils.concatBytes(chunks);
     });
-};
+});
 
 expose('jz.zip.pack', zip.pack);

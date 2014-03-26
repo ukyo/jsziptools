@@ -15,10 +15,14 @@
  *   chunkSize: 0xf000
  * });
  */
-stream.zlib.compress = function(buffer, streamFn, level, shareMemory, chunkSize) {
-    var params = utils.getParams(arguments, ['buffer', 'streamFn', 'level', 'shareMemory', 'chunkSize']);
-    params.input = utils.toBytes(params.buffer);
-    zlib.stream.deflate(params);
-};
+stream.zlib.compress = defun(['buffer', 'streamFn', 'level', 'shareMemory', 'chunkSize'], function(buffer, streamFn, level, shareMemory, chunkSize) {
+    zlib.stream.deflate({
+        input: utils.toBytes(buffer),
+        streamFn: streamFn,
+        level: level,
+        shareMemory: shareMemory,
+        chunkSize: chunkSize
+    });
+});
 
 expose('jz.stream.zlib.compress', stream.zlib.compress);

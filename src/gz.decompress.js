@@ -5,18 +5,16 @@
  * @param  {boolean}                             chunkSize
  * @return {Uint8Array}
  */
-gz.decompress = function(buffer, chunkSize) {
-    var params = utils.getParams(arguments, ['buffer', 'chunkSize']),
-        chunks = [];
+gz.decompress = defun(['buffer', 'chunkSize'], function(buffer, chunkSize) {
+    var chunks = [];
     stream.gz.decompress({
-        buffer: params.buffer,
+        buffer: buffer,
         streamFn: function(chunk) {
             chunks.push(chunk);
         },
-        shareMemory: false,
-        chunkSize: params.chunkSize
+        chunkSize: chunkSize
     });
     return utils.concatBytes(chunks);
-}
+});
 
 expose('jz.gz.decompress', gz.decompress);

@@ -6,20 +6,19 @@
  * @param  {string}                              fcomment
  * @return {Uint8Array}
  */
-gz.compress = function(buffer, level, chunkSize, fname, fcomment) {
-    var params = utils.getParams(arguments, ['buffer', 'level', 'chunkSize', 'fname', 'fcomment']),
-        chunks = [];
+gz.compress = defun(['buffer', 'level', 'chunkSize', 'fname', 'fcomment'], function(buffer, level, chunkSize, fname, fcomment) {
+    var chunks = [];
     stream.gz.compress({
-        buffer: params.buffer,
-        level: params.level,
-        chunkSize: params.chunkSize,
-        fname: params.fname,
-        fcomment: params.fcomments,
+        buffer: buffer,
+        level: level,
+        chunkSize: chunkSize,
+        fname: fname,
+        fcomment: fcomment,
         streamFn: function(chunk) {
             chunks.push(chunk);
         }
     });
     return utils.concatBytes(chunks);
-};
+});
 
 expose('jz.gz.compress', gz.compress);

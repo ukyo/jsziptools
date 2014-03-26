@@ -12,10 +12,13 @@
  *   chunkSize: 0xf000
  * });
  */
-stream.zlib.decompress = function(buffer, streamFn, shareMemory, chunkSize) {
-    var params = utils.getParams(arguments, ['buffer', 'streamFn', 'shareMemory', 'chunkSize']);
-    params.input = utils.toBytes(params.buffer);
-    zlib.stream.inflate(params);
-};
+stream.zlib.decompress = defun(['buffer', 'streamFn', 'shareMemory', 'chunkSize'], function(buffer, streamFn, shareMemory, chunkSize) {
+    zlib.stream.inflate({
+        input: buffer,
+        streamFn: streamFn,
+        shareMemory: shareMemory,
+        chunkSize: chunkSize
+    });
+});
 
 expose('jz.stream.zlib.decompress', stream.zlib.decompress);

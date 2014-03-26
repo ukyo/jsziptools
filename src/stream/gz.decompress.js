@@ -4,12 +4,9 @@
  * @param  {boolean}                             shareMemory
  * @param  {number}                              chunkSize
  */
-stream.gz.decompress = function(buffer, streamFn, shareMemory, chunkSize) {
-    var params = utils.getParams(arguments, ['buffer', 'streamFn', 'shareMemory', 'chunkSize']),
-        bytes = utils.toBytes(params.buffer),
-        flg, ret, crc, streamFn = params.streamFn,
-        shareMemory = params.shareMemory,
-        chunkSize = params.chunkSize,
+stream.gz.decompress = defun(['buffer', 'streamFn', 'shareMemory', 'chunkSize'], function(buffer, streamFn, shareMemory, chunkSize) {
+    var bytes = utils.toBytes(buffer),
+        flg, ret, crc,
         offset = 10,
         view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
 
@@ -39,6 +36,6 @@ stream.gz.decompress = function(buffer, streamFn, shareMemory, chunkSize) {
     if (crc !== view.getUint32(bytes.length - 8, true)) {
         throw new Error('js.stream.gz.decompress: file is broken.');
     }
-};
+});
 
 expose('jz.stream.gz.decompress', stream.gz.decompress);
