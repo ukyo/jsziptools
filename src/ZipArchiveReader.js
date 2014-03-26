@@ -2,11 +2,12 @@
  * @constructor
  * @param {object} params
  */
-function ZipArchiveReader(params) {
-    this.bytes = utils.toBytes(params.buffer);
+var ZipArchiveReader = defun(['buffer', 'encoding', 'chunkSize'], function ZipArchiveReader(buffer, encoding, chunkSize) {
+    this.bytes = utils.toBytes(buffer);
     this.buffer = this.bytes.buffer;
-    this.params = params;
-};
+    this.encoding = encoding;
+    this.chunkSize = chunkSize;
+});
 
 /**
  * @return {Promise}
@@ -19,8 +20,7 @@ ZipArchiveReader.prototype.init = function() {
         folders = [],
         offset = bytes.byteLength - 4,
         view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength),
-        self = this,
-        params = this.params;
+        self = this;
 
     this.files = files;
     this.folders = folders;
@@ -69,7 +69,6 @@ ZipArchiveReader.prototype.init = function() {
 ZipArchiveReader.prototype._completeInit = function() {
     var files = this.files,
         folders = this.folders,
-        params = this.params,
         localFileHeaders = this.localFileHeaders,
         self = this;
 
@@ -79,16 +78,16 @@ ZipArchiveReader.prototype._completeInit = function() {
     });
 
     // detect encoding. cp932 or utf-8.
-    if (params.encoding == null) {
+    if (self.encoding == null) {
         Promise.resolve(localFileHeaders.map(function(header) {
             return header.filename;
         })).then(utils.concatBytes).then(utils.detectEncoding).then(function(encoding) {
-            params.encoding = encoding;
+            self.encoding = encoding;
         })
     }
 
     return Promise.all(localFileHeaders.map(function(header, i) {
-        return utils.bytesToString(header.filename, params.encoding).then(function(filename) {
+        return utils.bytesToString(header.filename, self.encoding).then(function(filename) {
             header.filename = filename;
         });
     })).then(function() {
@@ -212,7 +211,7 @@ ZipArchiveReader.prototype._getFileInfo = function(filename) {
  * @return {Uint8Array} Decompressed bytes.
  */
 ZipArchiveReader.prototype._decompress = function(bytes, isCompressed) {
-    return isCompressed ? algorithms.inflate(bytes) : bytes;
+    return isCompressed ? algorithms.inflate({buffer: bytes, chunkSize: this.chunkSize}) : bytes;
 }
 
 /**

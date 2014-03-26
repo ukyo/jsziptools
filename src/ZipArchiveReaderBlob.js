@@ -2,10 +2,11 @@
  * @constructor
  * @param {object} params
  */
-function ZipArchiveReaderBlob(params) {
-    this.blob = params.buffer;
-    this.params = params;
-}
+var ZipArchiveReaderBlob = defun(['buffer', 'encoding', 'chunkSize'], function ZipArchiveReaderBlob(buffer, encoding, chunkSize) {
+    this.blob = buffer;
+    this.encoding = encoding;
+    this.chunkSize = chunkSize;
+});
 
 ZipArchiveReaderBlob.prototype = Object.create(ZipArchiveReader.prototype);
 ZipArchiveReaderBlob.prototype.constructor = ZipArchiveReaderBlob;
@@ -15,7 +16,6 @@ ZipArchiveReaderBlob.prototype.constructor = ZipArchiveReaderBlob;
  */
 ZipArchiveReaderBlob.prototype.init = function() {
     var blob = this.blob,
-        params = this.params,
         self = this,
         endCentDirHeader, centralDirHeaders = [],
         localFileHeaders = [],
