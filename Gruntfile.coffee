@@ -79,7 +79,7 @@ module.exports = (grunt) ->
           'src/gz.decompress.js'
           'src/zip.pack.js'
           'src/zip.unpack.js'
-          'test/loadWorker.js'
+          'test/loadWorkerDev.js'
           'test/test.js'
         ]
       release:

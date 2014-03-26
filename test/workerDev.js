@@ -23,5 +23,5 @@ importScripts(
     '../src/gz.decompress.js',
     '../src/zip.pack.js',
     '../src/zip.unpack.js',
-    'worker_body.js'
+    'workerBody.js'
 );

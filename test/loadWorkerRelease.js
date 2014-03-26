@@ -1,1 +1,1 @@
-var worker = new Worker('test/worker_min.js');
+var worker = new Worker('test/workerRelease.js');
