@@ -1,0 +1,668 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>Jsziptools by ukyo</title>
+
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="wrapper">
+      <header>
+        <h1>Jsziptools</h1>
+        <p>zip utility implemented with JavaScript</p>
+
+        <p class="view"><a href="https://github.com/ukyo/jsziptools">View the Project on GitHub <small>ukyo/jsziptools</small></a></p>
+
+
+        <ul>
+          <li><a href="https://github.com/ukyo/jsziptools/zipball/master">Download <strong>ZIP File</strong></a></li>
+          <li><a href="https://github.com/ukyo/jsziptools/tarball/master">Download <strong>TAR Ball</strong></a></li>
+          <li><a href="https://github.com/ukyo/jsziptools">View On <strong>GitHub</strong></a></li>
+        </ul>
+      </header>
+      <section>
+        <h1>
+<a name="jsziptools" class="anchor" href="#jsziptools"><span class="octicon octicon-link"></span></a>jsziptools</h1>
+
+<p>It's a utility of zlib, gzip and zip format binary data.</p>
+
+<h2>
+<a name="suported-browser" class="anchor" href="#suported-browser"><span class="octicon octicon-link"></span></a>suported browser</h2>
+
+<p>chrome, firefox, IE10, safari, opera.</p>
+
+<h2>
+<a name="examples" class="anchor" href="#examples"><span class="octicon octicon-link"></span></a>examples</h2>
+
+<h3>
+<a name="web-examples" class="anchor" href="#web-examples"><span class="octicon octicon-link"></span></a>web examples</h3>
+
+<ul>
+<li><a href="http://ukyo.github.com/jsziptools/examples/deflate_text.html">Deflate text</a></li>
+<li><a href="http://ukyo.github.com/jsziptools/examples/zip_viewer.html">Zip viewer</a></li>
+</ul><h2>
+<a name="apis" class="anchor" href="#apis"><span class="octicon octicon-link"></span></a>APIs</h2>
+
+<p>If the api is written as <em>foo({a, b, c})</em>, you can call it as below.</p>
+
+<div class="highlight highlight-js"><pre><span class="nx">foo</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">);</span>
+<span class="nx">foo</span><span class="p">({</span>
+  <span class="nx">a</span><span class="o">:</span> <span class="mi">1</span><span class="p">,</span>
+  <span class="nx">b</span><span class="o">:</span> <span class="mi">2</span><span class="p">,</span>
+  <span class="nx">c</span><span class="o">:</span> <span class="mi">3</span>
+<span class="p">});</span>
+</pre></div>
+
+<h3>
+<a name="promise" class="anchor" href="#promise"><span class="octicon octicon-link"></span></a>Promise</h3>
+
+<p>jsziptools uses ES6 Promises and add <code>spread</code> method.</p>
+
+<h3>
+<a name="promiseprototypespreadonfulfillment-onrejection" class="anchor" href="#promiseprototypespreadonfulfillment-onrejection"><span class="octicon octicon-link"></span></a>Promise.prototype.spread(onFulfillment, onRejection)</h3>
+
+<ul>
+<li>
+<a href="https://github.com/param" class="user-mention">@param</a> {function} onFulfillment</li>
+<li>
+<a href="https://github.com/param" class="user-mention">@param</a> {function} onRejection - optional</li>
+<li>
+<a href="https://github.com/return" class="user-mention">@return</a> {Promise}</li>
+</ul><p>It spreads a Array argument in a <code>onFulfillment</code> callback. </p>
+
+<div class="highlight highlight-js"><pre><span class="c1">// in ES6 Promises then</span>
+<span class="nx">Promise</span><span class="p">.</span><span class="nx">all</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">]).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">args</span><span class="p">)</span> <span class="p">{</span>
+  <span class="kd">var</span> <span class="nx">one</span> <span class="o">=</span> <span class="nx">args</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nx">two</span> <span class="o">=</span> <span class="nx">args</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="nx">three</span> <span class="o">=</span> <span class="nx">args</span><span class="p">[</span><span class="mi">2</span><span class="p">];</span>
+<span class="p">});</span>
+
+<span class="c1">// in Promise.prototype.spread</span>
+<span class="nx">Promise</span><span class="p">.</span><span class="nx">all</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">]).</span><span class="nx">spread</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">one</span><span class="p">,</span> <span class="nx">two</span><span class="p">,</span> <span class="nx">three</span><span class="p">)</span> <span class="p">{</span>
+  <span class="c1">// ...</span>
+<span class="p">});</span>
+</pre></div>
+
+<h3>
+<a name="utils" class="anchor" href="#utils"><span class="octicon octicon-link"></span></a>utils</h3>
+
+<h4>
+<a name="jzutilstobytesbuffer" class="anchor" href="#jzutilstobytesbuffer"><span class="octicon octicon-link"></span></a>jz.utils.toBytes(buffer)</h4>
+
+<ul>
+<li>
+<a href="https://github.com/param" class="user-mention">@param</a> {ArrayBuffer|Uint8Array|Array|string} buffer</li>
+<li>
+<a href="https://github.com/return" class="user-mention">@return</a> {Uint8Array}</li>
+</ul><h4>
+<a name="jzutilsreadfileasarraybufferblob" class="anchor" href="#jzutilsreadfileasarraybufferblob"><span class="octicon octicon-link"></span></a>jz.utils.readFileAsArrayBuffer(blob)</h4>
+
+<ul>
+<li>
+<a href="https://github.com/param" class="user-mention">@param</a> {Blob} blob</li>
+<li>
+<a href="https://github.com/return" class="user-mention">@return</a> {Promise}</li>
+</ul><div class="highlight highlight-js"><pre><span class="nx">jz</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">readFileAsArrayBuffer</span><span class="p">(</span><span class="nx">blob</span><span class="p">)</span>
+<span class="p">.</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">buffer</span><span class="p">)</span> <span class="p">{</span>
+  <span class="c1">// ...</span>
+<span class="p">});</span>
+</pre></div>
+
+<h4>
+<a name="jzutilsreadfileastextblob-encoding" class="anchor" href="#jzutilsreadfileastextblob-encoding"><span class="octicon octicon-link"></span></a>jz.utils.readFileAsText(blob, encoding)</h4>
+
+<ul>
+<li>
+<a href="https://github.com/param" class="user-mention">@param</a> {Blob} blob</li>
+<li>
+<a href="https://github.com/param" class="user-mention">@param</a> {string} encoding - optional (default is <code>"UTF-8"</code>)</li>
+<li>
+<a href="https://github.com/return" class="user-mention">@return</a> {Promise}</li>
+</ul><h4>
+<a name="jzutilsreadfileasdataurlblob" class="anchor" href="#jzutilsreadfileasdataurlblob"><span class="octicon octicon-link"></span></a>jz.utils.readFileAsDataURL(blob)</h4>
+
+<ul>
+<li>
+<a href="https://github.com/param" class="user-mention">@param</a> {Blob} blob</li>
+<li>
+<a href="https://github.com/return" class="user-mention">@return</a> {Promise}</li>
+</ul><h4>
+<a name="jzutilsreadfileasbinarystringblob" class="anchor" href="#jzutilsreadfileasbinarystringblob"><span class="octicon octicon-link"></span></a>jz.utils.readFileAsBinaryString(blob)</h4>
+
+<ul>
+<li>
+<a href="https://github.com/param" class="user-mention">@param</a> {Blob} blob</li>
+<li>
+<a href="https://github.com/return" class="user-mention">@return</a> {Promise}</li>
+</ul><h4>
+<a name="jzutilsbytestostringbuffer" class="anchor" href="#jzutilsbytestostringbuffer"><span class="octicon octicon-link"></span></a>jz.utils.bytesToString(buffer)</h4>
+
+<ul>
+<li>
+<a href="https://github.com/param" class="user-mention">@param</a> {Uint8Array|ArrayBuffer|Array|string} buffer</li>
+<li>
+<a href="https://github.com/return" class="user-mention">@return</a> {Promise}</li>
+</ul><div class="highlight highlight-js"><pre><span class="nx">jz</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">bytesToString</span><span class="p">(</span><span class="nx">bytes</span><span class="p">)</span>
+<span class="p">.</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">str</span><span class="p">)</span> <span class="p">{</span>
+  <span class="c1">// ...</span>
+<span class="p">});</span>
+</pre></div>
+
+<h4>
+<a name="jzutilsconcatbytesbuffers" class="anchor" href="#jzutilsconcatbytesbuffers"><span class="octicon octicon-link"></span></a>jz.utils.concatBytes(buffers)</h4>
+
+<ul>
+<li>
+<a href="https://github.com/param" class="user-mention">@param</a> {Array.&lt;Uint8Array|ArrayBuffer&gt;} buffers</li>
+<li>
+<a href="https://github.com/return" class="user-mention">@return</a> {Uint8Array}</li>
+</ul><div class="highlight highlight-js"><pre><span class="kd">var</span> <span class="nx">concated</span> <span class="o">=</span> <span class="nx">jz</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">concatBytes</span><span class="p">([</span><span class="nx">bytes1</span><span class="p">,</span> <span class="nx">bytes2</span><span class="p">]);</span>
+<span class="c1">// or</span>
+<span class="kd">var</span> <span class="nx">concated</span> <span class="o">=</span> <span class="nx">jz</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">concatBytes</span><span class="p">(</span><span class="nx">bytes1</span><span class="p">,</span> <span class="nx">bytes2</span><span class="p">);</span>
+</pre></div>
+
+<h4>
+<a name="jzutilsloadurls" class="anchor" href="#jzutilsloadurls"><span class="octicon octicon-link"></span></a>jz.utils.load(urls)</h4>
+
+<p>It loads files as <code>Uint8Array</code>.</p>
+
+<ul>
+<li>
+<a href="https://github.com/param" class="user-mention">@param</a> {Array.&lt;string&gt;} urls</li>
+<li>
+<a href="https://github.com/return" class="user-mention">@return</a> {Promise}</li>
+</ul><div class="highlight highlight-js"><pre><span class="nx">jz</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">load</span><span class="p">([</span><span class="s1">'foo.png'</span><span class="p">,</span> <span class="s1">'bar.jpg'</span><span class="p">])</span>
+<span class="p">.</span><span class="nx">spread</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">foo</span><span class="p">,</span> <span class="nx">bar</span><span class="p">)</span> <span class="p">{</span>
+  <span class="c1">// ...</span>
+<span class="p">});</span>
+<span class="c1">// or</span>
+<span class="nx">jz</span><span class="p">.</span><span class="nx">utils</span><span class="p">.</span><span class="nx">load</span><span class="p">(</span><span class="s1">'foo.png'</span><span class="p">,</span> <span class="s1">'bar.jpg'</span><span class="p">)</span>
+<span class="p">.</span><span class="nx">spread</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">foo</span><span class="p">,</span> <span class="nx">bar</span><span class="p">)</span> <span class="p">{</span>
+  <span class="c1">// ...</span>
+<span class="p">});</span>
+</pre></div>
+
+<h3>
+<a name="algos" class="anchor" href="#algos"><span class="octicon octicon-link"></span></a>algos</h3>
+
+<h4>
+<a name="jzalgosdeflatebuffer-level-chunksize" class="anchor" href="#jzalgosdeflatebuffer-level-chunksize"><span class="octicon octicon-link"></span></a>jz.algos.deflate({buffer, level, chunkSize})</h4>
+
+<ul>
+<li>
+<a href="https://github.com/param" class="user-mention">@param</a> {Uint8Array|ArrayBuffer} buffer</li>
+<li>
+<a href="https://github.com/param" class="user-mention">@param</a> {number} level - optional (default is <code>6</code>, range is 0-9)</li>
+<li>
+<a href="https://github.com/param" class="user-mention">@param</a> {number} chunkSize - optional (default is <code>0x8000</code>)</li>
+<li>
+<a href="https://github.com/return" class="user-mention">@return</a> {Uint8Array}</li>
+</ul><h4>
+<a name="jzalgosinflatebuffer-chunksize" class="anchor" href="#jzalgosinflatebuffer-chunksize"><span class="octicon octicon-link"></span></a>jz.algos.inflate({buffer, chunkSize})</h4>
+
+<ul>
+<li>
+<a href="https://github.com/param" class="user-mention">@param</a> {Uint8Array|ArrayBuffer} buffer</li>
+<li>
+<a href="https://github.com/param" class="user-mention">@param</a> {number} chunkSize - optional (default is <code>0x8000</code>)</li>
+<li>
+<a href="https://github.com/return" class="user-mention">@return</a> {Uint8Array}</li>
+</ul><h4>
+<a name="jzalgosadler32buffer" class="anchor" href="#jzalgosadler32buffer"><span class="octicon octicon-link"></span></a>jz.algos.adler32(buffer)</h4>
+
+<ul>
+<li>
+<a href="https://github.com/param" class="user-mention">@param</a> {Uint8Array|ArrayBuffer} buffer</li>
+<li>
+<a href="https://github.com/return" class="user-mention">@return</a> {number}</li>
+</ul><h4>
+<a name="jzalgoscrc32buffer-crc" class="anchor" href="#jzalgoscrc32buffer-crc"><span class="octicon octicon-link"></span></a>jz.algos.crc32({buffer, crc})</h4>
+
+<ul>
+<li>
+<a href="https://github.com/param" class="user-mention">@param</a> {Uint8Array|ArrayBuffer} buffer</li>
+<li>
+<a href="https://github.com/param" class="user-mention">@param</a> {number}</li>
+<li>
+<a href="https://github.com/return" class="user-mention">@return</a> {number}</li>
+</ul><h4>
+<a name="jzstreamalgosdeflatebuffer-streamfn-level-sharememory-chunksize" class="anchor" href="#jzstreamalgosdeflatebuffer-streamfn-level-sharememory-chunksize"><span class="octicon octicon-link"></span></a>jz.stream.algos.deflate({buffer, streamFn, level, shareMemory, chunkSize})</h4>
+
+<ul>
+<li>
+<a href="https://github.com/param" class="user-mention">@param</a> {Uint8Array|ArrayBuffer} buffer</li>
+<li>
+<a href="https://github.com/param" class="user-mention">@param</a> {function(chunk: Uint8Array)} streamFn</li>
+<li>
+<a href="https://github.com/param" class="user-mention">@param</a> {number} level - optional (default is <code>6</code>)</li>
+<li>
+<a href="https://github.com/param" class="user-mention">@param</a> {boolean} shareMemory - optional (default is <code>false</code>)</li>
+<li>
+<a href="https://github.com/param" class="user-mention">@param</a> {number} chunkSize - optional (default is <code>0x8000</code>)</li>
+</ul><div class="highlight highlight-js"><pre><span class="nx">jz</span><span class="p">.</span><span class="nx">stream</span><span class="p">.</span><span class="nx">algos</span><span class="p">.</span><span class="nx">deflate</span><span class="p">({</span>
+  <span class="nx">buffer</span><span class="o">:</span> <span class="nx">buffer</span><span class="p">,</span>
+  <span class="nx">streamFn</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">chunk</span><span class="p">)</span> <span class="p">{</span>
+    <span class="c1">// ...</span>
+  <span class="p">},</span>
+  <span class="nx">shareMemory</span><span class="o">:</span> <span class="kc">false</span>
+<span class="p">});</span>
+</pre></div>
+
+<h4>
+<a name="jzsteramalgosinflatebuffer-streamfn-sharememory-chunksize" class="anchor" href="#jzsteramalgosinflatebuffer-streamfn-sharememory-chunksize"><span class="octicon octicon-link"></span></a>jz.steram.algos.inflate({buffer, streamFn, shareMemory, chunkSize})</h4>
+
+<ul>
+<li>
+<a href="https://github.com/param" class="user-mention">@param</a> {Uint8Array|ArrayBuffer} buffer</li>
+<li>
+<a href="https://github.com/param" class="user-mention">@param</a> {function(chunk: Uint8Array)} streamFn</li>
+<li>
+<a href="https://github.com/param" class="user-mention">@param</a> {boolean} shareMemory - optional (default is <code>false</code>)</li>
+<li>
+<a href="https://github.com/param" class="user-mention">@param</a> {number} chunkSize - optional (default is <code>0x8000</code>)</li>
+</ul><h3>
+<a name="zlib" class="anchor" href="#zlib"><span class="octicon octicon-link"></span></a>zlib</h3>
+
+<h4>
+<a name="jzzlibcompressbuffer-level-chunksize" class="anchor" href="#jzzlibcompressbuffer-level-chunksize"><span class="octicon octicon-link"></span></a>jz.zlib.compress({buffer, level, chunkSize})</h4>
+
+<ul>
+<li>
+<a href="https://github.com/param" class="user-mention">@param</a> {Uint8Array|ArrayBuffer} buffer</li>
+<li>
+<a href="https://github.com/param" class="user-mention">@param</a> {number} level - optional (default is <code>6</code>)</li>
+<li>
+<a href="https://github.com/param" class="user-mention">@param</a> {number} chunkSize - optional (default is <code>0x8000</code>)</li>
+<li>
+<a href="https://github.com/return" class="user-mention">@return</a> {Uint8Array}</li>
+</ul><h4>
+<a name="jzzlibdecompressbuffer-chunksize" class="anchor" href="#jzzlibdecompressbuffer-chunksize"><span class="octicon octicon-link"></span></a>jz.zlib.decompress({buffer, chunkSize})</h4>
+
+<ul>
+<li>
+<a href="https://github.com/param" class="user-mention">@param</a> {Uint8Array|ArrayBuffer} buffer</li>
+<li>
+<a href="https://github.com/param" class="user-mention">@param</a> {number} chunkSize - optional (default is <code>0x8000</code>)</li>
+<li>
+<a href="https://github.com/return" class="user-mention">@return</a> {Uint8Array}</li>
+</ul><h4>
+<a name="jzstreamzlibcompressbuffer-streamfn-level-sharememory-chunksize" class="anchor" href="#jzstreamzlibcompressbuffer-streamfn-level-sharememory-chunksize"><span class="octicon octicon-link"></span></a>jz.stream.zlib.compress({buffer, streamFn, level, shareMemory, chunkSize})</h4>
+
+<ul>
+<li>
+<a href="https://github.com/param" class="user-mention">@param</a> {Uint8Array|ArrayBuffer} buffer</li>
+<li>
+<a href="https://github.com/param" class="user-mention">@param</a> {function(chunk: Uint8Array)} streamFn</li>
+<li>
+<a href="https://github.com/param" class="user-mention">@param</a> {number} level - optional (default is <code>6</code>)</li>
+<li>
+<a href="https://github.com/param" class="user-mention">@param</a> {boolean} shareMemory - optional (default is <code>false</code>)</li>
+<li>
+<a href="https://github.com/param" class="user-mention">@param</a> {number} chunkSize - optional (default is <code>0x8000</code>)</li>
+</ul><h4>
+<a name="jzstreamzlibdecompressbuffer-streamfn-sharememory-chunksize" class="anchor" href="#jzstreamzlibdecompressbuffer-streamfn-sharememory-chunksize"><span class="octicon octicon-link"></span></a>jz.stream.zlib.decompress({buffer, streamFn, shareMemory, chunkSize})</h4>
+
+<ul>
+<li>
+<a href="https://github.com/param" class="user-mention">@param</a> {Uint8Array|ArrayBuffer} buffer</li>
+<li>
+<a href="https://github.com/param" class="user-mention">@param</a> {function(chunk: Uint8Array)} streamFn</li>
+<li>
+<a href="https://github.com/param" class="user-mention">@param</a> {boolean} shareMemory - optional (default is <code>false</code>)</li>
+<li>
+<a href="https://github.com/param" class="user-mention">@param</a> {number} chunkSize - optional (default is <code>0x8000</code>)</li>
+</ul><h3>
+<a name="gzip" class="anchor" href="#gzip"><span class="octicon octicon-link"></span></a>gzip</h3>
+
+<h4>
+<a name="jzgzcompressbuffer-level-chunksize" class="anchor" href="#jzgzcompressbuffer-level-chunksize"><span class="octicon octicon-link"></span></a>jz.gz.compress({buffer, level, chunkSize})</h4>
+
+<ul>
+<li>
+<a href="https://github.com/param" class="user-mention">@param</a> {Uint8Array|ArrayBuffer} buffer</li>
+<li>
+<a href="https://github.com/param" class="user-mention">@param</a> {number} level - optional (default is <code>6</code>)</li>
+<li>
+<a href="https://github.com/param" class="user-mention">@param</a> {number} chunkSize - optional (default is <code>0x8000</code>)</li>
+<li>
+<a href="https://github.com/return" class="user-mention">@return</a> {Uint8Array}</li>
+</ul><h4>
+<a name="jzgzdecompressbuffer-chunksize" class="anchor" href="#jzgzdecompressbuffer-chunksize"><span class="octicon octicon-link"></span></a>jz.gz.decompress({buffer, chunkSize})</h4>
+
+<ul>
+<li>
+<a href="https://github.com/param" class="user-mention">@param</a> {Uint8Array|ArrayBuffer} buffer</li>
+<li>
+<a href="https://github.com/param" class="user-mention">@param</a> {number} chunkSize - optional (default is <code>0x8000</code>)</li>
+<li>
+<a href="https://github.com/return" class="user-mention">@return</a> {Uint8Array}</li>
+</ul><h4>
+<a name="jzstreamgzcompressbuffer-streamfn-level-sharememory-chunksize-fname-fcomment" class="anchor" href="#jzstreamgzcompressbuffer-streamfn-level-sharememory-chunksize-fname-fcomment"><span class="octicon octicon-link"></span></a>jz.stream.gz.compress({buffer, streamFn, level, shareMemory, chunkSize, fname, fcomment})</h4>
+
+<ul>
+<li>
+<a href="https://github.com/param" class="user-mention">@param</a> {Uint8Array|ArrayBuffer} buffer</li>
+<li>
+<a href="https://github.com/param" class="user-mention">@param</a> {function(chunk: Uint8Array)} streamFn</li>
+<li>
+<a href="https://github.com/param" class="user-mention">@param</a> {number} level - optional (default is <code>6</code>)</li>
+<li>
+<a href="https://github.com/param" class="user-mention">@param</a> {boolean} shareMemory - optional (default is <code>false</code>)</li>
+<li>
+<a href="https://github.com/param" class="user-mention">@param</a> {number} chunkSize - optional (default is <code>0x8000</code>)</li>
+<li>
+<a href="https://github.com/param" class="user-mention">@param</a> {string} fname - optional</li>
+<li>
+<a href="https://github.com/param" class="user-mention">@param</a> {string} fcomment - optional</li>
+</ul><h4>
+<a name="jzstreamgzdecompressbuffer-streamfn-sharememory-chunksize" class="anchor" href="#jzstreamgzdecompressbuffer-streamfn-sharememory-chunksize"><span class="octicon octicon-link"></span></a>jz.stream.gz.decompress({buffer, streamFn, shareMemory, chunkSize})</h4>
+
+<ul>
+<li>
+<a href="https://github.com/param" class="user-mention">@param</a> {Uint8Array|ArrayBuffer} buffer</li>
+<li>
+<a href="https://github.com/param" class="user-mention">@param</a> {function(chunk: Uint8Array)} streamFn</li>
+<li>
+<a href="https://github.com/param" class="user-mention">@param</a> {boolean} shareMemory - optional (default is <code>false</code>)</li>
+<li>
+<a href="https://github.com/param" class="user-mention">@param</a> {number} chunkSize - optional (default is <code>0x8000</code>)</li>
+</ul><h3>
+<a name="zip" class="anchor" href="#zip"><span class="octicon octicon-link"></span></a>zip</h3>
+
+<h4>
+<a name="jzzippackfiles-level-chunksize" class="anchor" href="#jzzippackfiles-level-chunksize"><span class="octicon octicon-link"></span></a>jz.zip.pack({files, level, chunkSize})</h4>
+
+<ul>
+<li>
+<a href="https://github.com/param" class="user-mention">@param</a> {Array.} files</li>
+<li>
+<a href="https://github.com/param" class="user-mention">@param</a> {number} level - optional (default is <code>6</code>)</li>
+<li>
+<a href="https://github.com/param" class="user-mention">@param</a> {number} chunkSize - optional (default is <code>0x8000</code>)</li>
+<li>
+<a href="https://github.com/return" class="user-mention">@return</a> {Promise}</li>
+</ul><div class="highlight highlight-js"><pre><span class="kd">var</span> <span class="nx">files</span> <span class="o">=</span> <span class="p">[</span>
+  <span class="p">{</span><span class="nx">name</span><span class="o">:</span> <span class="s2">"foo"</span><span class="p">,</span> <span class="nx">dir</span><span class="o">:</span> <span class="p">[</span> <span class="c1">// folder</span>
+    <span class="p">{</span><span class="nx">name</span><span class="o">:</span> <span class="s2">"hello.txt"</span><span class="p">,</span> <span class="nx">buffer</span><span class="o">:</span> <span class="s2">"Hello World!"</span><span class="p">},</span> <span class="c1">// string</span>
+    <span class="p">{</span><span class="nx">name</span><span class="o">:</span> <span class="s2">"bar.js"</span><span class="p">,</span> <span class="nx">buffer</span><span class="o">:</span> <span class="nx">buffer</span><span class="p">},</span> <span class="c1">// ArrayBuffer</span>
+    <span class="p">{</span><span class="nx">name</span><span class="o">:</span> <span class="s2">"hoge.mp3"</span><span class="p">,</span> <span class="nx">url</span><span class="o">:</span> <span class="s2">"audiodata/hoge.mp3"</span><span class="p">}</span> <span class="c1">// xhr</span>
+  <span class="p">]}</span>
+<span class="p">];</span>
+
+<span class="nx">jz</span><span class="p">.</span><span class="nx">zip</span><span class="p">.</span><span class="nx">pack</span><span class="p">({</span>
+  <span class="nx">files</span><span class="o">:</span> <span class="nx">files</span><span class="p">,</span>
+  <span class="nx">level</span><span class="o">:</span> <span class="mi">5</span>
+<span class="p">})</span>
+<span class="p">.</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">buffer</span><span class="p">)</span> <span class="p">{</span>
+  <span class="c1">// buffer is Uint8Array</span>
+<span class="p">});</span>
+
+
+<span class="c1">// You cat set compression level to each files.</span>
+<span class="kd">var</span> <span class="nx">files</span> <span class="o">=</span> <span class="p">[</span>
+  <span class="p">{</span><span class="nx">name</span><span class="o">:</span> <span class="s2">"mimetype"</span><span class="p">,</span> <span class="nx">buffer</span><span class="o">:</span> <span class="s2">"application/epub+zip"</span><span class="p">,</span> <span class="nx">level</span><span class="o">:</span> <span class="mi">0</span><span class="p">},</span> <span class="c1">//string</span>
+  <span class="p">{</span><span class="nx">name</span><span class="o">:</span> <span class="s2">"META-INF"</span><span class="p">,</span> <span class="nx">dir</span><span class="o">:</span> <span class="p">[</span> <span class="c1">//folder</span>
+    <span class="p">{</span><span class="nx">name</span><span class="o">:</span> <span class="s2">"container.xml"</span><span class="p">,</span> <span class="nx">buffer</span><span class="o">:</span> <span class="nx">buffer</span><span class="p">,</span> <span class="nx">level</span><span class="o">:</span> <span class="mi">0</span><span class="p">},</span> <span class="c1">//ArrayBuffer</span>
+  <span class="p">]},</span>
+  <span class="p">{</span><span class="nx">name</span><span class="o">:</span> <span class="s2">"package.opf"</span><span class="p">,</span> <span class="nx">url</span><span class="o">:</span> <span class="s2">"package.opf"</span><span class="p">,</span> <span class="nx">level</span><span class="o">:</span> <span class="mi">6</span><span class="p">},</span>
+  <span class="p">{</span><span class="nx">name</span><span class="o">:</span> <span class="s2">"foo.xhtml"</span><span class="p">,</span> <span class="nx">url</span><span class="o">:</span> <span class="s2">"foo.xhtml"</span><span class="p">,</span> <span class="nx">level</span><span class="o">:</span> <span class="mi">9</span><span class="p">}</span> <span class="c1">//xhr</span>
+<span class="p">];</span>
+
+<span class="nx">jz</span><span class="p">.</span><span class="nx">zip</span><span class="p">.</span><span class="nx">pack</span><span class="p">(</span><span class="nx">files</span><span class="p">)</span>
+<span class="p">.</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">buffer</span><span class="p">)</span> <span class="p">{</span>
+  <span class="c1">// ...</span>
+<span class="p">});</span>
+</pre></div>
+
+<h4>
+<a name="jzzipunpackbuffer-encoding-chunksize" class="anchor" href="#jzzipunpackbuffer-encoding-chunksize"><span class="octicon octicon-link"></span></a>jz.zip.unpack({buffer, encoding, chunkSize})</h4>
+
+<ul>
+<li>
+<a href="https://github.com/param" class="user-mention">@param</a> {Uint8Array|ArrayBuffer|Blob} buffer</li>
+<li>
+<a href="https://github.com/param" class="user-mention">@param</a> {string} encoding - optional (default is <code>"UTF-8"</code>)</li>
+<li>
+<a href="https://github.com/param" class="user-mention">@param</a> {number} chunkSize - optional (default is <code>0x8000</code>)</li>
+<li>
+<a href="https://github.com/return" class="user-mention">@return</a> {Promise}</li>
+</ul><div class="highlight highlight-js"><pre><span class="nx">jz</span><span class="p">.</span><span class="nx">zip</span><span class="p">.</span><span class="nx">unpack</span><span class="p">({</span>
+  <span class="nx">buffer</span><span class="o">:</span> <span class="nx">buffer</span><span class="p">,</span>
+  <span class="nx">encoding</span><span class="o">:</span> <span class="s1">'Shift_JIS'</span> <span class="c1">// encoding of filenames</span>
+<span class="p">})</span>
+<span class="p">.</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">reader</span><span class="p">)</span> <span class="p">{</span>
+  <span class="c1">// reader is ZipArchiveReader. See below.</span>
+  <span class="c1">// get file names.</span>
+  <span class="nx">reader</span><span class="p">.</span><span class="nx">getFileNames</span><span class="p">();</span>
+  <span class="nx">reader</span><span class="p">.</span><span class="nx">readFileAsText</span><span class="p">(</span><span class="nx">reader</span><span class="p">.</span><span class="nx">getFileNames</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+  <span class="p">.</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">text</span><span class="p">)</span> <span class="p">{</span>
+    <span class="c1">// ...</span>
+  <span class="p">});</span>
+<span class="p">});</span>
+</pre></div>
+
+<h4>
+<a name="jzstreamzippackfiles-streamfn-level-sharememory-chunksize" class="anchor" href="#jzstreamzippackfiles-streamfn-level-sharememory-chunksize"><span class="octicon octicon-link"></span></a>jz.stream.zip.pack({files, streamFn, level, shareMemory, chunkSize})</h4>
+
+<ul>
+<li>
+<a href="https://github.com/param" class="user-mention">@param</a> {Array} files</li>
+<li>
+<a href="https://github.com/param" class="user-mention">@param</a> {function(chunk: Uint8Array)} streamFn</li>
+<li>
+<a href="https://github.com/param" class="user-mention">@param</a> {number} level - optional (default is <code>6</code>)</li>
+<li>
+<a href="https://github.com/param" class="user-mention">@param</a> {boolean} shareMemory - optional (default is <code>false</code>)</li>
+<li>
+<a href="https://github.com/param" class="user-mention">@param</a> {number} chunkSize - optional (default is <code>0x8000</code>)</li>
+<li>
+<a href="https://github.com/return" class="user-mention">@return</a> {Promise}</li>
+</ul><div class="highlight highlight-js"><pre><span class="nx">jz</span><span class="p">.</span><span class="nx">stream</span><span class="p">.</span><span class="nx">zip</span><span class="p">.</span><span class="nx">pack</span><span class="p">({</span>
+  <span class="nx">files</span><span class="o">:</span> <span class="nx">files</span><span class="p">,</span>
+  <span class="nx">streamFn</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">chunk</span><span class="p">)</span> <span class="p">{</span>
+    <span class="c1">// ...</span>
+  <span class="p">}</span>
+<span class="p">})</span>
+<span class="p">.</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+  <span class="c1">// no args</span>
+<span class="p">});</span>
+</pre></div>
+
+<h3>
+<a name="ziparchivereader" class="anchor" href="#ziparchivereader"><span class="octicon octicon-link"></span></a>ZipArchiveReader</h3>
+
+<h4>
+<a name="ziparchivereadergetfilenames" class="anchor" href="#ziparchivereadergetfilenames"><span class="octicon octicon-link"></span></a>ZipArchiveReader#getFileNames()</h4>
+
+<p>It gets filenames in the zip archive.</p>
+
+<ul>
+<li>
+<a href="https://github.com/return" class="user-mention">@return</a> {Array.&lt;string&gt;}</li>
+</ul><h4>
+<a name="ziparchivereaderreadfileasarraybufferfilename" class="anchor" href="#ziparchivereaderreadfileasarraybufferfilename"><span class="octicon octicon-link"></span></a>ZipArchiveReader#readFileAsArrayBuffer(filename)</h4>
+
+<ul>
+<li>
+<a href="https://github.com/param" class="user-mention">@param</a> {string} filename</li>
+<li>
+<a href="https://github.com/return" class="user-mention">@return</a> {Promise}</li>
+</ul><h4>
+<a name="ziparchivereaderreadfileasblobfilename" class="anchor" href="#ziparchivereaderreadfileasblobfilename"><span class="octicon octicon-link"></span></a>ZipArchiveReader#readFileAsBlob(filename)</h4>
+
+<ul>
+<li>
+<a href="https://github.com/param" class="user-mention">@param</a> {string} filename</li>
+<li>
+<a href="https://github.com/return" class="user-mention">@return</a> {Promise}</li>
+</ul><h4>
+<a name="ziparchivereaderreadfileastextfilename-encoding" class="anchor" href="#ziparchivereaderreadfileastextfilename-encoding"><span class="octicon octicon-link"></span></a>ZipArchiveReader#readFileAsText(filename, encoding)</h4>
+
+<ul>
+<li>
+<a href="https://github.com/param" class="user-mention">@param</a> {string} filename</li>
+<li>
+<a href="https://github.com/param" class="user-mention">@param</a> {string} encoding</li>
+<li>
+<a href="https://github.com/return" class="user-mention">@return</a> {Promise}</li>
+</ul><h4>
+<a name="ziparchivereaderreadfileasdataurlfilename" class="anchor" href="#ziparchivereaderreadfileasdataurlfilename"><span class="octicon octicon-link"></span></a>ZipArchiveReader#readFileAsDataURL(filename)</h4>
+
+<ul>
+<li>
+<a href="https://github.com/param" class="user-mention">@param</a> {string} filename</li>
+<li>
+<a href="https://github.com/return" class="user-mention">@return</a> {Promise}</li>
+</ul><h4>
+<a name="ziparchivereaderreadfileasbinarystringfilename" class="anchor" href="#ziparchivereaderreadfileasbinarystringfilename"><span class="octicon octicon-link"></span></a>ZipArchiveReader#readFileAsBinaryString(filename)</h4>
+
+<ul>
+<li>
+<a href="https://github.com/param" class="user-mention">@param</a> {string} filename</li>
+<li>
+<a href="https://github.com/return" class="user-mention">@return</a> {Promise}</li>
+</ul><h4>
+<a name="ziparchivereaderreadfileasarraybuffersyncfilename" class="anchor" href="#ziparchivereaderreadfileasarraybuffersyncfilename"><span class="octicon octicon-link"></span></a>ZipArchiveReader#readFileAsArrayBufferSync(filename)</h4>
+
+<ul>
+<li>
+<a href="https://github.com/param" class="user-mention">@param</a> {string} filename</li>
+<li>
+<a href="https://github.com/return" class="user-mention">@return</a> {ArrayBuffer}</li>
+</ul><h4>
+<a name="ziparchivereaderreadfileasblobsyncfilename" class="anchor" href="#ziparchivereaderreadfileasblobsyncfilename"><span class="octicon octicon-link"></span></a>ZipArchiveReader#readFileAsBlobSync(filename)</h4>
+
+<ul>
+<li>
+<a href="https://github.com/param" class="user-mention">@param</a> {string} filename</li>
+<li>
+<a href="https://github.com/return" class="user-mention">@return</a> {Blob}</li>
+</ul><h4>
+<a name="ziparchivereaderreadfileastextsyncfilename-encoding" class="anchor" href="#ziparchivereaderreadfileastextsyncfilename-encoding"><span class="octicon octicon-link"></span></a>ZipArchiveReader#readFileAsTextSync(filename, encoding)</h4>
+
+<ul>
+<li>
+<a href="https://github.com/param" class="user-mention">@param</a> {string} filename</li>
+<li>
+<a href="https://github.com/param" class="user-mention">@param</a> {string} encoding</li>
+<li>
+<a href="https://github.com/return" class="user-mention">@return</a> {string}</li>
+</ul><h4>
+<a name="ziparchivereaderreadfileasbinarystringsyncfilename" class="anchor" href="#ziparchivereaderreadfileasbinarystringsyncfilename"><span class="octicon octicon-link"></span></a>ZipArchiveReader#readFileAsBinaryStringSync(filename)</h4>
+
+<ul>
+<li>
+<a href="https://github.com/param" class="user-mention">@param</a> {string} filename</li>
+<li>
+<a href="https://github.com/return" class="user-mention">@return</a> {string}</li>
+</ul><h4>
+<a name="ziparchivereaderreadfileasdataurlsyncfilename" class="anchor" href="#ziparchivereaderreadfileasdataurlsyncfilename"><span class="octicon octicon-link"></span></a>ZipArchiveReader#readFileAsDataURLSync(filename)</h4>
+
+<ul>
+<li>
+<a href="https://github.com/param" class="user-mention">@param</a> {string} filename</li>
+<li>
+<a href="https://github.com/return" class="user-mention">@return</a> {string}</li>
+</ul><h3>
+<a name="jzzipziparchivewritersharememory-chunksize" class="anchor" href="#jzzipziparchivewritersharememory-chunksize"><span class="octicon octicon-link"></span></a>jz.zip.ZipArchiveWriter({shareMemory, chunkSize})</h3>
+
+<p>Low level zip archive writer.</p>
+
+<ul>
+<li>
+<a href="https://github.com/param" class="user-mention">@param</a> {boolean} shareMemory - optional (default is <code>false</code>)</li>
+<li>
+<a href="https://github.com/param" class="user-mention">@param</a> {number} chunkSize - optional (default is <code>0x8000</code>)</li>
+</ul><div class="highlight highlight-js"><pre> <span class="kd">var</span> <span class="nx">writer</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">jz</span><span class="p">.</span><span class="nx">zip</span><span class="p">.</span><span class="nx">ZipArchiveWriter</span><span class="p">({</span><span class="nx">shareMemory</span><span class="o">:</span> <span class="kc">true</span><span class="p">,</span> <span class="nx">chunkSize</span><span class="o">:</span> <span class="mh">0xf000</span><span class="p">});</span>
+ <span class="nx">writer</span>
+ <span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">'data'</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">chunk</span><span class="p">)</span> <span class="p">{</span>
+   <span class="c1">// chunk is Uint8Array.</span>
+ <span class="p">})</span>
+ <span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">'end'</span><span class="p">,</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+   <span class="c1">// ...</span>
+ <span class="p">});</span>
+ <span class="p">.</span><span class="nx">write</span><span class="p">(</span><span class="s1">'foo/bar/baz.txt'</span><span class="p">,</span> <span class="nx">buffer</span><span class="p">)</span>
+ <span class="p">.</span><span class="nx">write</span><span class="p">(</span><span class="s1">'a.mp3'</span><span class="p">,</span> <span class="nx">mp3Buff</span><span class="p">)</span>
+ <span class="p">.</span><span class="nx">writeEnd</span><span class="p">();</span>
+</pre></div>
+
+<h4>
+<a name="onname-callback" class="anchor" href="#onname-callback"><span class="octicon octicon-link"></span></a>#on(name, callback)</h4>
+
+<ul>
+<li>
+<a href="https://github.com/param" class="user-mention">@param</a> {string} name</li>
+<li>
+<a href="https://github.com/param" class="user-mention">@param</a> {function} callback</li>
+<li>
+<a href="https://github.com/return" class="user-mention">@return</a> {jz.zip.ZipArchiveWriter} this</li>
+</ul><h4>
+<a name="writepath-buffer-level" class="anchor" href="#writepath-buffer-level"><span class="octicon octicon-link"></span></a>#write(path, buffer, level)</h4>
+
+<p>Write the file. Directories are created automatically.</p>
+
+<ul>
+<li>
+<a href="https://github.com/param" class="user-mention">@param</a> {string} path</li>
+<li>
+<a href="https://github.com/param" class="user-mention">@param</a> {Uint8Array} buffer</li>
+<li>
+<a href="https://github.com/param" class="user-mention">@param</a> {number} level - optional (default is <code>6</code>)</li>
+<li>
+<a href="https://github.com/return" class="user-mention">@return</a> {jz.zip.ZipArchiveWriter} this</li>
+</ul><div class="highlight highlight-js"><pre><span class="nx">writer</span><span class="p">.</span><span class="nx">write</span><span class="p">(</span><span class="s1">'a/b/c/d/foo.txt'</span><span class="p">,</span> <span class="nx">buffer</span><span class="p">,</span> <span class="mi">7</span><span class="p">);</span>
+</pre></div>
+
+<h4>
+<a name="writedirpath" class="anchor" href="#writedirpath"><span class="octicon octicon-link"></span></a>#writeDir(path)</h4>
+
+<ul>
+<li>
+<a href="https://github.com/param" class="user-mention">@param</a> {string} path</li>
+<li>
+<a href="https://github.com/return" class="user-mention">@return</a> {jz.zip.ZipArchiveWriter} this</li>
+</ul><div class="highlight highlight-js"><pre><span class="nx">writer</span><span class="p">.</span><span class="nx">writeDir</span><span class="p">(</span><span class="s1">'foo/'</span><span class="p">);</span>
+<span class="c1">// or</span>
+<span class="nx">writer</span><span class="p">.</span><span class="nx">writeDir</span><span class="p">(</span><span class="s1">'bar'</span><span class="p">);</span>
+</pre></div>
+
+<h4>
+<a name="writefilepath-buffer-level" class="anchor" href="#writefilepath-buffer-level"><span class="octicon octicon-link"></span></a>#writeFile(path, buffer, level)</h4>
+
+<ul>
+<li>
+<a href="https://github.com/param" class="user-mention">@param</a> {string} path</li>
+<li>
+<a href="https://github.com/param" class="user-mention">@param</a> {Uint8Array} buffer</li>
+<li>
+<a href="https://github.com/param" class="user-mention">@param</a> {number} level - optional (default is <code>6</code>)</li>
+<li>
+<a href="https://github.com/return" class="user-mention">@return</a> {jz.zip.ZipArchiveWriter} this</li>
+</ul><div class="highlight highlight-js"><pre><span class="nx">writer</span><span class="p">.</span><span class="nx">writeDir</span><span class="p">(</span><span class="s1">'a/'</span><span class="p">);</span>
+<span class="nx">writer</span><span class="p">.</span><span class="nx">writeDir</span><span class="p">(</span><span class="s1">'a/b/'</span><span class="p">);</span>
+<span class="nx">writer</span><span class="p">.</span><span class="nx">writeDir</span><span class="p">(</span><span class="s1">'a/b/c/'</span><span class="p">);</span>
+<span class="nx">writer</span><span class="p">.</span><span class="nx">writeFile</span><span class="p">(</span><span class="s1">'a/b/c/foo.txt'</span><span class="p">,</span> <span class="nx">buffer</span><span class="p">,</span> <span class="mi">7</span><span class="p">);</span>
+</pre></div>
+
+<h4>
+<a name="writeend" class="anchor" href="#writeend"><span class="octicon octicon-link"></span></a>#writeEnd()</h4>
+
+<p>Write central directory headers and the end central dirctory header.</p>
+
+<div class="highlight highlight-js"><pre><span class="nx">writer</span><span class="p">.</span><span class="nx">writeEnd</span><span class="p">();</span>
+</pre></div>
+      </section>
+      <footer>
+        <p>This project is maintained by <a href="https://github.com/ukyo">ukyo</a></p>
+        <p><small>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></small></p>
+      </footer>
+    </div>
+    <script src="javascripts/scale.fix.js"></script>
+    
+  </body>
+</html>
