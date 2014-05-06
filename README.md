@@ -4,12 +4,7 @@ It's a utility of zlib, gzip and zip format binary data.
 
 ## suported browser
 
-chrome, firefox, IE10.
-
-## tests
-
-* [test](http://ukyo.github.com/jsziptools/test/)
-* [test(minified)](http://ukyo.github.com/jsziptools/test/minified.html)
+chrome, firefox, IE10, safari, opera.
 
 ## examples
 
