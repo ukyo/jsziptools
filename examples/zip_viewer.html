@@ -93,7 +93,7 @@
 
                         function view(li) {
                             var filename = li.innerHTML;
-                            if (/.*(png|gif|jpg|bmp)$/.test(filename.toLowerCase())) {
+                            if (/.*(png|gif|jpe?g|bmp)$/.test(filename.toLowerCase())) {
                                 reader.readFileAsBlob(filename)
                                 .then(function(blob) {
                                     preview.innerHTML = img(blobURL(blob));

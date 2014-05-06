@@ -55,7 +55,7 @@
             outputView.innerHTML = genBinaryView(deflatedBytes);
 
             jz.utils.bytesToString(deflatedBytes)
-            .done(function(text) {
+            .then(function(text) {
                 output.value = text;
             });
         };
