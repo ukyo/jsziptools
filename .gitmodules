@@ -1,3 +1,0 @@
-[submodule "vendor/zlib-asm"]
-	path = vendor/zlib-asm
-	url = git@github.com:ukyo/zlib-asm.git
