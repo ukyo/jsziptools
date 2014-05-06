@@ -35,13 +35,13 @@ module.exports = (grunt) ->
           banner: """
             /*!
              * jsziptools.js <%= pkg.version %> - MIT License. https://github.com/ukyo/jsziptools/blob/master/LICENSE
-             * ES6-Promises - MIT License. https://github.com/jakearchibald/ES6-Promises/blob/master/LICENSE
+             * ES6-Promises - MIT License. https://github.com/jakearchibald/es6-promise/blob/master/LICENSE
              */
             ;(function(){
           """
           footer: '}).call(this);'
         src: [
-          'vendor/ES6-Promises/dist/promise-0.1.1.min.js'
+          'node_modules/es6-promise/dist/promise-1.0.0.js'
           'vendor/zlib-asm/zlib.js'
           '_jsziptools.js'
         ]
@@ -55,7 +55,7 @@ module.exports = (grunt) ->
       #   launch_in_dev: ['Chrome', 'Firefox']
       dev:
         src: [
-          'vendor/ES6-Promises/dist/promise-0.1.1.min.js'
+          'node_modules/es6-promise/dist/promise-1.0.0.js'
           'vendor/zlib-asm/zlib.js'
           'src/jsziptools.js'
           'src/utils.js'

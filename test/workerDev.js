@@ -1,5 +1,5 @@
 importScripts(
-    '../vendor/ES6-Promises/dist/promise-0.1.1.js',
+    '../node_modules/es6-promise/dist/promise-1.0.0.js',
     '../vendor/zlib-asm/zlib.js',
     '../src/jsziptools.js',
     '../src/utils.js',
