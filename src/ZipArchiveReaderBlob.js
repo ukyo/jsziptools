@@ -113,7 +113,7 @@ ZipArchiveReaderBlob.prototype.init = function() {
  */
 ZipArchiveReaderBlob.prototype.readFileAsArrayBuffer = function(filename) {
     return this._readFileAs('ArrayBuffer', filename);
-}
+};
 
 /**
  * @param  {string} filename    File name

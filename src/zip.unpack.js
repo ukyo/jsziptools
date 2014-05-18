@@ -21,7 +21,8 @@
  * });
  */
 zip.unpack = defun(['buffer', 'encoding', 'chunkSize'], function(buffer, encoding, chunkSize) {
-    return new(buffer instanceof Blob ? ZipArchiveReaderBlob : ZipArchiveReader)({
+    var ZipZipArchiveReader = buffer instanceof Blob ? ZipArchiveReaderBlob : ZipArchiveReader;
+    return new ZipArchiveReader({
         buffer: buffer,
         encoding: encoding,
         chunkSize: chunkSize

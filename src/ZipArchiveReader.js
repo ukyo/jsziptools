@@ -79,11 +79,11 @@ ZipArchiveReader.prototype._completeInit = function() {
 
     // detect encoding. cp932 or utf-8.
     if (self.encoding == null) {
-        Promise.resolve(localFileHeaders.map(function(header) {
+        Promise.resolve(localFileHeaders.slice(0, 100).map(function(header) {
             return header.filename;
         })).then(utils.concatBytes).then(utils.detectEncoding).then(function(encoding) {
             self.encoding = encoding;
-        })
+        });
     }
 
     return Promise.all(localFileHeaders.map(function(header, i) {
@@ -91,7 +91,7 @@ ZipArchiveReader.prototype._completeInit = function() {
             header.filename = filename;
         });
     })).then(function() {
-        return self
+        return self;
     });
 };
 
@@ -212,7 +212,7 @@ ZipArchiveReader.prototype._getFileInfo = function(filename) {
  */
 ZipArchiveReader.prototype._decompress = function(bytes, isCompressed) {
     return isCompressed ? algorithms.inflate({buffer: bytes, chunkSize: this.chunkSize}) : bytes;
-}
+};
 
 /**
  * @param  {string}     filename File name
@@ -221,7 +221,7 @@ ZipArchiveReader.prototype._decompress = function(bytes, isCompressed) {
 ZipArchiveReader.prototype._decompressFile = function(filename) {
     var info = this._getFileInfo(filename);
     return this._decompress(new Uint8Array(this.buffer, info.offset, info.length), info.isCompressed);
-}
+};
 
 /**
  * @param  {string} filename File name

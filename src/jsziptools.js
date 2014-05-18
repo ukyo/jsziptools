@@ -59,7 +59,7 @@ var mimetypes = (function() {
             mime = tmp[0],
             exts = tmp[1].split(' ');
         exts.forEach(function(ext) {
-            dict[ext] = mime
+            dict[ext] = mime;
         });
     });
 
@@ -76,7 +76,7 @@ var mimetypes = (function() {
         set: function(ext, mimetype) {
             if (typeof ext === 'object') {
                 Object.keys(ext).forEach(function(k) {
-                    dict[k] = ext[k]
+                    dict[k] = ext[k];
                 });
             } else {
                 dict[ext] = mimetype;

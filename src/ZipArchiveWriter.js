@@ -21,7 +21,7 @@ var ZipArchiveWriter = defun(['shareMemory', 'chunkSize'], function ZipArchiveWr
     this.dirs = {};
     this.centralDirHeaders = [];
     this.offset = 0;
-    this.date = new Date;
+    this.date = new Date();
     this.listners = {};
 });
 
@@ -104,7 +104,7 @@ ZipArchiveWriter.prototype.writeEnd = function() {
 };
 
 /**
- * @param  {string}           name     
+ * @param  {string}           name
  * @param  {Function}         callback
  * @return {ZipArchiveWriter} return this
  */
@@ -119,7 +119,8 @@ ZipArchiveWriter.prototype.on = function(name, callback) {
  * @param {*}      data
  */
 ZipArchiveWriter.prototype.trigger = function(name, data) {
-    this.listners[name] && this.listners[name].forEach(function(listner) {
+    if (!listners[name]) return;
+    this.listners[name].forEach(function(listner) {
         listner(data);
     });
 };

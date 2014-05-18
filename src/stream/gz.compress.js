@@ -1,6 +1,6 @@
 /**
  * Compress to a gzip format buffer.
- * 
+ *
  * @param {Uint8Array|ArrayBuffer}      buffer
  * @param {function(chunk: Uint8Array)} streamFn
  * @param {number}                      level - optional (default is `6`)
@@ -11,14 +11,15 @@
  */
 stream.gz.compress = defun(['buffer', 'streamFn', 'level', 'shareMemory', 'chunkSize', 'fname', 'fcomment'], function(buffer, streamFn, level, shareMemory, chunkSize, fname, fcomment) {
     var bytes = utils.toBytes(buffer),
-        fname = fname && utils.toBytes(fname),
-        fcomment = fcomment && utils.toBytes(fcomment),
         flg = 0,
         headerLength = 10,
         offset = 0,
         now = Date.now(),
         header, footer, view;
 
+    fname = fname && utils.toBytes(fname);
+    fcomment = fcomment && utils.toBytes(fcomment);
+    
     // add length of metadatas
     if (fname) {
         headerLength += fname.length + 1;

@@ -18,7 +18,7 @@ utils.getParams = function(args, propertyNames) {
         params[name] = args[i];
     });
     return params;
-}
+};
 
 
 /**
@@ -55,12 +55,12 @@ utils.readFileAs = function(type, blob, encoding) {
     var fn;
     if (env.isWorker) {
         fn = function(resolve) {
-            var fr = new FileReaderSync;
+            var fr = new FileReaderSync();
             resolve(fr['readAs' + type].call(fr, blob, encoding));
         };
     } else {
         fn = function(resolve, reject) {
-            var fr = new FileReader;
+            var fr = new FileReader();
             fr.onload = function() {
                 resolve(fr.result);
             };
@@ -69,7 +69,7 @@ utils.readFileAs = function(type, blob, encoding) {
         };
     }
     return new Promise(fn);
-}
+};
 
 
 /**
@@ -250,11 +250,10 @@ expose('jz.utils.load', utils.load);
  * var bytes = jz.utils.concatBytes([bytes1, bytes2, bytes3]);
  */
 utils.concatBytes = function(buffers) {
-    var buffers = Array.isArray(buffers) ? buffers : utils.toArray(arguments),
-        size = 0,
+    var size = 0,
         offset = 0,
         i, n, ret;
-
+    buffers = Array.isArray(buffers) ? buffers : utils.toArray(arguments);
     for (i = 0, n = buffers.length; i < n; ++i) size += buffers[i].length;
     ret = new Uint8Array(size);
     for (i = 0; i < n; ++i) {
