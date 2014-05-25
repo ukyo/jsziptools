@@ -119,7 +119,7 @@ ZipArchiveWriter.prototype.on = function(name, callback) {
  * @param {*}      data
  */
 ZipArchiveWriter.prototype.trigger = function(name, data) {
-    if (!listners[name]) return;
+    if (!this.listners[name]) return;
     this.listners[name].forEach(function(listner) {
         listner(data);
     });
