@@ -4,7 +4,7 @@
  * @return {Uint8Array}
  */
 algorithms.inflate = defun(['buffer', 'chunkSize'], function(buffer, chunkSize){
-    return zlib['rawInflate'](utils.toBytes(buffer), chunkSize);
+    return zlibBackend.rawInflate(utils.toBytes(buffer), chunkSize);
 });
 
 expose('jz.algorithms.inflate', algorithms.inflate);

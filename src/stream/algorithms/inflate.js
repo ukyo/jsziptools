@@ -14,12 +14,12 @@
  * });
  */
 stream.algorithms.inflate = defun(['buffer', 'streamFn', 'shareMemory', 'chunkSize'], function(buffer, streamFn, shareMemory, chunkSize) {
-    zlib.stream.rawInflate({
-        input: utils.toBytes(buffer),
-        streamFn: streamFn,
-        shareMemory: shareMemory,
-        chunkSize: chunkSize
-    });
+    zlibBackend.stream.rawInflate(
+        utils.toBytes(buffer),
+        streamFn,
+        shareMemory,
+        chunkSize
+    );
 });
 
 expose('jz.stream.algorithms.inflate', stream.algorithms.inflate);

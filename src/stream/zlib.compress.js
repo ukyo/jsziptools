@@ -16,13 +16,13 @@
  * });
  */
 stream.zlib.compress = defun(['buffer', 'streamFn', 'level', 'shareMemory', 'chunkSize'], function(buffer, streamFn, level, shareMemory, chunkSize) {
-    zlib.stream.deflate({
-        input: utils.toBytes(buffer),
-        streamFn: streamFn,
-        level: level,
-        shareMemory: shareMemory,
-        chunkSize: chunkSize
-    });
+    zlibBackend.stream.deflate(
+        utils.toBytes(buffer),
+        streamFn,
+        level,
+        shareMemory,
+        chunkSize
+    );
 });
 
 expose('jz.stream.zlib.compress', stream.zlib.compress);

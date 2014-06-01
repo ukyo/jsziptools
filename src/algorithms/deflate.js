@@ -10,7 +10,7 @@ utils.js
  * @return {Uint8Array}
  */
 algorithms.deflate = defun(['buffer', 'level', 'chunkSize'], function(buffer, level, chunkSize) {
-    return zlib['rawDeflate'](utils.toBytes(buffer), level, chunkSize);
+    return zlibBackend.rawDeflate(utils.toBytes(buffer), level, chunkSize);
 });
 
 expose('jz.algorithms.deflate', algorithms.deflate);

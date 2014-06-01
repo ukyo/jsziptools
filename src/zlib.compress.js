@@ -6,5 +6,5 @@
  * @return {Uint8Array}
  */
 expose('jz.zlib.compress', defun(['buffer', 'level', 'chunkSize'], function (buffer, level, chunkSize) {
-  return zlib['deflate'](utils.toBytes(buffer), level, chunkSize);
+  return zlibBackend.deflate(utils.toBytes(buffer), level, chunkSize);
 }));
