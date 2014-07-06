@@ -1,6 +1,5 @@
 importScripts(
     '../node_modules/es6-promise/dist/promise-1.0.0.js',
-    '../vendor/zlib-asm/zlib.js',
     '../src/jsziptools.js',
     '../src/utils.js',
     '../src/algorithms/adler32.js',
@@ -23,5 +22,7 @@ importScripts(
     '../src/gz.decompress.js',
     '../src/zip.pack.js',
     '../src/zip.unpack.js',
+    '../vendor/zlib-asm/zlib.js',
+    '../src/zlibBackend/emscriptenBackend.js',
     'workerBody.js'
 );

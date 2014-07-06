@@ -1,4 +1,5 @@
 var expect = chai.expect;
+var worker = new Worker('../worker.js');
 
 // init web worker.
 before(function(done) {

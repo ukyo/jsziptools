@@ -1,5 +1,5 @@
 var reader, readerBlob;
-jz.utils.load('zipsample.zip')
+jz.utils.load('test/zipsample.zip')
 .spread(function(buffer) {
     return Promise.all([
         jz.zip.unpack(buffer),

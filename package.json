@@ -32,6 +32,7 @@
     "grunt-contrib-testem": "~0.5.14"
   },
   "dependencies": {
-    "es6-promise": "^1.0.0"
+    "es6-promise": "^1.0.0",
+    "zlibjs": "^0.2.0"
   }
 }
