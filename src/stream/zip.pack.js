@@ -33,6 +33,7 @@
 stream.zip.pack = defun(['files', 'streamFn', 'level', 'shareMemory', 'chunkSize'], function(files, streamFn, level, shareMemory, chunkSize) {
     var promises = [],
         writer = new ZipArchiveWriter(shareMemory, chunkSize);
+    level = typeof level === 'number' ? level : 6;
     writer.on('data', streamFn);
 
     function packItem(level, path, item) {
