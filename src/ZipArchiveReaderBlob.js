@@ -46,8 +46,9 @@ ZipArchiveReaderBlob.prototype.init = function() {
             var dv = new DataView(buffer),
                 i, n;
 
-            for (i = buffer.byteLength - 4; i--;)
-            if (dv.getUint32(i, true) === zip.END_SIGNATURE) return offset + i;
+            for (i = buffer.byteLength - 4; i--;) {
+                if (dv.getUint32(i, true) === zip.END_SIGNATURE) return offset + i;
+            }
 
             if (offset) {
                 return validateEndSignature(Math.max(offset - 0x8000 + 3, 0));
