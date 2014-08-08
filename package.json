@@ -1,6 +1,6 @@
 {
   "name": "jsziptools",
-  "version": "2.4.3",
+  "version": "2.4.4",
   "description": "It's a utility of zlib, gzip and zip format binary data.",
   "main": "jsziptools.js",
   "directories": {
