@@ -70,7 +70,8 @@ ZipArchiveReader.prototype._completeInit = function() {
     var files = this.files,
         folders = this.folders,
         localFileHeaders = this.localFileHeaders,
-        self = this;
+        self = this,
+        promise;
 
     localFileHeaders.forEach(function(header, i) {
         // Is the last char '/'.
@@ -79,18 +80,26 @@ ZipArchiveReader.prototype._completeInit = function() {
 
     // detect encoding. cp932 or utf-8.
     if (self.encoding == null) {
-        Promise.resolve(localFileHeaders.slice(0, 100).map(function(header) {
+        promise = Promise.resolve(localFileHeaders.slice(0, 100).map(function(header) {
             return header.filename;
-        })).then(utils.concatBytes).then(utils.detectEncoding).then(function(encoding) {
+        }))
+        .then(utils.concatBytes)
+        .then(utils.detectEncoding)
+        .then(function(encoding) {
             self.encoding = encoding;
         });
+    } else {
+        promise = Promise.resolve();
     }
 
-    return Promise.all(localFileHeaders.map(function(header, i) {
-        return utils.bytesToString(header.filename, self.encoding).then(function(filename) {
-            header.filename = filename;
-        });
-    })).then(function() {
+    return promise.then(function() {
+        return Promise.all(localFileHeaders.map(function(header, i) {
+            return utils.bytesToString(header.filename, self.encoding).then(function(filename) {
+                header.filename = filename;
+            });
+        }));
+    })
+    .then(function() {
         return self;
     });
 };
