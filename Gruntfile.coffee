@@ -46,9 +46,8 @@ module.exports = (grunt) ->
           """
           footer: '}).call(this);'
         src: [
-          'node_modules/es6-promise/dist/promise-1.0.0.min.js'
           '_jsziptools.js'
-          'vendor/zlib-asm/zlib.js'
+          'node_modules/zlib-asm/zlib.js'
           '_emscriptenBackend.js'
         ]
         dest: 'jsziptools.js'
@@ -63,7 +62,6 @@ module.exports = (grunt) ->
       #   launch_in_dev: ['Chrome', 'Firefox']
       dev:
         src: [
-          'node_modules/es6-promise/dist/promise-1.0.0.js'
           'src/jsziptools.js'
           'src/utils.js'
           'src/algorithms/adler32.js'
@@ -86,7 +84,7 @@ module.exports = (grunt) ->
           'src/gz.decompress.js'
           'src/zip.pack.js'
           'src/zip.unpack.js'
-          'vendor/zlib-asm/zlib.js'
+          'node_modules/zlib-asm/zlib.js'
           'src/zlibBackend/emscriptenBackend.js'
           'test/test.js'
         ]
@@ -99,7 +97,6 @@ module.exports = (grunt) ->
     worker:
       dev:
         src: [
-          'node_modules/es6-promise/dist/promise-1.0.0.js'
           'src/jsziptools.js'
           'src/utils.js'
           'src/algorithms/adler32.js'
@@ -122,7 +119,7 @@ module.exports = (grunt) ->
           'src/gz.decompress.js'
           'src/zip.pack.js'
           'src/zip.unpack.js'
-          'vendor/zlib-asm/zlib.js'
+          'node_modules/zlib-asm/zlib.js'
           'src/zlibBackend/emscriptenBackend.js'
           'test/workerBody.js'
         ]
