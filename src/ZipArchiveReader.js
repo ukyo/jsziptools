@@ -220,7 +220,7 @@ ZipArchiveReader.prototype._getFileInfo = function(filename) {
  * @return {Uint8Array} Decompressed bytes.
  */
 ZipArchiveReader.prototype._decompress = function(bytes, isCompressed) {
-    return isCompressed ? algorithms.inflate({buffer: bytes, chunkSize: this.chunkSize}) : bytes;
+    return isCompressed ? algorithms.inflate({buffer: bytes, chunkSize: this.chunkSize}) : new Uint8Array(bytes);
 };
 
 /**
