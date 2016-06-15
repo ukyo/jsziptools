@@ -16,6 +16,7 @@ var utils = {},
     global = this;
 
 zip.LOCAL_FILE_SIGNATURE = 0x04034B50;
+zip.DATA_DESCRIPTOR_SIGNATURE = 0x08074B50;
 zip.CENTRAL_DIR_SIGNATURE = 0x02014B50;
 zip.END_SIGNATURE = 0x06054B50;
 env.isWorker = typeof importScripts === 'function';

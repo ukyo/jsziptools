@@ -70,6 +70,8 @@ ZipArchiveWriter.prototype.writeFile = function(path, buffer, level) {
     var offset = this.offset,
         localFileHeader = createLocalFileHeader(path, this.date, level),
         compressedSize = 0,
+        dataDescriptor,
+        crc32,
         self = this;
     this.trigger('data', localFileHeader);
     if (level) {
@@ -87,8 +89,11 @@ ZipArchiveWriter.prototype.writeFile = function(path, buffer, level) {
         compressedSize = buffer.length;
         this.trigger('data', buffer);
     }
-    this.centralDirHeaders.push(createCentralDirHeader(path, this.date, level, offset, buffer.length, compressedSize, algorithms.crc32(buffer)));
-    this.offset += localFileHeader.length + compressedSize;
+    crc32 = algorithms.crc32(buffer);
+    dataDescriptor = createDataDescriptor(crc32, compressedSize, buffer.length)
+    this.trigger('data', dataDescriptor);
+    this.centralDirHeaders.push(createCentralDirHeader(path, this.date, level, offset, buffer.length, compressedSize, crc32));
+    this.offset += localFileHeader.length + compressedSize + dataDescriptor.length;
     return this;
 };
 
@@ -145,7 +150,7 @@ function createLocalFileHeader(fileName, date, isDeflated) {
         offset = 0;
     view.setUint32(offset, zip.LOCAL_FILE_SIGNATURE, true); offset += 4; // local file header signature
     view.setUint16(offset, 20, true); offset += 2;                       // version needed to extract
-    view.setUint16(offset, 0x0008); offset += 2;                         // general purpose bit flag
+    view.setUint16(offset, 0x0808); offset += 2;                         // general purpose bit flag
     view.setUint16(offset, isDeflated ? 8 : 0, true); offset += 2;       // compression method
     view.setUint16(offset, createDosFileTime(date), true); offset += 2;  // last mod file time
     view.setUint16(offset, createDosFileDate(date), true); offset += 2;  // last mod file date
@@ -158,6 +163,22 @@ function createLocalFileHeader(fileName, date, isDeflated) {
     offset += 2;                                                         // skip extra field length
     bytes.set(fileName, offset);
     return bytes;
+}
+
+/**
+ * data descriptor
+ * @param {number} crc32
+ * @param {number} compressedSize
+ * @param {number} uncompressedSize
+ * @return {Uint8Array}
+ */
+function createDataDescriptor(crc32, compressedSize, uncompressedSize) {
+    var view = new DataView(new ArrayBuffer(16));
+    view.setUint32(0, zip.DATA_DESCRIPTOR_SIGNATURE, true);
+    view.setUint32(4, crc32, true);
+    view.setUint32(8, compressedSize, true);
+    view.setUint32(12, uncompressedSize, true);
+    return new Uint8Array(view.buffer);
 }
 
 /**
@@ -176,7 +197,7 @@ function createCentralDirHeader(fileName, date, isDeflated, fileOffset, uncompre
     view.setUint32(offset, zip.CENTRAL_DIR_SIGNATURE, true); offset += 4; // central file header signature
     view.setUint16(offset, 20, true); offset += 2;                        // version made by (2.0)
     view.setUint16(offset, 20, true); offset += 2;                        // version needed to extract
-    view.setUint16(offset, 0x0008); offset += 2;                          // general purpose bit flag (use utf8, data discriptor)
+    view.setUint16(offset, 0x0808); offset += 2;                          // general purpose bit flag (use utf8, data discriptor)
     view.setUint16(offset, isDeflated ? 8 : 0, true); offset += 2;        // compression method
     view.setUint16(offset, createDosFileTime(date), true); offset += 2;   // last mod file time
     view.setUint16(offset, createDosFileDate(date), true); offset += 2;   // last mod file date
