@@ -1,1 +1,4 @@
 node_modules
+dist/test.js
+dist/test_worker.js
+test/*.js

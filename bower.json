@@ -1,7 +1,7 @@
 {
   "name": "jsziptools",
   "main": "jsziptools.js",
-  "version": "2.4.7",
+  "version": "3.0.0",
   "homepage": "https://github.com/ukyo/jsziptools",
   "authors": [
     "ukyo <ukyo.web@gmail.com>"
@@ -22,7 +22,6 @@
     "examples",
     "src",
     "vendor",
-    "Gruntfile.coffee",
     "package.json",
     "testem.json"
   ]

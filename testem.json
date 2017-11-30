@@ -1,4 +1,7 @@
 {
+  "src_files": [
+    "dist/test.js"
+  ],
   "framework": "mocha+chai",
   "launch_in_dev": [
     "Chrome",

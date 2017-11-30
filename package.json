@@ -1,14 +1,18 @@
 {
   "name": "jsziptools",
-  "version": "2.4.7",
+  "version": "3.0.0",
   "description": "It's a utility of zlib, gzip and zip format binary data.",
   "main": "jsziptools.js",
+  "typings": "lib/index.ts",
   "directories": {
     "example": "examples",
     "test": "test"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "testem",
+    "build:release": "tsc && browserify browserify/browser.js --no-builtins --dg=false -p licensify -g uglifyify -o dist/jsziptools.js",
+    "build:test": "tsc && browserify browserify/test.js --no-builtins --dg=false -o dist/test.js && browserify browserify/test_worker.js --no-builtins --dg=false -o dist/test_worker.js",
+    "release": "npm run build:test && npm test -- ci && npm run build:release"
   },
   "repository": {
     "type": "git",
@@ -25,14 +29,15 @@
     "url": "https://github.com/ukyo/jsziptools/issues"
   },
   "devDependencies": {
-    "grunt": "~0.4.2",
-    "grunt-contrib-clean": "~0.5.0",
-    "grunt-contrib-concat": "~0.3.0",
-    "grunt-contrib-testem": "~0.5.14",
-    "grunt-contrib-uglify": "~0.2.7",
-    "zlib-asm": "^0.3.0"
+    "@types/chai": "^3.4.30",
+    "@types/mocha": "^2.2.29",
+    "browserify": "^13.1.0",
+    "licensify": "^3.1.2",
+    "testem": "^1.10.3",
+    "typescript": "^2.0.0",
+    "uglifyify": "^3.0.2"
   },
   "dependencies": {
-    "zlibjs": "^0.2.0"
+    "zlib-asm": "^1.0.7"
   }
 }
