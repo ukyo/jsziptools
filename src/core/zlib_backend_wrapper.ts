@@ -1,4 +1,4 @@
-import * as zlib from '../../node_modules/zlib-asm/index';
+import * as zlib from 'zlib-asm';
 
 export interface ZlibBackend {
   deflate(buffer: Uint8Array, compressionLevel?: number, chunkSize?: number): Uint8Array;
