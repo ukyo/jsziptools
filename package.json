@@ -1,6 +1,6 @@
 {
   "name": "jsziptools",
-  "version": "3.0.0-rc1",
+  "version": "3.0.0-rc2",
   "description": "It's a utility of zlib, gzip and zip format binary data.",
   "main": "./dist-npm/index.js",
   "types": "./dist-npm/index.d.ts",
