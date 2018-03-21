@@ -1,1 +1,0 @@
-window.jz = require('../lib');

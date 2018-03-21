@@ -1,0 +1,7 @@
+dist
+examples
+test
+.editorconfig
+.prettierrc
+testem.json
+webpack*

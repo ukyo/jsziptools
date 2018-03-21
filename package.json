@@ -1,28 +1,26 @@
 {
   "name": "jsziptools",
-  "version": "3.0.0",
+  "version": "3.0.0-rc1",
   "description": "It's a utility of zlib, gzip and zip format binary data.",
-  "main": "jsziptools.js",
-  "typings": "lib/index.ts",
+  "main": "./dist/index.bundle.js",
+  "types": "./dist/src/index.d.ts",
   "directories": {
     "example": "examples",
     "test": "test"
   },
   "scripts": {
     "test": "testem",
-    "build:release": "tsc && browserify browserify/browser.js --no-builtins --dg=false -p licensify -g uglifyify -o dist/jsziptools.js",
-    "build:test": "tsc && browserify browserify/test.js --no-builtins --dg=false -o dist/test.js && browserify browserify/test_worker.js --no-builtins --dg=false -o dist/test_worker.js",
-    "release": "npm run build:test && npm test -- ci && npm run build:release"
+    "build:browser": "webpack --mode production",
+    "build:npm": "mkdir -p dist-npm && tsc -d --outDir dist-npm",
+    "build:test": "webpack --mode production --config webpack.config.test.js",
+    "release": "npm run build:test && npm test -- ci && npm run build:browser && npm run build:npm",
+    "prepublish": "npm release"
   },
   "repository": {
     "type": "git",
     "url": "git://github.com/ukyo/jsziptools.git"
   },
-  "keywords": [
-    "zip",
-    "gz",
-    "zlib"
-  ],
+  "keywords": ["zip", "gz", "zlib"],
   "author": "Syu Kato",
   "license": "MIT",
   "bugs": {
@@ -31,11 +29,13 @@
   "devDependencies": {
     "@types/chai": "^3.4.30",
     "@types/mocha": "^2.2.29",
-    "browserify": "^13.1.0",
-    "licensify": "^3.1.2",
+    "license-info-webpack-plugin": "^1.0.0",
     "testem": "^1.10.3",
-    "typescript": "^2.0.0",
-    "uglifyify": "^3.0.2"
+    "ts-loader": "^4.1.0",
+    "typescript": "^2.7.2",
+    "uglifyjs-webpack-plugin": "^1.2.4",
+    "webpack": "^4.1.1",
+    "webpack-cli": "^2.0.12"
   },
   "dependencies": {
     "zlib-asm": "^1.0.7"
