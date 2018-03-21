@@ -14,7 +14,7 @@
     "build:npm": "mkdir -p dist-npm && tsc -d --outDir dist-npm",
     "build:test": "webpack --mode production --config webpack.config.test.js",
     "release": "npm run build:test && npm test -- ci && npm run build:browser && npm run build:npm",
-    "prepublish": "npm release"
+    "prepublish": "npm run release"
   },
   "repository": {
     "type": "git",
