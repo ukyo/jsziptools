@@ -4,7 +4,7 @@ It's a utility of zlib, gzip and zip format binary data.
 
 ## suported browser
 
-chrome, firefox, IE11, Edge, safari, opera.
+chrome, firefox, Edge, safari, opera.
 
 ## examples
 
@@ -14,17 +14,6 @@ chrome, firefox, IE11, Edge, safari, opera.
 * [Zip viewer](http://ukyo.github.com/jsziptools/examples/zip_viewer.html)
 
 ## APIs
-
-If the api is written as *foo({a, b, c})*, you can call it as below.
-
-```js
-foo(1, 2, 3);
-foo({
-  a: 1,
-  b: 2,
-  c: 3
-});
-```
 
 ### common
 
@@ -43,8 +32,7 @@ foo({
 * @return {Promise\<ArrayBuffer\>}
 
 ```js
-jz.common.readFileAsArrayBuffer(blob)
-.then(buffer => {
+jz.common.readFileAsArrayBuffer(blob).then(buffer => {
   // ...
 });
 ```
@@ -66,8 +54,7 @@ jz.common.readFileAsArrayBuffer(blob)
 * @return {Promise\<string\>}
 
 ```js
-jz.common.bytesToString(bytes)
-.then(str => {
+jz.common.bytesToString(bytes).then(str => {
   // ...
 });
 ```
@@ -91,13 +78,11 @@ It loads files as `Uint8Array`.
 * @return {Promise\<Uint8Array[]\>}
 
 ```js
-jz.common.load(['foo.png', 'bar.jpg'])
-.then(([foo, bar]) => {
+jz.common.load(['foo.png', 'bar.jpg']).then(([foo, bar]) => {
   // ...
 });
 // or
-jz.common.load('foo.png', 'bar.jpg')
-.then(([foo, bar]) => {
+jz.common.load('foo.png', 'bar.jpg').then(([foo, bar]) => {
   // ...
 });
 ```
@@ -142,7 +127,7 @@ jz.stream.core.deflate({
   streamFn: chunk => {
     // ...
   },
-  shareMemory: false
+  shareMemory: false,
 });
 ```
 
@@ -226,34 +211,41 @@ jz.stream.core.deflate({
 
 ```js
 var files = [
-  {name: "foo", dir: [ // folder
-    {name: "hello.txt", buffer: "Hello World!"}, // string
-    {name: "bar.js", buffer: buffer}, // ArrayBuffer
-    {name: "hoge.mp3", url: "audiodata/hoge.mp3"} // xhr
-  ]}
+  {
+    name: 'foo',
+    dir: [
+      // folder
+      { name: 'hello.txt', buffer: 'Hello World!' }, // string
+      { name: 'bar.js', buffer: buffer }, // ArrayBuffer
+      { name: 'hoge.mp3', url: 'audiodata/hoge.mp3' }, // xhr
+    ],
+  },
 ];
 
-jz.zip.pack({
-  files: files,
-  level: 5
-})
-.then(buffer => {
-  // buffer is Uint8Array
-});
-
+jz.zip
+  .pack({
+    files: files,
+    level: 5,
+  })
+  .then(buffer => {
+    // buffer is Uint8Array
+  });
 
 // You cat set compression level to each files.
 var files = [
-  {name: "mimetype", buffer: "application/epub+zip", level: 0}, //string
-  {name: "META-INF", dir: [ //folder
-    {name: "container.xml", buffer: buffer, level: 0}, //ArrayBuffer
-  ]},
-  {name: "package.opf", url: "package.opf", level: 6},
-  {name: "foo.xhtml", url: "foo.xhtml", level: 9} //xhr
+  { name: 'mimetype', buffer: 'application/epub+zip', level: 0 }, //string
+  {
+    name: 'META-INF',
+    dir: [
+      //folder
+      { name: 'container.xml', buffer: buffer, level: 0 }, //ArrayBuffer
+    ],
+  },
+  { name: 'package.opf', url: 'package.opf', level: 6 },
+  { name: 'foo.xhtml', url: 'foo.xhtml', level: 9 }, //xhr
 ];
 
-jz.zip.pack(files)
-.then(buffer => {
+jz.zip.pack({ files }).then(buffer => {
   // ...
 });
 ```
@@ -266,19 +258,19 @@ jz.zip.pack(files)
 * @return {Promise}
 
 ```js
-jz.zip.unpack({
-  buffer: buffer,
-  encoding: 'Shift_JIS' // encoding of filenames
-})
-.then(reader => {
-  // reader is ZipArchiveReader. See below.
-  // get file names.
-  reader.getFileNames();
-  reader.readFileAsText(reader.getFileNames[0])
-  .then(text => {
-    // ...
+jz.zip
+  .unpack({
+    buffer: buffer,
+    encoding: 'Shift_JIS', // encoding of filenames
+  })
+  .then(reader => {
+    // reader is ZipArchiveReader. See below.
+    // get file names.
+    reader.getFileNames();
+    reader.readFileAsText(reader.getFileNames[0]).then(text => {
+      // ...
+    });
   });
-});
 ```
 
 #### jz.stream.zip.pack({files, streamFn, level, shareMemory, chunkSize})
@@ -291,15 +283,16 @@ jz.zip.unpack({
 * @return {Promise}
 
 ```js
-jz.stream.zip.pack({
-  files: files,
-  streamFn: chunk => {
-    // ...
-  }
-})
-.then(() => {
-  // no args
-});
+jz.stream.zip
+  .pack({
+    files: files,
+    streamFn: chunk => {
+      // ...
+    },
+  })
+  .then(() => {
+    // no args
+  });
 ```
 
 ### ZipArchiveReader
@@ -365,17 +358,17 @@ Low level zip archive writer.
 * @param {number} chunkSize - optional (default is `0x8000`)
 
 ```js
- const writer = new jz.zip.ZipArchiveWriter({shareMemory: true, chunkSize: 0xf000});
- writer
- .on('data', chunk => {
-   // chunk is Uint8Array.
- })
- .on('end', () => {
-   // ...
- })
- .write('foo/bar/baz.txt', buffer)
- .write('a.mp3', mp3Buff)
- .writeEnd();
+const writer = new jz.zip.ZipArchiveWriter({ shareMemory: true, chunkSize: 0xf000 });
+writer
+  .on('data', chunk => {
+    // chunk is Uint8Array.
+  })
+  .on('end', () => {
+    // ...
+  })
+  .write('foo/bar/baz.txt', buffer)
+  .write('a.mp3', mp3Buff)
+  .writeEnd();
 ```
 
 #### #on(name, callback)
