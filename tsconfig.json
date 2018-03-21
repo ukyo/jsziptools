@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "noImplicitAny": true,
+    "removeComments": false,
+    "preserveConstEnums": true,
+    "rootDir": "./src",
+    "sourceMap": false,
+    "target": "es2015",
+    "lib": ["es2015", "webworker"]
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": ["node_modules"]
+}

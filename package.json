@@ -1,38 +1,43 @@
 {
   "name": "jsziptools",
-  "version": "2.4.7",
+  "version": "3.0.0-rc1",
   "description": "It's a utility of zlib, gzip and zip format binary data.",
-  "main": "jsziptools.js",
+  "main": "./dist/index.bundle.js",
+  "types": "./dist/src/index.d.ts",
   "directories": {
     "example": "examples",
     "test": "test"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "testem",
+    "build:browser": "webpack --mode production",
+    "build:npm": "mkdir -p dist-npm && tsc -d --outDir dist-npm",
+    "build:test": "webpack --mode production --config webpack.config.test.js",
+    "release": "npm run build:test && npm test -- ci && npm run build:browser && npm run build:npm",
+    "prepublish": "npm release"
   },
   "repository": {
     "type": "git",
     "url": "git://github.com/ukyo/jsziptools.git"
   },
-  "keywords": [
-    "zip",
-    "gz",
-    "zlib"
-  ],
+  "keywords": ["zip", "gz", "zlib"],
   "author": "Syu Kato",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/ukyo/jsziptools/issues"
   },
   "devDependencies": {
-    "grunt": "~0.4.2",
-    "grunt-contrib-clean": "~0.5.0",
-    "grunt-contrib-concat": "~0.3.0",
-    "grunt-contrib-testem": "~0.5.14",
-    "grunt-contrib-uglify": "~0.2.7",
-    "zlib-asm": "^0.3.0"
+    "@types/chai": "^3.4.30",
+    "@types/mocha": "^2.2.29",
+    "license-info-webpack-plugin": "^1.0.0",
+    "testem": "^1.10.3",
+    "ts-loader": "^4.1.0",
+    "typescript": "^2.7.2",
+    "uglifyjs-webpack-plugin": "^1.2.4",
+    "webpack": "^4.1.1",
+    "webpack-cli": "^2.0.12"
   },
   "dependencies": {
-    "zlibjs": "^0.2.0"
+    "zlib-asm": "^1.0.7"
   }
 }

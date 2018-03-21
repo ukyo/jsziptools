@@ -1,11 +1,12 @@
 <!DOCTYPE html>
 
 <html>
+
 <head>
     <title>deflate text</title>
     <link rel="stylesheet" href="style.css">
     <style type="text/css">
-        #main > div {
+        #main>div {
             width: 288px;
             margin-right: 32px;
             float: left;
@@ -27,73 +28,104 @@
             height: 64px;
         }
     </style>
-    <script type="text/javascript" src="../jsziptools.js"></script>
+    <script type="text/javascript" src="../dist/browser.bundle.js"></script>
     <script>
-    window.onload = function(){
-        var $ = document.getElementById.bind(document),
-            input = $('input'),
-            inputView = $('input-view'),
-            output = $('output'),
-            outputView = $('output-view'),
-            hexTable;
+        window.onload = function () {
+            var $ = document.getElementById.bind(document),
+                input = $('input'),
+                inputView = $('input-view'),
+                output = $('output'),
+                outputView = $('output-view'),
+                hexTable;
 
-        hexTable = function() {
-            var s = '0123456789abcdef', i, j, n = 16, ret = [];
+            hexTable = function () {
+                var s = '0123456789abcdef', i, j, n = 16, ret = [];
 
-            for (i = 0; i < n; ++i)
-                for (j = 0; j < n; ++j)
-                    ret.push(s[i] + s[j]);
+                for (i = 0; i < n; ++i)
+                    for (j = 0; j < n; ++j)
+                        ret.push(s[i] + s[j]);
 
-            return ret;
-        }();
+                return ret;
+            }();
 
-        input.onkeyup = function() {
-            var inputBytes = jz.utils.toBytes(input.value),
-                deflatedBytes = jz.utils.toBytes(jz.algorithms.deflate(inputBytes));
+            input.onkeyup = function () {
+                var inputBytes = jz.common.toBytes(input.value),
+                    deflatedBytes = jz.common.toBytes(jz.core.deflate(inputBytes));
 
-            inputView.innerHTML = genBinaryView(inputBytes);
-            outputView.innerHTML = genBinaryView(deflatedBytes);
+                inputView.innerHTML = genBinaryView(inputBytes);
+                outputView.innerHTML = genBinaryView(deflatedBytes);
 
-            jz.utils.bytesToString(deflatedBytes)
-            .done(function(text) {
-                output.value = text;
-            });
-        };
+                jz.common.bytesToString(deflatedBytes)
+                    .then(function (text) {
+                        output.value = text;
+                    });
+            };
 
-        function genBinaryView (bytes) {
-            var ret = '', i, n;
+            function genBinaryView(bytes) {
+                var ret = '', i, n;
 
-            for (i = 0, n = bytes.length; i < n; ++i) {
-                ret += '<span>' + hexTable[bytes[i]] + '</span>';
+                for (i = 0, n = bytes.length; i < n; ++i) {
+                    ret += '<span>' + hexTable[bytes[i]] + '</span>';
+                }
+
+                return ret;
             }
-
-            return ret;
-        }
-  };
-  </script>
+        };
+    </script>
 </head>
 
 <body>
-<div>
-    <h1>deflate text</h1>
-    <div id="main">
-        <div>
-            <h2>input</h2>
-            <textarea id="input"></textarea>
-            <div class="view-header">
-                <span>00</span><span>01</span><span>02</span><span>03</span><span>04</span><span>05</span><span>06</span><span>07</span><span>08</span><span>09</span><span>0a</span><span>0b</span><span>0c</span><span>0d</span><span>0e</span><span>0f</span>
+    <div>
+        <h1>deflate text</h1>
+        <div id="main">
+            <div>
+                <h2>input</h2>
+                <textarea id="input"></textarea>
+                <div class="view-header">
+                    <span>00</span>
+                    <span>01</span>
+                    <span>02</span>
+                    <span>03</span>
+                    <span>04</span>
+                    <span>05</span>
+                    <span>06</span>
+                    <span>07</span>
+                    <span>08</span>
+                    <span>09</span>
+                    <span>0a</span>
+                    <span>0b</span>
+                    <span>0c</span>
+                    <span>0d</span>
+                    <span>0e</span>
+                    <span>0f</span>
+                </div>
+                <div id="input-view"></div>
             </div>
-            <div id="input-view"></div>
-        </div>
-        <div>
-            <h2>output</h2>
-            <textarea id="output"></textarea>
-            <div class="view-header">
-                <span>00</span><span>01</span><span>02</span><span>03</span><span>04</span><span>05</span><span>06</span><span>07</span><span>08</span><span>09</span><span>0a</span><span>0b</span><span>0c</span><span>0d</span><span>0e</span><span>0f</span>
+            <div>
+                <h2>output</h2>
+                <textarea id="output"></textarea>
+                <div class="view-header">
+                    <span>00</span>
+                    <span>01</span>
+                    <span>02</span>
+                    <span>03</span>
+                    <span>04</span>
+                    <span>05</span>
+                    <span>06</span>
+                    <span>07</span>
+                    <span>08</span>
+                    <span>09</span>
+                    <span>0a</span>
+                    <span>0b</span>
+                    <span>0c</span>
+                    <span>0d</span>
+                    <span>0e</span>
+                    <span>0f</span>
+                </div>
+                <div id="output-view"></div>
             </div>
-            <div id="output-view"></div>
         </div>
     </div>
-</div>
 </body>
+
 </html>
