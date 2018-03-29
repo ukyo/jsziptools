@@ -1,9 +1,11 @@
 const LicenseInfoWebpackPlugin = require('license-info-webpack-plugin').default;
 const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
+const path = require('path');
 
 module.exports = {
   entry: './src/browser.ts',
   output: {
+    path: path.resolve(__dirname, 'dist-release'),
     filename: 'jsziptools.min.js',
   },
   module: {

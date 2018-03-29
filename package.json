@@ -1,9 +1,9 @@
 {
   "name": "jsziptools",
-  "version": "3.0.0-rc2",
+  "version": "3.0.0-rc3",
   "description": "It's a utility of zlib, gzip and zip format binary data.",
-  "main": "./dist-npm/index.js",
-  "types": "./dist-npm/index.d.ts",
+  "main": "./jsziptools.min.js",
+  "types": "./index.d.ts",
   "directories": {
     "example": "examples",
     "test": "test"
@@ -11,10 +11,9 @@
   "scripts": {
     "test": "testem",
     "build:browser": "webpack --mode production",
-    "build:npm": "mkdir -p dist-npm && tsc -d --outDir dist-npm",
+    "build:npm": "tsc -d --outDir dist-release",
     "build:test": "webpack --mode production --config webpack.config.test.js",
-    "release": "npm run build:test && npm test -- ci && npm run build:browser && npm run build:npm",
-    "prepublish": "npm run release"
+    "release": "npm run build:test && npm test -- ci && npm run build:browser && npm run build:npm"
   },
   "repository": {
     "type": "git",

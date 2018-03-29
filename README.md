@@ -423,12 +423,12 @@ Write central directory headers and the end central dirctory header.
 writer.writeEnd();
 ```
 
-## ES2015 Modules
+## Import subdirectries
 
-You can import modules separately.
+You can import modules from subdirectries.
 
 ```js
-import {deflate} from "jsziptools/core";
+import { deflate } from "jsziptools/core";
 import * as zip from "jsziptools/zip";
 
 deflate(...);
